@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Factorio</string>
+    <string name="run">Çalıştır</string>
+    <string name="edit">Düzenle</string>
+    <string name="remove">Kaldır</string>
+    <string name="add">Ekle</string>
+    <string name="shortcuts">Kısayollar</string>
+    <string name="containers">Kapsayıcılar</string>
+    <string name="input_controls">Giriş Kontrolleri</string>
+    <string name="no_items_to_display">Görüntülenecek öğe yok</string>
+    <string name="new_container">Yeni Kapsayıcı</string>
+    <string name="edit_container">Kapsayıcıyı Düzenle</string>
+    <string name="creating_container">Kapsayıcı oluşturuluyor...</string>
+    <string name="removing_container">Kapsayıcı kaldırılıyor...</string>
+    <string name="duplicating_container">Kapsayıcı çoğaltılıyor...</string>
+    <string name="installing_system_files">Sistem dosyaları yükleniyor...</string>
+    <string name="updating_system_files">Sistem dosyaları güncelleniyor...</string>
+    <string name="starting_up">Başlatılıyor...</string>
+    <string name="unable_to_install_system_files">Sistem dosyaları yüklenemiyor</string>
+    <string name="keyboard">Klavye</string>
+    <string name="toggle_fullscreen">Tam Ekranı Aç/Kapat</string>
+    <string name="exit">Çıkış</string>
+    <string name="no_control_element_selected">Hiçbir kontrol öğesi seçilmedi</string>
+    <string name="scale">Ölçek</string>
+    <string name="shape">Şekil</string>
+    <string name="type">Tür</string>
+    <string name="binding">Atama</string>
+    <string name="binding_up">Yukarı Atama</string>
+    <string name="binding_right">Sağ Atama</string>
+    <string name="binding_down">Aşağı Atama</string>
+    <string name="binding_left">Sol Atama</string>
+    <string name="overlay_opacity">Katman Saydamlığı</string>
+    <string name="opacity">Saydamlık</string>
+    <string name="profile">Profil</string>
+    <string name="select_profile">Profil Seç</string>
+    <string name="profile_name">Profil Adı</string>
+    <string name="name">Ad</string>
+    <string name="ok">Tamam</string>
+    <string name="cancel">İptal</string>
+    <string name="untitled">Başlıksız</string>
+    <string name="no_profile_selected">Hiçbir profil seçilmedi</string>
+    <string name="no_profile_found">Profil bulunamadı</string>
+    <string name="do_you_want_to_remove_this_profile">Bu profili kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_duplicate_this_profile">Bu profili çoğaltmak istiyor musunuz?</string>
+    <string name="do_you_want_to_duplicate_this_preset">Bu ön ayarı çoğaltmak istiyor musunuz?</string>
+    <string name="do_you_want_to_remove_this_container">Bu kapsayıcıyı kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_duplicate_this_container">Bu kapsayıcıyı çoğaltmak istiyor musunuz?</string>
+    <string name="do_you_want_to_remove_this_file">Bu dosyayı kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_remove_this_controller">Bu denetleyiciyi kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_remove_this_wine_version">Bu Wine sürümünü kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_remove_this_preset">Bu ön ayarı kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_remove_this_component_version">Bu bileşen sürümünü kaldırmak istiyor musunuz?</string>
+    <string name="do_you_want_to_end_this_process">Bu işlemi sonlandırmak istiyor musunuz?</string>
+    <string name="controls_editor">Kontrol Düzenleyicisi</string>
+    <string name="enabled">Etkin</string>
+    <string name="disabled">Devre Dışı</string>
+    <string name="container">Kapsayıcı</string>
+    <string name="screen_size">Ekran Boyutu</string>
+    <string name="new_environment_variable">Yeni Ortam Değişkeni</string>
+    <string name="environment_variables">Ortam Değişkenleri</string>
+    <string name="value">Değer</string>
+    <string name="processor_affinity">İşlemci Benzeşimi</string>
+    <string name="processor_affinity_32_bit_apps">İşlemci Benzeşimi (32-bit uygulamalar)</string>
+    <string name="cursor_speed">İmleç Hızı</string>
+    <string name="relative_mouse_movement">Göreli Fare Hareketi</string>
+    <string name="toggle_switch">Geçiş Düğmesi</string>
+    <string name="profile_exported_to">Profil şuraya dışa aktarıldı</string>
+    <string name="unable_to_import_profile">Profil içe aktarılamıyor</string>
+    <string name="wine_configuration">Wine Yapılandırması</string>
+    <string name="enable_csmt">CSMT\'yi Etkinleştir (Komut Akışı Çok İş Parçacığı)</string>
+    <string name="gpu_name">GPU Adı</string>
+    <string name="offscreen_rendering_mode">Ekran Dışı Oluşturma Modu</string>
+    <string name="enable_strict_shader_math">Katı Gölgelendirici Matematiğini Etkinleştir</string>
+    <string name="video_memory_size">Video Belleği Boyutu</string>
+    <string name="none">Yok</string>
+    <string name="custom_text">Özel Metin</string>
+    <string name="icon">Simge</string>
+    <string name="import_profile">Profil İçe Aktar</string>
+    <string name="export_profile">Profil Dışa Aktar</string>
+    <string name="touchpad_help">Dokunmatik Yüzey Yardımı</string>
+    <string name="touchpad_help_mouse_left_click_title">Fare Sol Tıklama</string>
+    <string name="touchpad_help_mouse_left_click_description">Bir parmakla kısa dokunuş</string>
+    <string name="touchpad_help_mouse_right_click_title">Fare Sağ Tıklama</string>
+    <string name="touchpad_help_mouse_right_click_description">Bir parmakla dokunup başka bir parmakla kısa dokunuş</string>
+    <string name="touchpad_help_mouse_scroll_wheel_title">Fare Kaydırma Tekerleği</string>
+    <string name="touchpad_help_mouse_scroll_wheel_description">İki parmakla dokunup kaydırma</string>
+    <string name="touchpad_help_main_menu_title">Ana Menü</string>
+    <string name="touchpad_help_main_menu_description">Dört parmakla dokunuş</string>
+    <string name="duplicate">Çoğalt</string>
+    <string name="about">Hakkında</string>
+    <string name="credits_and_third_party_apps">Katkılar ve Üçüncü Taraf Uygulamalar</string>
+    <string name="external_controllers">Harici Denetleyiciler</string>
+    <string name="graphics_driver">Grafik Sürücüsü</string>
+    <string name="audio_driver">Ses Sürücüsü</string>
+    <string name="loading">Yükleniyor...</string>
+    <string name="press_any_button_on_your_controller">Denetleyicinizdeki herhangi bir düğmeye basın</string>
+    <string name="bindings">Atamalar</string>
+    <string name="show_touchscreen_controls">Dokunmatik Ekran Kontrollerini Göster</string>
+    <string name="dxwrapper" translatable="false">DX Wrapper</string>
+    <string name="mouse_warp_override" translatable="false">Mouse Warp Override</string>
+    <string name="direct3d" translatable="false">Direct3D</string>
+    <string name="directsound" translatable="false">DirectSound</string>
+    <string name="directmusic" translatable="false">DirectMusic</string>
+    <string name="directplay" translatable="false">DirectPlay</string>
+    <string name="directshow" translatable="false">DirectShow</string>
+    <string name="directinput" translatable="false">DirectInput</string>
+    <string name="xaudio" translatable="false">XAudio</string>
+    <string name="directx" translatable="false">DirectX</string>
+    <string name="vcrun2005" translatable="false">Visual C++ 2005</string>
+    <string name="vcrun2010" translatable="false">Visual C++ 2010</string>
+    <string name="wmdecoder" translatable="false">Windows Media Decoder</string>
+    <string name="settings">Ayarlar</string>
+    <string name="exec_arguments" translatable="false">Exec Arguments</string>
+    <string name="win_components" translatable="false">Win Components</string>
+    <string name="drives">Sürücüler</string>
+    <string name="drive">Sürücü</string>
+    <string name="force_fullscreen">Tam Ekranı Zorla</string>
+    <string name="range">Aralık</string>
+    <string name="enable">Etkinleştir</string>
+    <string name="disable">Devre Dışı Bırak</string>
+    <string name="force">Zorla</string>
+    <string name="install_wine">Wine\'ı Yükle</string>
+    <string name="version">Sürüm</string>
+    <string name="unable_to_install_wine">Wine yüklenemiyor</string>
+    <string name="unable_to_remove_this_wine_version">Bu Wine sürümü kaldırılamıyor</string>
+    <string name="wine_version">Wine Sürümü</string>
+    <string name="removing_wine">Wine kaldırılıyor...</string>
+    <string name="preparing_installation">Yükleme hazırlanıyor...</string>
+    <string name="finishing_installation">Yükleme tamamlanıyor...</string>
+    <string name="storage_info">Depolama Bilgisi</string>
+    <string name="drive_c">C: Sürücüsü</string>
+    <string name="cache" translatable="false">Cache</string>
+    <string name="total">Toplam</string>
+    <string name="clear_cache">Önbelleği Temizle</string>
+    <string name="estimated_used_space">Tahmini Kullanılan Alan</string>
+    <string name="advanced">Gelişmiş</string>
+    <string name="box64" translatable="false">Box64</string>
+    <string name="system">Sistem</string>
+    <string name="box64_preset">Box64 Ön Ayarı</string>
+    <string name="box64_version">Box64 Sürümü</string>
+    <string name="letter">Sürücü Harfi</string>
+    <string name="target_path">Hedef Yol</string>
+    <string name="width">Genişlik</string>
+    <string name="height">Yükseklik</string>
+    <string name="old">eski</string>
+    <string name="_new">yeni</string>
+    <string name="task_manager">Görev Yöneticisi</string>
+    <string name="process_name">İşlem Adı</string>
+    <string name="pid" translatable="false">PID</string>
+    <string name="memory">Bellek</string>
+    <string name="battery">Pil</string>
+    <string name="end_process">İşlemi Sonlandır</string>
+    <string name="new_task">Yeni Görev</string>
+    <string name="processes">İşlemler</string>
+    <string name="orientation">Yönlendirme</string>
+    <string name="horizontal">Yatay</string>
+    <string name="vertical">Dikey</string>
+    <string name="open_file">Dosya Aç</string>
+    <string name="download_file">Dosya İndir</string>
+    <string name="do_you_want_to_download_the_selected_profiles">Seçili profilleri indirmek istiyor musunuz?</string>
+    <string name="downloading_file">Dosya indiriliyor...</string>
+    <string name="a_network_error_occurred">Bir ağ hatası oluştu</string>
+    <string name="copy">Kopyala</string>
+    <string name="installed_version">Yüklü Sürüm</string>
+    <string name="unable_to_download_file">Dosya indirilemiyor</string>
+    <string name="stability">Kararlılık</string>
+    <string name="conservative">Tutucu</string>
+    <string name="intermediate">Orta</string>
+    <string name="performance">Performans</string>
+    <string name="preset">Ön Ayar</string>
+    <string name="you_cannot_remove_this_preset">Bu ön ayar kaldırılamaz</string>
+    <string name="you_cannot_remove_this_component_version">Bu bileşen sürümü kaldırılamaz</string>
+    <string name="dxwrapper_help_content"><![CDATA[
+        <i><b>WineD3D</b></i>, DirectX 1-11\'i OpenGL\'e çeviren bir katmandır.<br /><br />
+        <i><b>DXVK</b></i>, Direct3D 9-11\'i Vulkan\'a çeviren bir katmandır.<br /><br />
+        <i><b>VKD3D</b></i>, Direct3D 12 API\'sini Vulkan\'a çeviren bir katmandır.<br /><br />
+        <i><b>CNC DDraw</b></i>, klasik oyunlarla daha iyi uyumluluk için bir DirectDraw uygulamasıdır.
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_safeflags" translatable="false"><![CDATA[
+        Handling of flags on CALL/RET opcodes<br /><br />
+        <b>0</b> : Treats CALL/RET as if it never needed flags (faster, unstable)<br />
+        <b>1</b> : Most RET will need flags, most CALLS will not<br />
+        <b>2</b> : All CALL/RET will need flags (slower)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_fastnan" translatable="false">Generation of -NAN like on x86</string>
+    <string name="box64_env_var_help__dynarec_fastround" translatable="false"><![CDATA[
+        Generation of precise x86 rounding<br /><br />
+        <b>0</b> : Generate float/double -> int rounding like on x86<br />
+        <b>1</b> : Don\'t do anything special with edge case Rounding, to go as fast as possible (no INF/NAN/Overflow -> MIN_INT conversion)<br />
+        <b>2</b> : Everything from 1 plus also fast round of double -> float (not taking into account current rounding mode)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_x87double" translatable="false">Use of Float/Double for x87 emulation</string>
+    <string name="box64_env_var_help__dynarec_bigblock" translatable="false"><![CDATA[
+        Dynarec building BigBlock<br /><br />
+        <b>0</b> : Don\'t try to build block as big as possible<br />
+        <b>1</b> : Build Dynarec block as big as possible<br />
+        <b>2</b> : Build Dynarec block bigger (continue when block overlaps, but only for blocks in elf memory)<br />
+        <b>3</b> : Build Dynarec block bigger (continue when block overlaps, for all types of memory)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_strongmem" translatable="false"><![CDATA[
+        Simulation of Strong Memory model<br /><br />
+        <b>0</b> : Don\'t try anything special<br />
+        <b>1</b> : Enable some Memory Barrier when writing to memory (on some MOV opcode)<br />
+        <b>2</b> : All 1 plus a Memory Barrier on every write to memory using MOV<br />
+        <b>3</b> : All 2 plus Memory Barrier when reading from memory and on some SSE/SSE2 opcodes
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_weakbarrier" translatable="false"><![CDATA[
+        Tweak the memory barriers to reduce the performance impact by strongmem<br /><br />
+        <b>0</b> : Use regular safe barrier<br />
+        <b>1</b> : Use weak barriers to have more performance boost<br />
+        <b>2</b> : All in 1, plus disabled the last write barriers
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_forward" translatable="false">Defines the max allowed forward value when building Block</string>
+    <string name="box64_env_var_help__dynarec_callret" translatable="false">Optimization of CALL/RET opcodes</string>
+    <string name="box64_env_var_help__dynarec_wait" translatable="false">Defines whether or not Dynarec will wait for the FillBlock to be ready</string>
+    <string name="box64_env_var_help__dynarec_nativeflags" translatable="false">The generated code will use native flags, if possible</string>
+    <string name="columns">Sütunlar</string>
+    <string name="directinput_mapper_type">DirectInput Eşleyici Türü</string>
+    <string name="desktop">Masaüstü</string>
+    <string name="theme">Tema</string>
+    <string name="background">Arka Plan</string>
+    <string name="max_device_memory">Maksimum Cihaz Belleği</string>
+    <string name="frame_rate">Kare Hızı</string>
+    <string name="configuration">Yapılandırma</string>
+    <string name="browse">Gözat</string>
+    <string name="magnifier">Büyüteç</string>
+    <string name="bring_to_front">Öne Getir</string>
+    <string name="options">Seçenekler</string>
+    <string name="logs">Günlükler</string>
+    <string name="enable_wine_debug">Wine Hata Ayıklamayı Etkinleştir</string>
+    <string name="box64_logs">Box64 Günlükleri</string>
+    <string name="export">Dışa Aktar</string>
+    <string name="logs_exported_to">Günlükler şuraya dışa aktarıldı</string>
+    <string name="general">Genel</string>
+    <string name="startup_selection">Başlangıç Seçimi</string>
+    <string name="wine_debug_channel">Wine Hata Ayıklama Kanalı</string>
+    <string name="save_logs_to_file">Günlükleri Dosyaya Kaydet</string>
+    <string name="new_folder">Yeni Klasör</string>
+    <string name="view_style">Görünüm Stili</string>
+    <string name="there_already_file_with_that_name">Bu adda bir dosya zaten var</string>
+    <string name="cut">Kes</string>
+    <string name="copying_files">Dosyalar kopyalanıyor...</string>
+    <string name="removing_files">Dosyalar kaldırılıyor...</string>
+    <string name="disable_mouse_input">Fare Girişini Devre Dışı Bırak</string>
+    <string name="move_cursor_to_touchpoint">İmleci Dokunma Noktasına Taşı</string>
+    <string name="sync_every_frame">Her Karede Eşitle</string>
+    <string name="dpi_font_size">DPI (Yazı Tipi Boyutu)</string>
+    <string name="preferred_input_api">Tercih Edilen Giriş API\'si</string>
+    <string name="file_manager">Dosya Yöneticisi</string>
+    <string name="documents">Belgeler</string>
+    <string name="items">öğe</string>
+    <string name="you_cannot_paste_files_here">Dosyaları buraya yapıştıramazsınız</string>
+    <string name="information">Bilgi</string>
+    <string name="rename">Yeniden Adlandır</string>
+    <string name="location">Konum</string>
+    <string name="file">Dosya</string>
+    <string name="folder">Klasör</string>
+    <string name="size">Boyut</string>
+    <string name="modified">Değiştirildi</string>
+    <string name="contains">İçerir</string>
+    <string name="favorites">Sık Kullanılanlar</string>
+    <string name="add_to_favorites">Sık Kullanılanlara Ekle</string>
+    <string name="file_added_to_favorites">Dosya sık kullanılanlara eklendi</string>
+    <string name="game_controllers">Oyun Denetleyicileri</string>
+    <string name="home">Ana Sayfa</string>
+    <string name="custom_device">Özel Cihaz</string>
+    <string name="reinstall_system_files">Sistem Dosyalarını Yeniden Yükle</string>
+    <string name="do_you_want_to_reinstall_system_files">Sistem dosyalarını yeniden yüklemek istiyor musunuz?</string>
+    <string name="mouse">Fare</string>
+    <string name="cursor_size">İmleç Boyutu</string>
+    <string name="color">Renk</string>
+    <string name="volume">Ses Seviyesi</string>
+    <string name="average_latency">Ortalama Gecikme</string>
+    <string name="performance_mode">Performans Modu</string>
+    <string name="audio">Ses</string>
+    <string name="opengl_version">OpenGL Sürümü</string>
+    <string name="disable_vertex_array_bgra">Köşe Dizisi BGRA\'yı Devre Dışı Bırak</string>
+    <string name="screen_effect">Ekran Efekti</string>
+    <string name="enable_fxaa">FXAA\'yı Etkinleştir</string>
+    <string name="brightness">Parlaklık</string>
+    <string name="contrast">Kontrast</string>
+    <string name="gamma">Gama</string>
+    <string name="color_adjustment">Renk Ayarı</string>
+    <string name="reset">Sıfırla</string>
+    <string name="enable_crt_shader">CRT Gölgelendiricisini Etkinleştir</string>
+    <string name="open_directory">Dizini Aç</string>
+    <string name="locations">Konumlar</string>
+    <string name="downloads">İndirilenler</string>
+    <string name="internal_storage">Dahili Depolama</string>
+    <string name="windows_version">Windows Sürümü</string>
+    <string name="install_component">Bileşen Yükle</string>
+    <string name="open_android_browser_from_wine">Wine\'dan Android Tarayıcısını Aç</string>
+    <string name="use_android_clipboard_on_Wine">Wine\'da Android Panosunu Kullan</string>
+    <string name="capture_pointer_on_external_mouse">Harici Farede İşaretçiyi Yakala</string>
+    <string name="there_are_no_items_to_download">İndirilecek öğe yok</string>
+    <string name="enable_direct_rendering">Doğrudan Oluşturmayı Etkinleştir</string>
+    <string name="d3d_feature_level">D3D Özellik Düzeyi</string>
+    <string name="system_font">Sistem Yazı Tipi</string>
+    <string name="vulkan_version">Vulkan Sürümü</string>
+    <string name="exposed_extensions">Kullanılabilir Uzantılar</string>
+    <string name="multiselection_combobox_display_text">%d / %d öğe</string>
+    <string name="voltage">Gerilim</string>
+    <string name="current">Akım</string>
+    <string name="capacity">Kapasite</string>
+    <string name="sound">Ses</string>
+    <string name="midi_soundfont">MIDI SoundFont</string>
+    <string name="instrument">Enstrüman</string>
+    <string name="channel">Kanal</string>
+    <string name="note">Nota</string>
+    <string name="move_mouse_when_pressed">Basıldığında Fareyi Taşı</string>
+    <string name="midi_input_device">MIDI Giriş Cihazı</string>
+    <string name="auto">Otomatik</string>
+    <string name="active_windows">Etkin Pencereler</string>
+    <string name="show_desktop">Masaüstünü Göster</string>
+    <string name="language">Dil</string>
+    <string name="image_cache_size">Görüntü Önbellek Boyutu</string>
+    <string name="pip_mode">PiP Modu</string>
+    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
+    <string name="resource_memory_type">Kaynak Bellek Türü</string>
+    <string name="zero_no_limit">0 (Sınır yok)</string>
+    <string name="custom">Özel</string>
+    <string name="minimal">Minimum</string>
+    <string name="trace">İzleme</string>
+    <string name="builtin_wine">Yerleşik (Wine)</string>
+    <string name="native_windows">Yerel (Windows)</string>
+    <string name="light">Açık</string>
+    <string name="dark">Koyu</string>
+    <string name="image">Görüntü</string>
+    <string name="solid_color">Düz Renk</string>
+    <string name="startup_selection_normal">Normal (Tüm hizmetleri yükle)</string>
+    <string name="startup_selection_essential">Temel (Yalnızca temel hizmetleri yükle)</string>
+    <string name="startup_selection_aggressive">Agresif (Başlangıçta hizmetleri durdur)</string>
+    <string name="both">Her İkisi</string>
+    <string name="low_latency">Düşük Gecikme</string>
+    <string name="power_saving">Güç Tasarrufu</string>
+    <string name="player">Oyuncu</string>
+    <string name="gamepad">Oyun Kumandası</string>
+    <string name="enable_vibration">Titreşimi Etkinleştir</string>
+    <string name="mode">Mod</string>
+    <string name="external_controller">Harici Denetleyici</string>
+    <string name="controls_profile">Kontrol Profili</string>
+    <string name="do_you_want_to_reset_configurations">Yapılandırmaları sıfırlamak istiyor musunuz?</string>
+    <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Ayarlar değiştirildi. Uygulamayı yeniden başlatmak istiyor musunuz?</string>
+    <string name="hud_mode">HUD Modu</string>
+    <string name="simple_fps">Basit (FPS)</string>
+    <string name="full">Tam</string>
+    <string name="ddraw_wrapper" translatable="false">DDraw Wrapper</string>
+    <string name="renderer">Oluşturucu</string>
+</resources>

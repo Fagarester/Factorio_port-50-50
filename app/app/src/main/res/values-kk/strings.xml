@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Factorio</string>
+    <string name="run">Іске қосу</string>
+    <string name="edit">Өңдеу</string>
+    <string name="remove">Жою</string>
+    <string name="add">Қосу</string>
+    <string name="shortcuts">Таңбашалар</string>
+    <string name="containers">Контейнерлер</string>
+    <string name="input_controls">Басқару элементтері</string>
+    <string name="no_items_to_display">Көрсетілетін элементтер жоқ</string>
+    <string name="new_container">Жаңа контейнер</string>
+    <string name="edit_container">Контейнерді өңдеу</string>
+    <string name="creating_container">Контейнер жасалуда…</string>
+    <string name="removing_container">Контейнер жойылуда…</string>
+    <string name="duplicating_container">Контейнер көшірілуде…</string>
+    <string name="installing_system_files">Жүйелік файлдар орнатылуда…</string>
+    <string name="updating_system_files">Жүйелік файлдар жаңартылуда…</string>
+    <string name="starting_up">Іске қосылуда…</string>
+    <string name="unable_to_install_system_files">Жүйелік файлдарды орнату мүмкін болмады</string>
+    <string name="keyboard">Пернетақта</string>
+    <string name="toggle_fullscreen">Толық экранды қосу/өшіру</string>
+    <string name="exit">Шығу</string>
+    <string name="no_control_element_selected">Басқару элементі таңдалмаған</string>
+    <string name="scale">Масштаб</string>
+    <string name="shape">Пішін</string>
+    <string name="type">Түр</string>
+    <string name="binding">Тағайындау</string>
+    <string name="binding_up">Тағайындау: жоғары</string>
+    <string name="binding_right">Тағайындау: оңға</string>
+    <string name="binding_down">Тағайындау: төмен</string>
+    <string name="binding_left">Тағайындау: солға</string>
+    <string name="overlay_opacity">Үстіңгі қабаттың мөлдірлігі</string>
+    <string name="opacity">Мөлдірлік</string>
+    <string name="profile">Профиль</string>
+    <string name="select_profile">Профильді таңдау</string>
+    <string name="profile_name">Профиль атауы</string>
+    <string name="name">Атауы</string>
+    <string name="ok">ОК</string>
+    <string name="cancel">Бас тарту</string>
+    <string name="untitled">Атаусыз</string>
+    <string name="no_profile_selected">Профиль таңдалмаған</string>
+    <string name="no_profile_found">Профиль табылмады</string>
+    <string name="do_you_want_to_remove_this_profile">Бұл профильді жою керек пе?</string>
+    <string name="do_you_want_to_duplicate_this_profile">Бұл профильді көшіру керек пе?</string>
+    <string name="do_you_want_to_duplicate_this_preset">Бұл алдын ала реттеуді көшіру керек пе?</string>
+    <string name="do_you_want_to_remove_this_container">Бұл контейнерді жою керек пе?</string>
+    <string name="do_you_want_to_duplicate_this_container">Бұл контейнерді көшіру керек пе?</string>
+    <string name="do_you_want_to_remove_this_file">Бұл файлды жою керек пе?</string>
+    <string name="do_you_want_to_remove_this_controller">Бұл контроллерді жою керек пе?</string>
+    <string name="do_you_want_to_remove_this_wine_version">Wine-ның бұл нұсқасын жою керек пе?</string>
+    <string name="do_you_want_to_remove_this_preset">Бұл алдын ала реттеуді жою керек пе?</string>
+    <string name="do_you_want_to_remove_this_component_version">Компоненттің бұл нұсқасын жою керек пе?</string>
+    <string name="do_you_want_to_end_this_process">Бұл процесті аяқтау керек пе?</string>
+    <string name="controls_editor">Басқару редакторы</string>
+    <string name="enabled">Қосулы</string>
+    <string name="disabled">Өшірулі</string>
+    <string name="container">Контейнер</string>
+    <string name="screen_size">Экран өлшемі</string>
+    <string name="new_environment_variable">Жаңа орта айнымалысы</string>
+    <string name="environment_variables">Орта айнымалылары</string>
+    <string name="value">Мән</string>
+    <string name="processor_affinity">Процессор жақындығы</string>
+    <string name="processor_affinity_32_bit_apps">Процессор жақындығы (32-биттік бағдарламалар)</string>
+    <string name="cursor_speed">Курсор жылдамдығы</string>
+    <string name="relative_mouse_movement">Тышқанның салыстырмалы қозғалысы</string>
+    <string name="toggle_switch">Ауыстырып қосқыш</string>
+    <string name="profile_exported_to">Профиль экспортталды</string>
+    <string name="unable_to_import_profile">Профильді импорттау мүмкін болмады</string>
+    <string name="wine_configuration">Wine конфигурациясы</string>
+    <string name="enable_csmt">CSMT қосу (пәрмен ағынын көп ағынды өңдеу)</string>
+    <string name="gpu_name">GPU атауы</string>
+    <string name="offscreen_rendering_mode">Экраннан тыс рендерлеу режимі</string>
+    <string name="enable_strict_shader_math">Шейдерлердің қатаң математикасын қосу</string>
+    <string name="video_memory_size">Бейне жады көлемі</string>
+    <string name="none">Жоқ</string>
+    <string name="custom_text">Өз мәтіні</string>
+    <string name="icon">Белгіше</string>
+    <string name="import_profile">Профильді импорттау</string>
+    <string name="export_profile">Профильді экспорттау</string>
+    <string name="touchpad_help">Тачпад анықтамасы</string>
+    <string name="touchpad_help_mouse_left_click_title">Тышқанның сол жақ түймесін басу</string>
+    <string name="touchpad_help_mouse_left_click_description">Бір саусақпен қысқа түрту</string>
+    <string name="touchpad_help_mouse_right_click_title">Тышқанның оң жақ түймесін басу</string>
+    <string name="touchpad_help_mouse_right_click_description">Бір саусақпен түрту және екінші саусақпен қысқа түрту</string>
+    <string name="touchpad_help_mouse_scroll_wheel_title">Тышқанның айналдыру дөңгелегі</string>
+    <string name="touchpad_help_mouse_scroll_wheel_description">Екі саусақпен түртіп жылжыту</string>
+    <string name="touchpad_help_main_menu_title">Негізгі мәзір</string>
+    <string name="touchpad_help_main_menu_description">Төрт саусақпен түрту</string>
+    <string name="duplicate">Көшіру</string>
+    <string name="about">Бағдарлама туралы</string>
+    <string name="credits_and_third_party_apps">Авторлар және үшінші тарап бағдарламалары</string>
+    <string name="external_controllers">Сыртқы контроллерлер</string>
+    <string name="graphics_driver">Графикалық драйвер</string>
+    <string name="audio_driver">Аудио драйвер</string>
+    <string name="loading">Жүктелуде…</string>
+    <string name="press_any_button_on_your_controller">Контроллердегі кез келген түймені басыңыз</string>
+    <string name="bindings">Тағайындаулар</string>
+    <string name="show_touchscreen_controls">Сенсорлы экран басқару элементтерін көрсету</string>
+    <string name="dxwrapper" translatable="false">DX Wrapper</string>
+    <string name="mouse_warp_override" translatable="false">Mouse Warp Override</string>
+    <string name="direct3d" translatable="false">Direct3D</string>
+    <string name="directsound" translatable="false">DirectSound</string>
+    <string name="directmusic" translatable="false">DirectMusic</string>
+    <string name="directplay" translatable="false">DirectPlay</string>
+    <string name="directshow" translatable="false">DirectShow</string>
+    <string name="directinput" translatable="false">DirectInput</string>
+    <string name="xaudio" translatable="false">XAudio</string>
+    <string name="directx" translatable="false">DirectX</string>
+    <string name="vcrun2005" translatable="false">Visual C++ 2005</string>
+    <string name="vcrun2010" translatable="false">Visual C++ 2010</string>
+    <string name="wmdecoder" translatable="false">Windows Media Decoder</string>
+    <string name="settings">Параметрлер</string>
+    <string name="exec_arguments" translatable="false">Exec Arguments</string>
+    <string name="win_components" translatable="false">Win Components</string>
+    <string name="drives">Дискілер</string>
+    <string name="drive">Диск</string>
+    <string name="force_fullscreen">Толық экранды мәжбүрлеу</string>
+    <string name="range">Ауқым</string>
+    <string name="enable">Қосу</string>
+    <string name="disable">Өшіру</string>
+    <string name="force">Мәжбүрлеу</string>
+    <string name="install_wine">Wine орнату</string>
+    <string name="version">Нұсқа</string>
+    <string name="unable_to_install_wine">Wine орнату мүмкін болмады</string>
+    <string name="unable_to_remove_this_wine_version">Wine-ның бұл нұсқасын жою мүмкін болмады</string>
+    <string name="wine_version">Wine нұсқасы</string>
+    <string name="removing_wine">Wine жойылуда…</string>
+    <string name="preparing_installation">Орнатуға дайындалуда…</string>
+    <string name="finishing_installation">Орнату аяқталуда…</string>
+    <string name="storage_info">Жад туралы ақпарат</string>
+    <string name="drive_c">C: дискісі</string>
+    <string name="cache" translatable="false">Cache</string>
+    <string name="total">Барлығы</string>
+    <string name="clear_cache">Кэшті тазалау</string>
+    <string name="estimated_used_space">Шамамен пайдаланылған орын</string>
+    <string name="advanced">Қосымша</string>
+    <string name="box64" translatable="false">Box64</string>
+    <string name="system">Жүйе</string>
+    <string name="box64_preset">Box64 алдын ала реттеуі</string>
+    <string name="box64_version">Box64 нұсқасы</string>
+    <string name="letter">Әріп</string>
+    <string name="target_path">Мақсатты жол</string>
+    <string name="width">Ені</string>
+    <string name="height">Биіктігі</string>
+    <string name="old">ескі</string>
+    <string name="_new">жаңа</string>
+    <string name="task_manager">Тапсырмалар диспетчері</string>
+    <string name="process_name">Процесс атауы</string>
+    <string name="pid" translatable="false">PID</string>
+    <string name="memory">Жад</string>
+    <string name="battery">Батарея</string>
+    <string name="end_process">Процесті аяқтау</string>
+    <string name="new_task">Жаңа тапсырма</string>
+    <string name="processes">Процестер</string>
+    <string name="orientation">Бағдар</string>
+    <string name="horizontal">Көлденең</string>
+    <string name="vertical">Тік</string>
+    <string name="open_file">Файлды ашу</string>
+    <string name="download_file">Файлды жүктеу</string>
+    <string name="do_you_want_to_download_the_selected_profiles">Таңдалған профильдерді жүктеу керек пе?</string>
+    <string name="downloading_file">Файл жүктелуде…</string>
+    <string name="a_network_error_occurred">Желі қатесі орын алды</string>
+    <string name="copy">Көшіру</string>
+    <string name="installed_version">Орнатылған нұсқа</string>
+    <string name="unable_to_download_file">Файлды жүктеу мүмкін болмады</string>
+    <string name="stability">Тұрақтылық</string>
+    <string name="conservative">Консервативті</string>
+    <string name="intermediate">Орташа</string>
+    <string name="performance">Өнімділік</string>
+    <string name="preset">Алдын ала реттеу</string>
+    <string name="you_cannot_remove_this_preset">Бұл алдын ала реттеуді жою мүмкін емес</string>
+    <string name="you_cannot_remove_this_component_version">Компоненттің бұл нұсқасын жою мүмкін емес</string>
+    <string name="dxwrapper_help_content"><![CDATA[
+        <i><b>WineD3D</b></i> — DirectX 1-11-ді OpenGL-ге аудару қабаты.<br /><br />
+        <i><b>DXVK</b></i> — Direct3D 9-11-ді Vulkan-ға аудару қабаты.<br /><br />
+        <i><b>VKD3D</b></i> — Direct3D 12 API-ін Vulkan-ға аудару қабаты.<br /><br />
+        <i><b>CNC DDraw</b></i> — классикалық ойындармен үйлесімділікті жақсарту үшін DirectDraw іске асырылымы.
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_safeflags" translatable="false"><![CDATA[
+        CALL/RET опкодтарындағы жалаушаларды өңдеу<br /><br />
+        <b>0</b> : CALL/RET жалаушаларды ешқашан қажет етпейді деп саналады (жылдамырақ, тұрақсыз)<br />
+        <b>1</b> : Көптеген RET жалаушаларды қажет етеді, көптеген CALL — қажет етпейді<br />
+        <b>2</b> : Барлық CALL/RET жалаушаларды қажет етеді (баяуырақ)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_fastnan" translatable="false">x86-дағыдай -NAN генерациясы</string>
+    <string name="box64_env_var_help__dynarec_fastround" translatable="false"><![CDATA[
+        Дәл x86 дөңгелектеуін генерациялау<br /><br />
+        <b>0</b> : x86-дағыдай float/double -> int дөңгелектеуін генерациялау<br />
+        <b>1</b> : Шекті жағдайларды арнайы өңдемеу, максималды жылдамдық үшін (INF/NAN/Overflow -> MIN_INT түрлендіруінсіз)<br />
+        <b>2</b> : 1-нің барлығы, сонымен қатар double -> float жылдам дөңгелектеуі (ағымдағы дөңгелектеу режимін ескермей)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_x87double" translatable="false">x87 эмуляциясы үшін Float/Double қолдану</string>
+    <string name="box64_env_var_help__dynarec_bigblock" translatable="false"><![CDATA[
+        Dynarec үшін үлкен блоктар құру<br /><br />
+        <b>0</b> : Блоктарды мүмкіндігінше үлкен етіп құруға тырыспау<br />
+        <b>1</b> : Dynarec блоктарын мүмкіндігінше үлкен етіп құру<br />
+        <b>2</b> : Үлкенірек Dynarec блоктарын құру (блоктар қабаттасқанда жалғастыру, тек ELF жадындағы блоктар үшін)<br />
+        <b>3</b> : Үлкенірек Dynarec блоктарын құру (блоктар қабаттасқанда жалғастыру, барлық жад түрлері үшін)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_strongmem" translatable="false"><![CDATA[
+        Қатаң жад моделін эмуляциялау<br /><br />
+        <b>0</b> : Ешқандай арнайы әрекет жасамау<br />
+        <b>1</b> : Жадқа жазу кезінде кейбір жад тосқауылдарын қосу (кейбір MOV опкодтарында)<br />
+        <b>2</b> : 1-нің барлығы, сонымен қатар MOV арқылы жазудың әрбірінде жад тосқауылы<br />
+        <b>3</b> : 2-нің барлығы, сонымен қатар оқу кезінде және кейбір SSE/SSE2 опкодтарында тосқауыл
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_weakbarrier" translatable="false"><![CDATA[
+        Strongmem-нің өнімділікке әсерін азайту үшін жад тосқауылдарын баптау<br /><br />
+        <b>0</b> : Қалыпты қауіпсіз тосқауылдарды қолдану<br />
+        <b>1</b> : Өнімділікті арттыру үшін әлсіз тосқауылдарды қолдану<br />
+        <b>2</b> : 1-нің барлығы, сонымен қатар соңғы жазу тосқауылдарын өшіру
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_forward" translatable="false">Блок құру кезінде рұқсат етілген максималды forward мәнін анықтайды</string>
+    <string name="box64_env_var_help__dynarec_callret" translatable="false">CALL/RET опкодтарын оңтайландыру</string>
+    <string name="box64_env_var_help__dynarec_wait" translatable="false">Dynarec-тің FillBlock дайын болуын күтетінін анықтайды</string>
+    <string name="box64_env_var_help__dynarec_nativeflags" translatable="false">Мүмкін болса, генерацияланған код жергілікті жалаушаларды пайдаланады</string>
+    <string name="columns">Бағандар</string>
+    <string name="directinput_mapper_type">DirectInput маппер түрі</string>
+    <string name="desktop">Жұмыс үстелі</string>
+    <string name="theme">Тақырып</string>
+    <string name="background">Фон</string>
+    <string name="max_device_memory">Құрылғының максималды жады</string>
+    <string name="frame_rate">Кадр жиілігі</string>
+    <string name="configuration">Конфигурация</string>
+    <string name="browse">Шолу</string>
+    <string name="magnifier">Үлкейткіш</string>
+    <string name="bring_to_front">Алдыңғы планға шығару</string>
+    <string name="options">Параметрлер</string>
+    <string name="logs">Журналдар</string>
+    <string name="enable_wine_debug">Wine жөндеуін қосу</string>
+    <string name="box64_logs">Box64 журналдары</string>
+    <string name="export">Экспорт</string>
+    <string name="logs_exported_to">Журналдар экспортталды</string>
+    <string name="general">Жалпы</string>
+    <string name="startup_selection">Іске қосу режимін таңдау</string>
+    <string name="wine_debug_channel">Wine жөндеу арнасы</string>
+    <string name="save_logs_to_file">Журналдарды файлға сақтау</string>
+    <string name="new_folder">Жаңа қалта</string>
+    <string name="view_style">Көрсету стилі</string>
+    <string name="there_already_file_with_that_name">Мұндай атаулы файл бұрыннан бар</string>
+    <string name="cut">Қию</string>
+    <string name="copying_files">Файлдар көшірілуде…</string>
+    <string name="removing_files">Файлдар жойылуда…</string>
+    <string name="disable_mouse_input">Тышқан енгізуін өшіру</string>
+    <string name="move_cursor_to_touchpoint">Курсорды жанасу нүктесіне жылжыту</string>
+    <string name="sync_every_frame">Әр кадрды синхрондау</string>
+    <string name="dpi_font_size">DPI (қаріп өлшемі)</string>
+    <string name="preferred_input_api">Артықшылықты енгізу API</string>
+    <string name="file_manager">Файл менеджері</string>
+    <string name="documents">Құжаттар</string>
+    <string name="items">элемент</string>
+    <string name="you_cannot_paste_files_here">Файлдарды осында қою мүмкін емес</string>
+    <string name="information">Ақпарат</string>
+    <string name="rename">Атауын өзгерту</string>
+    <string name="location">Орналасқан жері</string>
+    <string name="file">Файл</string>
+    <string name="folder">Қалта</string>
+    <string name="size">Өлшемі</string>
+    <string name="modified">Өзгертілген</string>
+    <string name="contains">Мазмұны</string>
+    <string name="favorites">Таңдаулылар</string>
+    <string name="add_to_favorites">Таңдаулыларға қосу</string>
+    <string name="file_added_to_favorites">Файл таңдаулыларға қосылды</string>
+    <string name="game_controllers">Ойын контроллерлері</string>
+    <string name="home">Басты бет</string>
+    <string name="custom_device">Өзгертілген құрылғы</string>
+    <string name="reinstall_system_files">Жүйелік файлдарды қайта орнату</string>
+    <string name="do_you_want_to_reinstall_system_files">Жүйелік файлдарды қайта орнату керек пе?</string>
+    <string name="mouse">Тышқан</string>
+    <string name="cursor_size">Курсор өлшемі</string>
+    <string name="color">Түс</string>
+    <string name="volume">Дыбыс деңгейі</string>
+    <string name="average_latency">Орташа кідіріс</string>
+    <string name="performance_mode">Өнімділік режимі</string>
+    <string name="audio">Аудио</string>
+    <string name="opengl_version">OpenGL нұсқасы</string>
+    <string name="disable_vertex_array_bgra">BGRA төбе массивін өшіру</string>
+    <string name="screen_effect">Экран эффекті</string>
+    <string name="enable_fxaa">FXAA қосу</string>
+    <string name="brightness">Жарықтық</string>
+    <string name="contrast">Контраст</string>
+    <string name="gamma">Гамма</string>
+    <string name="color_adjustment">Түс түзету</string>
+    <string name="reset">Қалпына келтіру</string>
+    <string name="enable_crt_shader">CRT шейдерін қосу</string>
+    <string name="open_directory">Каталогты ашу</string>
+    <string name="locations">Орындар</string>
+    <string name="downloads">Жүктелгендер</string>
+    <string name="internal_storage">Ішкі жад</string>
+    <string name="windows_version">Windows нұсқасы</string>
+    <string name="install_component">Компонентті орнату</string>
+    <string name="open_android_browser_from_wine">Wine-дан Android браузерін ашу</string>
+    <string name="use_android_clipboard_on_Wine">Wine-да Android алмасу буферін пайдалану</string>
+    <string name="capture_pointer_on_external_mouse">Сыртқы тышқан кезінде меңзерді ұстап алу</string>
+    <string name="there_are_no_items_to_download">Жүктелетін элементтер жоқ</string>
+    <string name="enable_direct_rendering">Тікелей рендерлеуді қосу</string>
+    <string name="d3d_feature_level">D3D мүмкіндік деңгейі</string>
+    <string name="system_font">Жүйелік қаріп</string>
+    <string name="vulkan_version">Vulkan нұсқасы</string>
+    <string name="exposed_extensions">Қолжетімді кеңейтімдер</string>
+    <string name="multiselection_combobox_display_text">%d элементтің %d-і</string>
+    <string name="voltage">Кернеу</string>
+    <string name="current">Ток</string>
+    <string name="capacity">Сыйымдылық</string>
+    <string name="sound">Дыбыс</string>
+    <string name="midi_soundfont">MIDI SoundFont</string>
+    <string name="instrument">Аспап</string>
+    <string name="channel">Арна</string>
+    <string name="note">Нота</string>
+    <string name="move_mouse_when_pressed">Басқанда тышқанды жылжыту</string>
+    <string name="midi_input_device">MIDI енгізу құрылғысы</string>
+    <string name="auto">Авто</string>
+    <string name="active_windows">Белсенді терезелер</string>
+    <string name="show_desktop">Жұмыс үстелін көрсету</string>
+    <string name="language">Тіл</string>
+    <string name="image_cache_size">Кескін кэшінің өлшемі</string>
+    <string name="pip_mode">PiP режимі</string>
+    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
+    <string name="resource_memory_type">Ресурс жадының түрі</string>
+    <string name="zero_no_limit">0 (шектеусіз)</string>
+    <string name="custom">Өзгертілген</string>
+    <string name="minimal">Минималды</string>
+    <string name="trace">Трассировка</string>
+    <string name="builtin_wine">Кірістірілген (Wine)</string>
+    <string name="native_windows">Жергілікті (Windows)</string>
+    <string name="light">Ашық</string>
+    <string name="dark">Қараңғы</string>
+    <string name="image">Кескін</string>
+    <string name="solid_color">Бір түсті</string>
+    <string name="startup_selection_normal">Қалыпты (барлық қызметтерді жүктеу)</string>
+    <string name="startup_selection_essential">Негізгі (тек қажетті қызметтерді жүктеу)</string>
+    <string name="startup_selection_aggressive">Агрессивті (іске қосу кезінде қызметтерді тоқтату)</string>
+    <string name="both">Екеуі де</string>
+    <string name="low_latency">Төмен кідіріс</string>
+    <string name="power_saving">Қуатты үнемдеу</string>
+    <string name="player">Ойыншы</string>
+    <string name="gamepad">Геймпад</string>
+    <string name="enable_vibration">Діріл қосу</string>
+    <string name="mode">Режим</string>
+    <string name="external_controller">Сыртқы контроллер</string>
+    <string name="controls_profile">Басқару профилі</string>
+    <string name="do_you_want_to_reset_configurations">Конфигурацияларды қалпына келтіру керек пе?</string>
+    <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Параметрлер өзгертілді. Бағдарламаны қайта іске қосу керек пе?</string>
+    <string name="hud_mode">HUD режимі</string>
+    <string name="simple_fps">Қарапайым (FPS)</string>
+    <string name="full">Толық</string>
+    <string name="ddraw_wrapper" translatable="false">DDraw Wrapper</string>
+    <string name="renderer">Рендерер</string>
+</resources>
