@@ -1,4 +1,4 @@
-name: Build WinlatorUA
+name: Build Factorio
 on: [workflow_dispatch] # Теперь только кнопка в Actions
 
 jobs:
@@ -37,5 +37,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: WinlatorUA-debug
+          name: Factorio
           path: ./**/build/outputs/apk/debug/*.apk
