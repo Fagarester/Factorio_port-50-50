@@ -1,7 +1,0 @@
-{
-    "ICD": {
-        "api_version": "1.1.128",
-        "library_path": "/data/data/com.factorio/files/rootfs/lib/libvulkan_vortek.so"
-    },
-    "file_format_version": "1.0.0"
-}
