@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Removed from the side menu (res/menu/xserver_menu.xml); ids kept so the activity code still compiles -->
+    <item name="menu_item_toggle_fullscreen" type="id" />
+    <item name="menu_item_task_manager" type="id" />
+    <item name="menu_item_active_windows" type="id" />
+    <item name="menu_item_magnifier" type="id" />
+</resources>

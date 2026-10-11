@@ -1,0 +1,190 @@
+package com.factorio;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
+
+import com.google.android.material.navigation.NavigationView;
+import com.factorio.contentdialog.ContentDialog;
+import com.factorio.contentdialog.GamepadPlayerConfigDialog;
+import com.factorio.core.AppUtils;
+import com.factorio.core.LocaleHelper;
+import com.factorio.widget.ColorPickerView;
+import com.factorio.widget.LogView;
+import com.factorio.widget.SeekBar;
+import com.factorio.winhandler.GamepadHandler;
+import com.factorio.xenvironment.RootFSInstaller;
+
+public class SettingsFragment extends Fragment {
+    public static final byte APP_THEME_LIGHT = 0;
+    public static final byte APP_THEME_DARK = 1;
+    public static final byte APP_THEME_DARK1 = 2;
+    public static final byte APP_THEME_DARK2 = 3;
+    public static final byte APP_THEME_DARK3 = 4;
+    public static final byte APP_THEME_DARK4 = 5;
+    public static final byte APP_THEME_DARK5 = 6;
+    public static final byte APP_THEME_DARK6 = 7;
+    public static final byte APP_THEME_DARK7 = 8;
+    public static final byte APP_THEME_DARK8 = 9;
+
+    // radio buttons in the order of the APP_THEME_* constants above
+    private static final int[] THEME_BUTTON_IDS = {R.id.RBLight, R.id.RBDark, R.id.RBDark1, R.id.RBDark2, R.id.RBDark3,
+                                                   R.id.RBDark4, R.id.RBDark5, R.id.RBDark6, R.id.RBDark7, R.id.RBDark8};
+    private SharedPreferences preferences;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(R.string.settings);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.settings_fragment, container, false);
+        final Context context = getContext();
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
+        final int oldTheme = Math.max(0, Math.min(THEME_BUTTON_IDS.length - 1, preferences.getInt("app_theme", APP_THEME_DARK6)));
+        rgAppTheme.check(THEME_BUTTON_IDS[oldTheme]);
+
+        final CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
+        cbMoveCursorToTouchpoint.setChecked(preferences.getBoolean("move_cursor_to_touchpoint", false));
+
+        final CheckBox cbCapturePointerOnExternalMouse = view.findViewById(R.id.CBCapturePointerOnExternalMouse);
+        cbCapturePointerOnExternalMouse.setChecked(preferences.getBoolean("capture_pointer_on_external_mouse", true));
+
+        final CheckBox cbEnableDebugLogs = view.findViewById(R.id.CBEnableDebugLogs);
+        cbEnableDebugLogs.setChecked(preferences.getBoolean("enable_debug_logs", false));
+
+        final CheckBox cbSaveLogsToFile = view.findViewById(R.id.CBSaveLogsToFile);
+        cbSaveLogsToFile.setChecked(preferences.getBoolean("save_logs_to_file", false));
+
+        final EditText etLogFile = view.findViewById(R.id.ETLogFile);
+        final String defaultLogPath = LogView.getLogFile().getPath();
+        etLogFile.setText(preferences.getString("log_file", defaultLogPath));
+        etLogFile.setVisibility(cbSaveLogsToFile.isChecked() ? View.VISIBLE : View.GONE);
+        cbSaveLogsToFile.setOnCheckedChangeListener((buttonView, isChecked) -> etLogFile.setVisibility(isChecked ? View.VISIBLE : View.GONE));
+
+        final SeekBar sbCursorSpeed = view.findViewById(R.id.SBCursorSpeed);
+        sbCursorSpeed.setValue(preferences.getFloat("cursor_speed", 1.0f) * 100);
+
+        final SeekBar sbCursorSize = view.findViewById(R.id.SBCursorSize);
+        sbCursorSize.setValue(preferences.getFloat("cursor_scale", 1.0f) * 100);
+
+        final ColorPickerView cpvCursorColor = view.findViewById(R.id.CPVCursorColor);
+        cpvCursorColor.setPalette(0xffffff, 0x000000, 0x651fff, 0xffea00, 0xff9100, 0xf50057, 0x00b0ff, 0x1de9b6);
+        cpvCursorColor.setColor(preferences.getInt("cursor_color", 0xffffff));
+
+        final Spinner sPreferredInputApi = view.findViewById(R.id.SPreferredInputApi);
+        sPreferredInputApi.setSelection(preferences.getInt("preferred_input_api", GamepadHandler.PreferredInputApi.AUTO.ordinal()));
+
+        final Spinner sLanguage = view.findViewById(R.id.SLanguage);
+        sLanguage.setSelection(LocaleHelper.getLocaleIndex(context));
+        final int oldLCIndex = sLanguage.getSelectedItemPosition();
+
+        view.findViewById(R.id.BTReinstallSystemFiles).setOnClickListener((v) -> {
+            ContentDialog.confirm(context, R.string.do_you_want_to_reinstall_system_files, () -> RootFSInstaller.install((MainActivity)getActivity()));
+        });
+
+        loadGamepadPlayerConfigs(view);
+
+        view.findViewById(R.id.BTConfirm).setOnClickListener((v) -> {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("move_cursor_to_touchpoint", cbMoveCursorToTouchpoint.isChecked());
+            editor.putBoolean("capture_pointer_on_external_mouse", cbCapturePointerOnExternalMouse.isChecked());
+            editor.putFloat("cursor_speed", sbCursorSpeed.getValue() / 100.0f);
+            editor.putFloat("cursor_scale", sbCursorSize.getValue() / 100.0f);
+            editor.putInt("cursor_color", cpvCursorColor.getColor());
+            editor.putBoolean("enable_debug_logs", cbEnableDebugLogs.isChecked());
+            editor.putBoolean("save_logs_to_file", cbSaveLogsToFile.isChecked());
+            editor.putInt("preferred_input_api", sPreferredInputApi.getSelectedItemPosition());
+            putGamepadPlayerConfigs(view, editor);
+
+            int newTheme = oldTheme;
+            int checkedId = rgAppTheme.getCheckedRadioButtonId();
+            for (int i = 0; i < THEME_BUTTON_IDS.length; i++) {
+                if (THEME_BUTTON_IDS[i] == checkedId) {
+                    newTheme = i;
+                    break;
+                }
+            }
+            editor.putInt("app_theme", newTheme);
+
+            int newLCIndex = sLanguage.getSelectedItemPosition();
+            editor.putInt("lc_index", newLCIndex);
+            boolean restartApp = oldLCIndex != newLCIndex || oldTheme != newTheme;
+
+            String logPath = etLogFile.getText().toString().trim();
+            if (!logPath.equals(defaultLogPath) && !logPath.isEmpty()) {
+                editor.putString("log_file", logPath);
+            }
+            else editor.remove("log_file");
+
+            if (editor.commit()) {
+                if (!restartApp) {
+                    NavigationView navigationView = getActivity().findViewById(R.id.NavigationView);
+                    navigationView.setCheckedItem(R.id.menu_item_containers);
+                    FragmentManager fragmentManager = getParentFragmentManager();
+                    fragmentManager.beginTransaction()
+                        .replace(R.id.FLFragmentContainer, new ContainersFragment())
+                        .commit();
+                }
+                else AppUtils.restartActivity(getActivity());
+            }
+        });
+
+        return view;
+    }
+
+    private void loadGamepadPlayerConfigs(View view) {
+        LinearLayout container = view.findViewById(R.id.LLGamepadPlayer);
+        view.findViewById(R.id.BTResetGamepadPlayerConfigs).setOnClickListener((v) -> {
+            ContentDialog.confirm(v.getContext(), R.string.do_you_want_to_reset_configurations, () -> {
+                for (int i = 0; i < container.getChildCount(); i++) container.getChildAt(i).setTag("");
+            });
+        });
+
+        for (int i = 0; i < container.getChildCount(); i++) {
+            final View child = container.getChildAt(i);
+            child.setTag(preferences.getString("gamepad_player"+i, ""));
+            final byte slot = (byte)i;
+            child.setOnClickListener((v) -> (new GamepadPlayerConfigDialog(child, slot)).show());
+        }
+    }
+
+    private void putGamepadPlayerConfigs(View view, SharedPreferences.Editor editor) {
+        LinearLayout container = view.findViewById(R.id.LLGamepadPlayer);
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View child = container.getChildAt(i);
+            String config = child.getTag().toString();
+            String key = "gamepad_player"+i;
+            if (!config.isEmpty()) {
+                editor.putString(key, child.getTag().toString());
+            }
+            else editor.remove(key);
+        }
+    }
+}
