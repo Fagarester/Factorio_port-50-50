@@ -3,8 +3,8 @@ package com.factorio.container;
 import android.content.Context;
 import android.os.Handler;
 
-import com.factorio.R;
 import com.factorio.core.Callback;
+import com.factorio.core.EnvVars;
 import com.factorio.core.FileUtils;
 import com.factorio.xenvironment.RootFS;
 
@@ -75,22 +75,6 @@ public class ContainerManager {
         });
     }
 
-    public void duplicateContainerAsync(Container container, Runnable callback) {
-        final Handler handler = new Handler();
-        Executors.newSingleThreadExecutor().execute(() -> {
-            duplicateContainer(container);
-            handler.post(callback);
-        });
-    }
-
-    public void removeContainerAsync(Container container, Runnable callback) {
-        final Handler handler = new Handler();
-        Executors.newSingleThreadExecutor().execute(() -> {
-            removeContainer(container);
-            handler.post(callback);
-        });
-    }
-
     private Container createContainer(JSONObject data) {
         try {
             int id = maxContainerId + 1;
@@ -112,34 +96,16 @@ public class ContainerManager {
         return null;
     }
 
-    private void duplicateContainer(Container srcContainer) {
-        int id = maxContainerId + 1;
-
-        File dstDir = new File(homeDir, RootFS.USER+"-"+id);
-        if (!dstDir.mkdirs()) return;
-
-        if (!FileUtils.copy(srcContainer.getRootDir(), dstDir, (file) -> FileUtils.chmod(file, 0771))) {
-            FileUtils.delete(dstDir);
-            return;
+    /**
+     * The app has a single built-in container (the game). Prefers the one that has NATIVE_EXEC,
+     * falls back to the first one, or null when nothing has been created yet.
+     */
+    public Container getMainContainer() {
+        for (Container container : containers) {
+            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
+            if (nativeExec != null && !nativeExec.isEmpty()) return container;
         }
-
-        Container dstContainer = new Container(id);
-        dstContainer.setRootDir(dstDir);
-        dstContainer.setName(srcContainer.getName()+" ("+context.getString(R.string.copy)+")");
-        dstContainer.setScreenSize(srcContainer.getScreenSize());
-        dstContainer.setEnvVars(srcContainer.getEnvVars());
-        dstContainer.setGraphicsDriver(srcContainer.getGraphicsDriver());
-        dstContainer.setGraphicsDriverConfig(srcContainer.getGraphicsDriverConfig());
-        dstContainer.setAudioDriver(srcContainer.getAudioDriver());
-        dstContainer.setAudioDriverConfig(srcContainer.getAudioDriverConfig());
-        dstContainer.saveData();
-
-        maxContainerId++;
-        containers.add(dstContainer);
-    }
-
-    private void removeContainer(Container container) {
-        if (FileUtils.delete(container.getRootDir())) containers.remove(container);
+        return containers.isEmpty() ? null : containers.get(0);
     }
 
     public int getNextContainerId() {

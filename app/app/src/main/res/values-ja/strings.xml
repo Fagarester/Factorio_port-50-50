@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">編集</string>
-    <string name="remove">削除</string>
     <string name="add">追加</string>
-    <string name="containers">コンテナ</string>
     <string name="input_controls">入力コントロール</string>
     <string name="no_items_to_display">表示するアイテムがありません</string>
-    <string name="new_container">新しいコンテナ</string>
-    <string name="edit_container">コンテナを編集</string>
-    <string name="creating_container">コンテナを作成中...</string>
-    <string name="removing_container">コンテナを削除中...</string>
-    <string name="duplicating_container">コンテナを複製中...</string>
     <string name="installing_system_files">システムファイルをインストール中...</string>
     <string name="starting_up">起動中...</string>
     <string name="unable_to_install_system_files">システムファイルをインストールできません</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">プロファイルが選択されていません</string>
     <string name="do_you_want_to_remove_this_profile">このプロファイルを削除しますか？</string>
     <string name="do_you_want_to_duplicate_this_profile">このプロファイルを複製しますか？</string>
-    <string name="do_you_want_to_remove_this_container">このコンテナを削除しますか？</string>
-    <string name="do_you_want_to_duplicate_this_container">このコンテナを複製しますか？</string>
     <string name="do_you_want_to_remove_this_controller">このコントローラーを削除しますか？</string>
     <string name="do_you_want_to_remove_this_component_version">このコンポーネントバージョンを削除しますか？</string>
     <string name="controls_editor">コントロールエディター</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">2本指でタップして移動</string>
     <string name="touchpad_help_main_menu_title">メインメニュー</string>
     <string name="touchpad_help_main_menu_description">4本指でタップ</string>
-    <string name="duplicate">複製</string>
     <string name="external_controllers">外部コントローラー</string>
     <string name="graphics_driver">グラフィックスドライバー</string>
     <string name="audio_driver">オーディオドライバー</string>
@@ -78,12 +67,6 @@
     <string name="settings">設定</string>
     <string name="range">範囲</string>
     <string name="version">バージョン</string>
-    <string name="storage_info">ストレージ情報</string>
-    <string name="drive_c">ドライブ C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">合計</string>
-    <string name="clear_cache">キャッシュをクリア</string>
-    <string name="estimated_used_space">推定使用容量</string>
     <string name="advanced">詳細設定</string>
     <string name="system">システム</string>
     <string name="width">幅</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">選択したプロファイルをダウンロードしますか？</string>
     <string name="downloading_file">ファイルをダウンロード中...</string>
     <string name="a_network_error_occurred">ネットワークエラーが発生しました</string>
-    <string name="copy">コピー</string>
     <string name="you_cannot_remove_this_component_version">このコンポーネントバージョンは削除できません</string>
     <string name="columns">列</string>
     <string name="theme">テーマ</string>

@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Editar</string>
-    <string name="remove">Eliminar</string>
     <string name="add">Añadir</string>
-    <string name="containers">Contenedores</string>
     <string name="input_controls">Controles de entrada</string>
     <string name="no_items_to_display">No hay elementos para mostrar</string>
-    <string name="new_container">Nuevo contenedor</string>
-    <string name="edit_container">Editar contenedor</string>
-    <string name="creating_container">Creando contenedor…</string>
-    <string name="removing_container">Eliminando contenedor…</string>
-    <string name="duplicating_container">Duplicando contenedor…</string>
     <string name="installing_system_files">Instalando archivos del sistema…</string>
     <string name="starting_up">Iniciando…</string>
     <string name="unable_to_install_system_files">No se pueden instalar los archivos del sistema</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Ningún perfil seleccionado</string>
     <string name="do_you_want_to_remove_this_profile">¿Deseas eliminar este perfil?</string>
     <string name="do_you_want_to_duplicate_this_profile">¿Deseas duplicar este perfil?</string>
-    <string name="do_you_want_to_remove_this_container">¿Deseas eliminar este contenedor?</string>
-    <string name="do_you_want_to_duplicate_this_container">¿Deseas duplicar este contenedor?</string>
     <string name="do_you_want_to_remove_this_controller">¿Deseas eliminar este controlador?</string>
     <string name="do_you_want_to_remove_this_component_version">¿Deseas eliminar esta versión del componente?</string>
     <string name="controls_editor">Editor de controles</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Toque con dos dedos y desliza</string>
     <string name="touchpad_help_main_menu_title">Menú principal</string>
     <string name="touchpad_help_main_menu_description">Toque con cuatro dedos</string>
-    <string name="duplicate">Duplicar</string>
     <string name="external_controllers">Controladores externos</string>
     <string name="graphics_driver">Controlador gráfico</string>
     <string name="audio_driver">Controlador de audio</string>
@@ -78,12 +67,6 @@
     <string name="settings">Ajustes</string>
     <string name="range">Rango</string>
     <string name="version">Versión</string>
-    <string name="storage_info">Información de almacenamiento</string>
-    <string name="drive_c">Unidad C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Total</string>
-    <string name="clear_cache">Limpiar caché</string>
-    <string name="estimated_used_space">Espacio usado estimado</string>
     <string name="advanced">Avanzado</string>
     <string name="system">Sistema</string>
     <string name="width">Anchura</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">¿Deseas descargar los perfiles seleccionados?</string>
     <string name="downloading_file">Descargando archivo…</string>
     <string name="a_network_error_occurred">Se produjo un error de red</string>
-    <string name="copy">Copiar</string>
     <string name="you_cannot_remove_this_component_version">No se puede eliminar esta versión del componente</string>
     <string name="columns">Columnas</string>
     <string name="theme">Tema</string>

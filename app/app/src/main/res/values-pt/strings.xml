@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Editar</string>
-    <string name="remove">Remover</string>
     <string name="add">Adicionar</string>
-    <string name="containers">Containers</string>
     <string name="input_controls">Controles de Entrada</string>
     <string name="no_items_to_display">Nenhum item para exibir</string>
-    <string name="new_container">Novo Container</string>
-    <string name="edit_container">Editar Container</string>
-    <string name="creating_container">Criando Container...</string>
-    <string name="removing_container">Removendo Container...</string>
-    <string name="duplicating_container">Duplicando Container...</string>
     <string name="installing_system_files">Instalando Arquivos do Sistema...</string>
     <string name="starting_up">Iniciando...</string>
     <string name="unable_to_install_system_files">Não foi possível instalar arquivos do sistema</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Nenhum perfil selecionado</string>
     <string name="do_you_want_to_remove_this_profile">Você deseja remover este perfil?</string>
     <string name="do_you_want_to_duplicate_this_profile">Você deseja duplicar este perfil?</string>
-    <string name="do_you_want_to_remove_this_container">Você deseja remover este container?</string>
-    <string name="do_you_want_to_duplicate_this_container">Você deseja duplicar este container?</string>
     <string name="do_you_want_to_remove_this_controller">Você deseja remover este controlador?</string>
     <string name="do_you_want_to_remove_this_component_version">Você deseja remover esta versão do componente?</string>
     <string name="controls_editor">Editor de Controles</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Toque com dois dedos e mova</string>
     <string name="touchpad_help_main_menu_title">Menu Principal</string>
     <string name="touchpad_help_main_menu_description">Toque com quatro dedos</string>
-    <string name="duplicate">Duplicar</string>
     <string name="external_controllers">Controles Externos</string>
     <string name="graphics_driver">Driver Gráfico</string>
     <string name="audio_driver">Driver de Áudio</string>
@@ -78,11 +67,6 @@
     <string name="settings">Configurações</string>
     <string name="range">Faixa</string>
     <string name="version">Versão</string>
-    <string name="storage_info">Informações de Armazenamento</string>
-    <string name="drive_c">Unidade C:</string>
-    <string name="total">Total</string>
-    <string name="clear_cache">Limpar Cache</string>
-    <string name="estimated_used_space">Espaço Usado (Estimado)</string>
     <string name="advanced">Avançado</string>
     <string name="system">Sistema</string>
     <string name="width">Largura</string>
@@ -95,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Você deseja baixar os perfis selecionados?</string>
     <string name="downloading_file">Baixando Arquivo...</string>
     <string name="a_network_error_occurred">Ocorreu um erro de rede</string>
-    <string name="copy">Copiar</string>
     <string name="you_cannot_remove_this_component_version">Você não pode remover esta versão de componente</string>
     <string name="columns">Colunas</string>
     <string name="theme">Tema</string>

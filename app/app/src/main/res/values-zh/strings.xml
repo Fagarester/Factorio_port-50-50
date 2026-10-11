@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">编辑</string>
-    <string name="remove">删除</string>
     <string name="add">添加</string>
-    <string name="containers">容器</string>
     <string name="input_controls">输入控制</string>
     <string name="no_items_to_display">无可显示项目</string>
-    <string name="new_container">新建容器</string>
-    <string name="edit_container">编辑容器</string>
-    <string name="creating_container">正在创建容器...</string>
-    <string name="removing_container">正在删除容器...</string>
-    <string name="duplicating_container">正在复制容器...</string>
     <string name="installing_system_files">正在安装系统文件...</string>
     <string name="starting_up">正在启动...</string>
     <string name="unable_to_install_system_files">无法安装系统文件</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">未选择配置文件</string>
     <string name="do_you_want_to_remove_this_profile">是否删除此配置文件？</string>
     <string name="do_you_want_to_duplicate_this_profile">是否复制此配置文件？</string>
-    <string name="do_you_want_to_remove_this_container">是否删除此容器？</string>
-    <string name="do_you_want_to_duplicate_this_container">是否复制此容器？</string>
     <string name="do_you_want_to_remove_this_controller">是否删除此控制器？</string>
     <string name="do_you_want_to_remove_this_component_version">是否删除此组件版本？</string>
     <string name="controls_editor">控制编辑器</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">双指按住并滑动</string>
     <string name="touchpad_help_main_menu_title">主菜单</string>
     <string name="touchpad_help_main_menu_description">四指轻触</string>
-    <string name="duplicate">复制</string>
     <string name="external_controllers">外部控制器</string>
     <string name="graphics_driver">图形驱动</string>
     <string name="audio_driver">音频驱动</string>
@@ -78,12 +67,6 @@
     <string name="settings">设置</string>
     <string name="range">范围</string>
     <string name="version">版本</string>
-    <string name="storage_info">存储信息</string>
-    <string name="drive_c">C 盘:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">总计</string>
-    <string name="clear_cache">清除缓存</string>
-    <string name="estimated_used_space">预计已用空间</string>
     <string name="advanced">高级</string>
     <string name="system">系统</string>
     <string name="width">宽度</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">是否下载所选配置文件？</string>
     <string name="downloading_file">正在下载文件...</string>
     <string name="a_network_error_occurred">发生网络错误</string>
-    <string name="copy">复制</string>
     <string name="you_cannot_remove_this_component_version">无法删除此组件版本</string>
     <string name="columns">列</string>
     <string name="theme">主题</string>

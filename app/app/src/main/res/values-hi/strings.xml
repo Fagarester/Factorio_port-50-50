@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">संपादित करें</string>
-    <string name="remove">हटाएँ</string>
     <string name="add">जोड़ें</string>
-    <string name="containers">कंटेनर</string>
     <string name="input_controls">इनपुट नियंत्रण</string>
     <string name="no_items_to_display">दिखाने के लिए कोई आइटम नहीं</string>
-    <string name="new_container">नया कंटेनर</string>
-    <string name="edit_container">कंटेनर संपादित करें</string>
-    <string name="creating_container">कंटेनर बनाया जा रहा है…</string>
-    <string name="removing_container">कंटेनर हटाया जा रहा है…</string>
-    <string name="duplicating_container">कंटेनर डुप्लिकेट किया जा रहा है…</string>
     <string name="installing_system_files">सिस्टम फ़ाइलें इंस्टॉल हो रही हैं…</string>
     <string name="starting_up">शुरू हो रहा है…</string>
     <string name="unable_to_install_system_files">सिस्टम फ़ाइलें इंस्टॉल नहीं हो सकीं</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">कोई प्रोफ़ाइल नहीं चुनी गई</string>
     <string name="do_you_want_to_remove_this_profile">क्या आप इस प्रोफ़ाइल को हटाना चाहते हैं?</string>
     <string name="do_you_want_to_duplicate_this_profile">क्या आप इस प्रोफ़ाइल को डुप्लिकेट करना चाहते हैं?</string>
-    <string name="do_you_want_to_remove_this_container">क्या आप इस कंटेनर को हटाना चाहते हैं?</string>
-    <string name="do_you_want_to_duplicate_this_container">क्या आप इस कंटेनर को डुप्लिकेट करना चाहते हैं?</string>
     <string name="do_you_want_to_remove_this_controller">क्या आप इस कंट्रोलर को हटाना चाहते हैं?</string>
     <string name="do_you_want_to_remove_this_component_version">क्या आप इस घटक संस्करण को हटाना चाहते हैं?</string>
     <string name="controls_editor">नियंत्रण संपादक</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">दो उँगलियों से स्पर्श और खिसकाएँ</string>
     <string name="touchpad_help_main_menu_title">मुख्य मेनू</string>
     <string name="touchpad_help_main_menu_description">चार उँगलियों से स्पर्श</string>
-    <string name="duplicate">डुप्लिकेट करें</string>
     <string name="external_controllers">बाहरी कंट्रोलर</string>
     <string name="graphics_driver">ग्राफ़िक्स ड्राइवर</string>
     <string name="audio_driver">ऑडियो ड्राइवर</string>
@@ -78,12 +67,6 @@
     <string name="settings">सेटिंग्स</string>
     <string name="range">सीमा</string>
     <string name="version">संस्करण</string>
-    <string name="storage_info">संग्रहण जानकारी</string>
-    <string name="drive_c">ड्राइव C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">कुल</string>
-    <string name="clear_cache">कैश साफ़ करें</string>
-    <string name="estimated_used_space">अनुमानित उपयोग किया गया स्थान</string>
     <string name="advanced">उन्नत</string>
     <string name="system">सिस्टम</string>
     <string name="width">चौड़ाई</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">क्या आप चुनी गई प्रोफ़ाइल डाउनलोड करना चाहते हैं?</string>
     <string name="downloading_file">फ़ाइल डाउनलोड हो रही है…</string>
     <string name="a_network_error_occurred">नेटवर्क त्रुटि हुई</string>
-    <string name="copy">कॉपी करें</string>
     <string name="you_cannot_remove_this_component_version">इस घटक संस्करण को नहीं हटाया जा सकता</string>
     <string name="columns">कॉलम</string>
     <string name="theme">थीम</string>

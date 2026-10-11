@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">편집</string>
-    <string name="remove">제거</string>
     <string name="add">추가</string>
-    <string name="containers">컨테이너</string>
     <string name="input_controls">입력 컨트롤</string>
     <string name="no_items_to_display">표시할 항목이 없습니다</string>
-    <string name="new_container">새 컨테이너</string>
-    <string name="edit_container">컨테이너 편집</string>
-    <string name="creating_container">컨테이너 생성 중...</string>
-    <string name="removing_container">컨테이너 제거 중...</string>
-    <string name="duplicating_container">컨테이너 복제 중...</string>
     <string name="installing_system_files">시스템 파일 설치 중...</string>
     <string name="starting_up">시작 중...</string>
     <string name="unable_to_install_system_files">시스템 파일을 설치할 수 없습니다</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">선택된 프로필이 없습니다</string>
     <string name="do_you_want_to_remove_this_profile">이 프로필을 제거하시겠습니까?</string>
     <string name="do_you_want_to_duplicate_this_profile">이 프로필을 복제하시겠습니까?</string>
-    <string name="do_you_want_to_remove_this_container">이 컨테이너를 제거하시겠습니까?</string>
-    <string name="do_you_want_to_duplicate_this_container">이 컨테이너를 복제하시겠습니까?</string>
     <string name="do_you_want_to_remove_this_controller">이 컨트롤러를 제거하시겠습니까?</string>
     <string name="do_you_want_to_remove_this_component_version">이 컴포넌트 버전을 제거하시겠습니까?</string>
     <string name="controls_editor">컨트롤 편집기</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">두 손가락으로 탭하고 이동</string>
     <string name="touchpad_help_main_menu_title">메인 메뉴</string>
     <string name="touchpad_help_main_menu_description">네 손가락으로 탭</string>
-    <string name="duplicate">복제</string>
     <string name="external_controllers">외부 컨트롤러</string>
     <string name="graphics_driver">그래픽 드라이버</string>
     <string name="audio_driver">오디오 드라이버</string>
@@ -78,12 +67,6 @@
     <string name="settings">설정</string>
     <string name="range">범위</string>
     <string name="version">버전</string>
-    <string name="storage_info">저장소 정보</string>
-    <string name="drive_c">드라이브 C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">전체</string>
-    <string name="clear_cache">캐시 지우기</string>
-    <string name="estimated_used_space">예상 사용 공간</string>
     <string name="advanced">고급 설정</string>
     <string name="system">시스템</string>
     <string name="width">너비</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">선택한 프로필을 다운로드하시겠습니까?</string>
     <string name="downloading_file">파일 다운로드 중...</string>
     <string name="a_network_error_occurred">네트워크 오류가 발생했습니다</string>
-    <string name="copy">복사</string>
     <string name="you_cannot_remove_this_component_version">이 컴포넌트 버전은 제거할 수 없습니다</string>
     <string name="columns">열</string>
     <string name="theme">테마</string>

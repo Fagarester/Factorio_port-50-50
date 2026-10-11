@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Рэдагаваць</string>
-    <string name="remove">Выдаліць</string>
     <string name="add">Дадаць</string>
-    <string name="containers">Кантэйнеры</string>
     <string name="input_controls">Элементы кіравання</string>
     <string name="no_items_to_display">Няма элементаў для адлюстравання</string>
-    <string name="new_container">Новы кантэйнер</string>
-    <string name="edit_container">Рэдагаваць кантэйнер</string>
-    <string name="creating_container">Стварэнне кантэйнера…</string>
-    <string name="removing_container">Выдаленне кантэйнера…</string>
-    <string name="duplicating_container">Дубліраванне кантэйнера…</string>
     <string name="installing_system_files">Усталёўка сістэмных файлаў…</string>
     <string name="starting_up">Запуск…</string>
     <string name="unable_to_install_system_files">Не ўдалося ўсталяваць сістэмныя файлы</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Профіль не абраны</string>
     <string name="do_you_want_to_remove_this_profile">Выдаліць гэты профіль?</string>
     <string name="do_you_want_to_duplicate_this_profile">Дубліраваць гэты профіль?</string>
-    <string name="do_you_want_to_remove_this_container">Выдаліць гэты кантэйнер?</string>
-    <string name="do_you_want_to_duplicate_this_container">Дубліраваць гэты кантэйнер?</string>
     <string name="do_you_want_to_remove_this_controller">Выдаліць гэты кантролер?</string>
     <string name="do_you_want_to_remove_this_component_version">Выдаліць гэтую версію кампанента?</string>
     <string name="controls_editor">Рэдактар кіравання</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Дотык двума пальцамі і рух</string>
     <string name="touchpad_help_main_menu_title">Галоўнае меню</string>
     <string name="touchpad_help_main_menu_description">Дотык чатырма пальцамі</string>
-    <string name="duplicate">Дубліраваць</string>
     <string name="external_controllers">Знешнія кантролеры</string>
     <string name="graphics_driver">Графічны драйвер</string>
     <string name="audio_driver">Аўдыядрайвер</string>
@@ -78,12 +67,6 @@
     <string name="settings">Налады</string>
     <string name="range">Дыяпазон</string>
     <string name="version">Версія</string>
-    <string name="storage_info">Звесткі аб сховішчы</string>
-    <string name="drive_c">Дыск C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Усяго</string>
-    <string name="clear_cache">Ачысціць кэш</string>
-    <string name="estimated_used_space">Прыблізна выкарыстана месца</string>
     <string name="advanced">Дадаткова</string>
     <string name="system">Сістэма</string>
     <string name="width">Шырыня</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Спампаваць абраныя профілі?</string>
     <string name="downloading_file">Спампоўка файла…</string>
     <string name="a_network_error_occurred">Узнікла памылка сеткі</string>
-    <string name="copy">Капіяваць</string>
     <string name="you_cannot_remove_this_component_version">Немагчыма выдаліць гэтую версію кампанента</string>
     <string name="columns">Слупкі</string>
     <string name="theme">Тэма</string>

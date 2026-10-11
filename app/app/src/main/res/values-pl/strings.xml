@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Edytuj</string>
-    <string name="remove">Usuń</string>
     <string name="add">Dodaj</string>
-    <string name="containers">Kontenery</string>
     <string name="input_controls">Sterowanie wejściem</string>
     <string name="no_items_to_display">Brak elementów do wyświetlenia</string>
-    <string name="new_container">Nowy kontener</string>
-    <string name="edit_container">Edytuj kontener</string>
-    <string name="creating_container">Tworzenie kontenera…</string>
-    <string name="removing_container">Usuwanie kontenera…</string>
-    <string name="duplicating_container">Duplikowanie kontenera…</string>
     <string name="installing_system_files">Instalowanie plików systemowych…</string>
     <string name="starting_up">Uruchamianie…</string>
     <string name="unable_to_install_system_files">Nie można zainstalować plików systemowych</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Nie wybrano profilu</string>
     <string name="do_you_want_to_remove_this_profile">Czy chcesz usunąć ten profil?</string>
     <string name="do_you_want_to_duplicate_this_profile">Czy chcesz zduplikować ten profil?</string>
-    <string name="do_you_want_to_remove_this_container">Czy chcesz usunąć ten kontener?</string>
-    <string name="do_you_want_to_duplicate_this_container">Czy chcesz zduplikować ten kontener?</string>
     <string name="do_you_want_to_remove_this_controller">Czy chcesz usunąć ten kontroler?</string>
     <string name="do_you_want_to_remove_this_component_version">Czy chcesz usunąć tę wersję komponentu?</string>
     <string name="controls_editor">Edytor sterowania</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Stuknięcie dwoma palcami i przesunięcie</string>
     <string name="touchpad_help_main_menu_title">Menu główne</string>
     <string name="touchpad_help_main_menu_description">Stuknięcie czterema palcami</string>
-    <string name="duplicate">Duplikuj</string>
     <string name="external_controllers">Zewnętrzne kontrolery</string>
     <string name="graphics_driver">Sterownik graficzny</string>
     <string name="audio_driver">Sterownik audio</string>
@@ -78,12 +67,6 @@
     <string name="settings">Ustawienia</string>
     <string name="range">Zakres</string>
     <string name="version">Wersja</string>
-    <string name="storage_info">Informacje o pamięci</string>
-    <string name="drive_c">Dysk C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Łącznie</string>
-    <string name="clear_cache">Wyczyść pamięć podręczną</string>
-    <string name="estimated_used_space">Szacowane zajęte miejsce</string>
     <string name="advanced">Zaawansowane</string>
     <string name="system">System</string>
     <string name="width">Szerokość</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Czy chcesz pobrać wybrane profile?</string>
     <string name="downloading_file">Pobieranie pliku…</string>
     <string name="a_network_error_occurred">Wystąpił błąd sieci</string>
-    <string name="copy">Kopiuj</string>
     <string name="you_cannot_remove_this_component_version">Nie można usunąć tej wersji komponentu</string>
     <string name="columns">Kolumny</string>
     <string name="theme">Motyw</string>

@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Bewerken</string>
-    <string name="remove">Verwijderen</string>
     <string name="add">Toevoegen</string>
-    <string name="containers">Containers</string>
     <string name="input_controls">Invoerbesturingen</string>
     <string name="no_items_to_display">Geen items om weer te geven</string>
-    <string name="new_container">Nieuwe container</string>
-    <string name="edit_container">Container bewerken</string>
-    <string name="creating_container">Container aanmaken...</string>
-    <string name="removing_container">Container verwijderen...</string>
-    <string name="duplicating_container">Container dupliceren...</string>
     <string name="installing_system_files">Systeembestanden installeren...</string>
     <string name="starting_up">Opstarten...</string>
     <string name="unable_to_install_system_files">Kan systeembestanden niet installeren</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Geen profiel geselecteerd</string>
     <string name="do_you_want_to_remove_this_profile">Wilt u dit profiel verwijderen?</string>
     <string name="do_you_want_to_duplicate_this_profile">Wilt u dit profiel dupliceren?</string>
-    <string name="do_you_want_to_remove_this_container">Wilt u deze container verwijderen?</string>
-    <string name="do_you_want_to_duplicate_this_container">Wilt u deze container dupliceren?</string>
     <string name="do_you_want_to_remove_this_controller">Wilt u deze controller verwijderen?</string>
     <string name="do_you_want_to_remove_this_component_version">Wilt u deze componentversie verwijderen?</string>
     <string name="controls_editor">Besturingseditor</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Tikken met twee vingers en bewegen</string>
     <string name="touchpad_help_main_menu_title">Hoofdmenu</string>
     <string name="touchpad_help_main_menu_description">Tikken met vier vingers</string>
-    <string name="duplicate">Dupliceren</string>
     <string name="external_controllers">Externe controllers</string>
     <string name="graphics_driver">Grafisch stuurprogramma</string>
     <string name="audio_driver">Audiostuurprogramma</string>
@@ -78,12 +67,6 @@
     <string name="settings">Instellingen</string>
     <string name="range">Bereik</string>
     <string name="version">Versie</string>
-    <string name="storage_info">Opslaginfo</string>
-    <string name="drive_c">Schijf C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Totaal</string>
-    <string name="clear_cache">Cache wissen</string>
-    <string name="estimated_used_space">Geschatte gebruikte ruimte</string>
     <string name="advanced">Geavanceerd</string>
     <string name="system">Systeem</string>
     <string name="width">Breedte</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Wilt u de geselecteerde profielen downloaden?</string>
     <string name="downloading_file">Bestand downloaden...</string>
     <string name="a_network_error_occurred">Er is een netwerkfout opgetreden</string>
-    <string name="copy">Kopiëren</string>
     <string name="you_cannot_remove_this_component_version">U kunt deze componentversie niet verwijderen</string>
     <string name="columns">Kolommen</string>
     <string name="theme">Thema</string>

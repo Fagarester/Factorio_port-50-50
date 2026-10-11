@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Редагувати</string>
-    <string name="remove">Видалити</string>
     <string name="add">Додати</string>
-    <string name="containers">Контейнери</string>
     <string name="input_controls">Керування введенням</string>
     <string name="no_items_to_display">Немає елементів для відображення</string>
-    <string name="new_container">Новий контейнер</string>
-    <string name="edit_container">Редагувати контейнер</string>
-    <string name="creating_container">Створення контейнера...</string>
-    <string name="removing_container">Видалення контейнера...</string>
-    <string name="duplicating_container">Дублювання контейнера...</string>
     <string name="installing_system_files">Встановлення системних файлів...</string>
     <string name="starting_up">Запуск...</string>
     <string name="unable_to_install_system_files">Неможливо встановити системні файли</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Профіль не вибрано</string>
     <string name="do_you_want_to_remove_this_profile">Ви хочете видалити цей профіль?</string>
     <string name="do_you_want_to_duplicate_this_profile">Ви хочете дублювати цей профіль?</string>
-    <string name="do_you_want_to_remove_this_container">Ви хочете видалити цей контейнер?</string>
-    <string name="do_you_want_to_duplicate_this_container">Ви хочете дублювати цей контейнер?</string>
     <string name="do_you_want_to_remove_this_controller">Ви хочете видалити цей контролер?</string>
     <string name="do_you_want_to_remove_this_component_version">Ви хочете видалити цю версію компонента?</string>
     <string name="controls_editor">Редактор керування</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Натисніть двома пальцями і рухайте</string>
     <string name="touchpad_help_main_menu_title">Головне меню</string>
     <string name="touchpad_help_main_menu_description">Натисніть чотирма пальцями</string>
-    <string name="duplicate">Дублювати</string>
     <string name="external_controllers">Зовнішні контролери</string>
     <string name="graphics_driver">Графічний драйвер</string>
     <string name="audio_driver">Аудіодрайвер</string>
@@ -78,11 +67,6 @@
     <string name="settings">Налаштування</string>
     <string name="range">Діапазон</string>
     <string name="version">Версія</string>
-    <string name="storage_info">Інформація про сховище</string>
-    <string name="drive_c">Диск C:</string>
-    <string name="total">Всього</string>
-    <string name="clear_cache">Очистити кеш</string>
-    <string name="estimated_used_space">Розрахунковий зайнятий простір</string>
     <string name="advanced">Додаткові</string>
     <string name="system">Система</string>
     <string name="width">Ширина</string>
@@ -95,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Бажаєте завантажити вибрані профілі?</string>
     <string name="downloading_file">Завантаження файлу...</string>
     <string name="a_network_error_occurred">Сталася помилка мережі</string>
-    <string name="copy">Копіювати</string>
     <string name="you_cannot_remove_this_component_version">Ви не можете видалити цю версію компонента</string>
     <string name="columns">Стовпці</string>
     <string name="theme">Тема</string>

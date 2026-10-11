@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Düzenle</string>
-    <string name="remove">Kaldır</string>
     <string name="add">Ekle</string>
-    <string name="containers">Kapsayıcılar</string>
     <string name="input_controls">Giriş Kontrolleri</string>
     <string name="no_items_to_display">Görüntülenecek öğe yok</string>
-    <string name="new_container">Yeni Kapsayıcı</string>
-    <string name="edit_container">Kapsayıcıyı Düzenle</string>
-    <string name="creating_container">Kapsayıcı oluşturuluyor...</string>
-    <string name="removing_container">Kapsayıcı kaldırılıyor...</string>
-    <string name="duplicating_container">Kapsayıcı çoğaltılıyor...</string>
     <string name="installing_system_files">Sistem dosyaları yükleniyor...</string>
     <string name="starting_up">Başlatılıyor...</string>
     <string name="unable_to_install_system_files">Sistem dosyaları yüklenemiyor</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Hiçbir profil seçilmedi</string>
     <string name="do_you_want_to_remove_this_profile">Bu profili kaldırmak istiyor musunuz?</string>
     <string name="do_you_want_to_duplicate_this_profile">Bu profili çoğaltmak istiyor musunuz?</string>
-    <string name="do_you_want_to_remove_this_container">Bu kapsayıcıyı kaldırmak istiyor musunuz?</string>
-    <string name="do_you_want_to_duplicate_this_container">Bu kapsayıcıyı çoğaltmak istiyor musunuz?</string>
     <string name="do_you_want_to_remove_this_controller">Bu denetleyiciyi kaldırmak istiyor musunuz?</string>
     <string name="do_you_want_to_remove_this_component_version">Bu bileşen sürümünü kaldırmak istiyor musunuz?</string>
     <string name="controls_editor">Kontrol Düzenleyicisi</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">İki parmakla dokunup kaydırma</string>
     <string name="touchpad_help_main_menu_title">Ana Menü</string>
     <string name="touchpad_help_main_menu_description">Dört parmakla dokunuş</string>
-    <string name="duplicate">Çoğalt</string>
     <string name="external_controllers">Harici Denetleyiciler</string>
     <string name="graphics_driver">Grafik Sürücüsü</string>
     <string name="audio_driver">Ses Sürücüsü</string>
@@ -78,12 +67,6 @@
     <string name="settings">Ayarlar</string>
     <string name="range">Aralık</string>
     <string name="version">Sürüm</string>
-    <string name="storage_info">Depolama Bilgisi</string>
-    <string name="drive_c">C: Sürücüsü</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Toplam</string>
-    <string name="clear_cache">Önbelleği Temizle</string>
-    <string name="estimated_used_space">Tahmini Kullanılan Alan</string>
     <string name="advanced">Gelişmiş</string>
     <string name="system">Sistem</string>
     <string name="width">Genişlik</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Seçili profilleri indirmek istiyor musunuz?</string>
     <string name="downloading_file">Dosya indiriliyor...</string>
     <string name="a_network_error_occurred">Bir ağ hatası oluştu</string>
-    <string name="copy">Kopyala</string>
     <string name="you_cannot_remove_this_component_version">Bu bileşen sürümü kaldırılamaz</string>
     <string name="columns">Sütunlar</string>
     <string name="theme">Tema</string>

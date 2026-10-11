@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Eagar</string>
-    <string name="remove">Bain</string>
     <string name="add">Cuir leis</string>
-    <string name="containers">Coimeádáin</string>
     <string name="input_controls">Rialuithe ionchurtha</string>
     <string name="no_items_to_display">Níl aon mhír le taispeáint</string>
-    <string name="new_container">Coimeádán nua</string>
-    <string name="edit_container">Coimeádán a eagarthóireacht</string>
-    <string name="creating_container">Coimeádán á chruthú...</string>
-    <string name="removing_container">Coimeádán á bhaint...</string>
-    <string name="duplicating_container">Coimeádán á dhúbailt...</string>
     <string name="installing_system_files">Comhaid córais á suiteáil...</string>
     <string name="starting_up">Ag tosú suas...</string>
     <string name="unable_to_install_system_files">Ní féidir comhaid córais a shuiteáil</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Níl aon phróifíl roghnaithe</string>
     <string name="do_you_want_to_remove_this_profile">An bhfuil tú ag iarraidh an phróifíl seo a bhaint?</string>
     <string name="do_you_want_to_duplicate_this_profile">An bhfuil tú ag iarraidh an phróifíl seo a dhúbailt?</string>
-    <string name="do_you_want_to_remove_this_container">An bhfuil tú ag iarraidh an coimeádán seo a bhaint?</string>
-    <string name="do_you_want_to_duplicate_this_container">An bhfuil tú ag iarraidh an coimeádán seo a dhúbailt?</string>
     <string name="do_you_want_to_remove_this_controller">An bhfuil tú ag iarraidh an rialaire seo a bhaint?</string>
     <string name="do_you_want_to_remove_this_component_version">An bhfuil tú ag iarraidh an leagan comhpháirte seo a bhaint?</string>
     <string name="controls_editor">Eagarthóir rialuithe</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Tapáil le dhá mhéar agus bog</string>
     <string name="touchpad_help_main_menu_title">Príomhroghchlár</string>
     <string name="touchpad_help_main_menu_description">Tapáil le ceithre mhéar</string>
-    <string name="duplicate">Dúblaigh</string>
     <string name="external_controllers">Rialairí seachtracha</string>
     <string name="graphics_driver">Tiománaí grafaicí</string>
     <string name="audio_driver">Tiománaí fuaime</string>
@@ -78,12 +67,6 @@
     <string name="settings">Socruithe</string>
     <string name="range">Raon</string>
     <string name="version">Leagan</string>
-    <string name="storage_info">Eolas stórála</string>
-    <string name="drive_c">Tiomántán C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Iomlán</string>
-    <string name="clear_cache">Glan taisce</string>
-    <string name="estimated_used_space">Spás úsáidte measta</string>
     <string name="advanced">Ardsocruithe</string>
     <string name="system">Córas</string>
     <string name="width">Leithead</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">An bhfuil tú ag iarraidh na próifílí roghnaithe a íoslódáil?</string>
     <string name="downloading_file">Comhad á íoslódáil...</string>
     <string name="a_network_error_occurred">Tharla earráid líonra</string>
-    <string name="copy">Cóipeáil</string>
     <string name="you_cannot_remove_this_component_version">Ní féidir an leagan comhpháirte seo a bhaint</string>
     <string name="columns">Colúin</string>
     <string name="theme">Téama</string>

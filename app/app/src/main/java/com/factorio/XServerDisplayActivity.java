@@ -101,11 +101,18 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private MagnifierView magnifierView;
     private DebugDialog debugDialog;
     private String screenEffectProfile;
+    private static boolean running = false;
+
+    // true while the game screen exists (MainActivity uses it to know that settings changes need a restart)
+    public static boolean isRunning() {
+        return running;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         AppUtils.setActivityTheme(this);
         super.onCreate(savedInstanceState);
+        running = true;
         AppUtils.hideSystemUI(this);
         AppUtils.keepScreenOn(this);
         setContentView(R.layout.xserver_display_activity);
@@ -129,6 +136,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         ContainerManager containerManager = new ContainerManager(this);
         container = containerManager.getContainerById(getIntent().getIntExtra("container_id", 0));
+        if (container == null) container = containerManager.getMainContainer();
         if (container == null) {
             finish();
             return;
@@ -230,6 +238,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     protected void onDestroy() {
+        running = false;
         winHandler.gamepadHandler.stopBridge();
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
@@ -298,6 +307,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 break;
             case R.id.menu_item_touchpad_help:
                 showTouchpadHelpDialog();
+                break;
+            case R.id.menu_item_settings:
+                // unified settings (container + app) live in MainActivity; the game keeps running underneath
+                Intent settingsIntent = new Intent(this, MainActivity.class);
+                settingsIntent.putExtra("open_settings", true);
+                settingsIntent.putExtra("from_game", true);
+                startActivity(settingsIntent);
+                drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_exit:
                 exit();

@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class RootFSInstaller {
-    public static final byte LATEST_VERSION = 20; // TODO increment it on rootfs update (20: package-independent paths, no Wine)
+    public static final byte LATEST_VERSION = 21; // TODO increment it on rootfs update (21: + ALSA android_aserver plugin and cursors that used to come from rootfs_patches)
     public static final String FILENAME = "rootfs.tzst";
 
     private static void resetContainerRFSVersions(Context context) {
@@ -100,7 +100,7 @@ public abstract class RootFSInstaller {
             manager.createContainerAsync(data, (container) -> {
                 if (container != null) {
                     preferences.edit().putBoolean("default_container_created", true).apply();
-                    activity.reloadContainersList(); // show the new container in the list right away
+                    activity.reloadSettings(); // show the new container in the settings right away
                     activity.autoStartContainer();   // and start it
                 }
                 else activity.hideStartupCover();

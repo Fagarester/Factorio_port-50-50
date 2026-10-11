@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Өңдеу</string>
-    <string name="remove">Жою</string>
     <string name="add">Қосу</string>
-    <string name="containers">Контейнерлер</string>
     <string name="input_controls">Басқару элементтері</string>
     <string name="no_items_to_display">Көрсетілетін элементтер жоқ</string>
-    <string name="new_container">Жаңа контейнер</string>
-    <string name="edit_container">Контейнерді өңдеу</string>
-    <string name="creating_container">Контейнер жасалуда…</string>
-    <string name="removing_container">Контейнер жойылуда…</string>
-    <string name="duplicating_container">Контейнер көшірілуде…</string>
     <string name="installing_system_files">Жүйелік файлдар орнатылуда…</string>
     <string name="starting_up">Іске қосылуда…</string>
     <string name="unable_to_install_system_files">Жүйелік файлдарды орнату мүмкін болмады</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Профиль таңдалмаған</string>
     <string name="do_you_want_to_remove_this_profile">Бұл профильді жою керек пе?</string>
     <string name="do_you_want_to_duplicate_this_profile">Бұл профильді көшіру керек пе?</string>
-    <string name="do_you_want_to_remove_this_container">Бұл контейнерді жою керек пе?</string>
-    <string name="do_you_want_to_duplicate_this_container">Бұл контейнерді көшіру керек пе?</string>
     <string name="do_you_want_to_remove_this_controller">Бұл контроллерді жою керек пе?</string>
     <string name="do_you_want_to_remove_this_component_version">Компоненттің бұл нұсқасын жою керек пе?</string>
     <string name="controls_editor">Басқару редакторы</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Екі саусақпен түртіп жылжыту</string>
     <string name="touchpad_help_main_menu_title">Негізгі мәзір</string>
     <string name="touchpad_help_main_menu_description">Төрт саусақпен түрту</string>
-    <string name="duplicate">Көшіру</string>
     <string name="external_controllers">Сыртқы контроллерлер</string>
     <string name="graphics_driver">Графикалық драйвер</string>
     <string name="audio_driver">Аудио драйвер</string>
@@ -78,12 +67,6 @@
     <string name="settings">Параметрлер</string>
     <string name="range">Ауқым</string>
     <string name="version">Нұсқа</string>
-    <string name="storage_info">Жад туралы ақпарат</string>
-    <string name="drive_c">C: дискісі</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Барлығы</string>
-    <string name="clear_cache">Кэшті тазалау</string>
-    <string name="estimated_used_space">Шамамен пайдаланылған орын</string>
     <string name="advanced">Қосымша</string>
     <string name="system">Жүйе</string>
     <string name="width">Ені</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Таңдалған профильдерді жүктеу керек пе?</string>
     <string name="downloading_file">Файл жүктелуде…</string>
     <string name="a_network_error_occurred">Желі қатесі орын алды</string>
-    <string name="copy">Көшіру</string>
     <string name="you_cannot_remove_this_component_version">Компоненттің бұл нұсқасын жою мүмкін емес</string>
     <string name="columns">Бағандар</string>
     <string name="theme">Тақырып</string>

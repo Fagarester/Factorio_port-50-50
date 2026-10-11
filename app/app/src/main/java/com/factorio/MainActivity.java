@@ -14,7 +14,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -32,7 +31,6 @@ import com.factorio.container.Container;
 import com.factorio.container.ContainerManager;
 import com.factorio.core.AppUtils;
 import com.factorio.core.Callback;
-import com.factorio.core.EnvVars;
 import com.factorio.core.LocaleHelper;
 import com.factorio.core.PackagePath;
 import com.factorio.core.PreloaderDialog;
@@ -55,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Callback<Uri> openFileCallback;
     private SharedPreferences preferences;
     private Fragment currentFragment;
+    private boolean openedFromGame = false; // Settings were opened from the in-game side drawer (the game is running underneath)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +68,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         Intent startIntent = getIntent();
+        openedFromGame = startIntent.getBooleanExtra("from_game", false) || XServerDisplayActivity.isRunning();
         boolean openedByShortcutOrApp = startIntent.getBooleanExtra("edit_input_controls", false) ||
+            startIntent.getBooleanExtra("open_settings", false) ||
             startIntent.getIntExtra("container_id", 0) != 0 ||
             startIntent.getIntExtra("selected_menu_item_id", 0) != 0;
         if (savedInstanceState == null && !openedByShortcutOrApp && tryFastAutoStart()) return;
@@ -102,9 +103,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else {
             int selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0);
-            int menuItemId = selectedMenuItemId > 0 ? selectedMenuItemId : R.id.menu_item_containers;
+            int menuItemId = selectedMenuItemId > 0 ? selectedMenuItemId : R.id.menu_item_settings;
 
-            autoStartPending = savedInstanceState == null && intent.getIntExtra("container_id", 0) == 0;
+            autoStartPending = savedInstanceState == null && !openedByShortcutOrApp; // opened for settings: do not start the game
             if (autoStartPending && isFirstStart()) showStartupCover();
 
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_menu);
@@ -143,11 +144,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
-        if (currentFragment != null && currentFragment.isVisible() && currentFragment instanceof ContainersFragment) {
+        if (currentFragment instanceof SettingsFragment || editInputControls) {
             finish();
+            return;
         }
 
-        showFragment(new ContainersFragment());
+        showFragment(new SettingsFragment());
+    }
+
+    public boolean isOpenedFromGame() {
+        return openedFromGame;
     }
 
     public void setOpenFileCallback(Callback<Uri> openFileCallback) {
@@ -165,17 +171,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-        if (menuItem.getItemId() == R.id.menu_item_add) {
-            return super.onOptionsItemSelected(menuItem);
+        if (editInputControls) {
+            setResult(RESULT_OK);
+            finish();
         }
-        else {
-            if (editInputControls) {
-                setResult(RESULT_OK);
-                finish();
-            }
-            else drawerLayout.openDrawer(GravityCompat.START);
-            return true;
-        }
+        else drawerLayout.openDrawer(GravityCompat.START);
+        return true;
     }
 
     @Override
@@ -186,8 +187,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         switch (item.getItemId()) {
-            case R.id.menu_item_containers:
-                showFragment(new ContainersFragment());
+            case R.id.menu_item_play:
+                startGame();
                 break;
             case R.id.menu_item_input_controls:
                 showFragment(new InputControlsFragment(selectedProfileId));
@@ -199,9 +200,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // Re-reads containers from disk when the containers list is on screen (used after the default container is created).
-    public void reloadContainersList() {
-        if (currentFragment instanceof ContainersFragment) showFragment(new ContainersFragment());
+    // Re-reads the container from disk when the settings are on screen (used after the default container is created).
+    public void reloadSettings() {
+        if (currentFragment instanceof SettingsFragment) showFragment(new SettingsFragment());
     }
 
     private boolean isFirstStart() {
@@ -229,18 +230,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startupCover = null;
     }
 
-    // First container that has NATIVE_EXEC (native game); falls back to the first container.
-    private Container findNativeContainer() {
-        ArrayList<Container> containers = (new ContainerManager(this)).getContainers();
-        for (Container container : containers) {
-            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
-            if (nativeExec != null && !nativeExec.isEmpty()) return container;
-        }
-        return containers.isEmpty() ? null : containers.get(0);
+    // Starts the game (the single built-in container) and closes this screen.
+    public void startGame() {
+        Container container = (new ContainerManager(this)).getMainContainer();
+        if (container == null) return;
+
+        Intent intent = new Intent(this, XServerDisplayActivity.class);
+        intent.putExtra("container_id", container.id);
+        startActivity(intent);
+        finish();
+        overridePendingTransition(0, 0);
     }
 
     // Normal app start: if everything is installed, start the game right away and close this screen
-    // before any UI is created (no flash of the containers list, nothing underneath when the game exits).
+    // before any UI is created (nothing flashes on the screen, nothing underneath when the game exits).
     private boolean tryFastAutoStart() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (!prefs.getBoolean("auto_start_container", true)) return false;
@@ -249,22 +252,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         RootFS rootFS = RootFS.find(this);
         if (!rootFS.isValid() || rootFS.getVersion() < RootFSInstaller.LATEST_VERSION) return false;
+        if ((new ContainerManager(this)).getMainContainer() == null) return false;
 
-        for (Container container : (new ContainerManager(this)).getContainers()) {
-            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
-            if (nativeExec != null && !nativeExec.isEmpty()) {
-                Intent intent = new Intent(this, XServerDisplayActivity.class);
-                intent.putExtra("container_id", container.id);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(0, 0);
-                return true;
-            }
-        }
-        return false;
+        startGame();
+        return true;
     }
 
-    // Starts the first native-game container (the one with NATIVE_EXEC) once per fresh app start.
+    // Starts the game once per fresh app start (called when the system files and the container are ready).
     // Turn it off with the preference "auto_start_container" = false.
     public void autoStartContainer() {
         if (!autoStartPending) {
@@ -272,24 +266,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
         autoStartPending = false;
-        if (!preferences.getBoolean("auto_start_container", true)) {
+        if (!preferences.getBoolean("auto_start_container", true) || (new ContainerManager(this)).getMainContainer() == null) {
             hideStartupCover();
             return;
         }
 
-        ContainerManager manager = new ContainerManager(this);
-        for (Container container : manager.getContainers()) {
-            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
-            if (nativeExec != null && !nativeExec.isEmpty()) {
-                Intent intent = new Intent(this, XServerDisplayActivity.class);
-                intent.putExtra("container_id", container.id);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(0, 0);
-                return;
-            }
-        }
-        hideStartupCover(); // no native container: show the normal containers list
+        startGame();
     }
 
     public void showFragment(Fragment fragment) {

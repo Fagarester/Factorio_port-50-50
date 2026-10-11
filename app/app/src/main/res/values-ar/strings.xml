@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">تعديل</string>
-    <string name="remove">حذف</string>
     <string name="add">إضافة</string>
-    <string name="containers">الحاويات</string>
     <string name="input_controls">أدوات الإدخال</string>
     <string name="no_items_to_display">لا توجد عناصر للعرض</string>
-    <string name="new_container">حاوية جديدة</string>
-    <string name="edit_container">تعديل الحاوية</string>
-    <string name="creating_container">جارٍ إنشاء الحاوية...</string>
-    <string name="removing_container">جارٍ حذف الحاوية...</string>
-    <string name="duplicating_container">جارٍ نسخ الحاوية...</string>
     <string name="installing_system_files">جارٍ تثبيت ملفات النظام...</string>
     <string name="starting_up">جارٍ التشغيل...</string>
     <string name="unable_to_install_system_files">تعذّر تثبيت ملفات النظام</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">لم يتم تحديد ملف شخصي</string>
     <string name="do_you_want_to_remove_this_profile">هل تريد حذف هذا الملف الشخصي؟</string>
     <string name="do_you_want_to_duplicate_this_profile">هل تريد نسخ هذا الملف الشخصي؟</string>
-    <string name="do_you_want_to_remove_this_container">هل تريد حذف هذه الحاوية؟</string>
-    <string name="do_you_want_to_duplicate_this_container">هل تريد نسخ هذه الحاوية؟</string>
     <string name="do_you_want_to_remove_this_controller">هل تريد حذف وحدة التحكم هذه؟</string>
     <string name="do_you_want_to_remove_this_component_version">هل تريد حذف إصدار المكوّن هذا؟</string>
     <string name="controls_editor">محرر أدوات التحكم</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">نقر بإصبعين مع التحريك</string>
     <string name="touchpad_help_main_menu_title">القائمة الرئيسية</string>
     <string name="touchpad_help_main_menu_description">نقر بأربعة أصابع</string>
-    <string name="duplicate">نسخ</string>
     <string name="external_controllers">وحدات التحكم الخارجية</string>
     <string name="graphics_driver">مشغّل الرسوميات</string>
     <string name="audio_driver">مشغّل الصوت</string>
@@ -78,12 +67,6 @@
     <string name="settings">الإعدادات</string>
     <string name="range">النطاق</string>
     <string name="version">الإصدار</string>
-    <string name="storage_info">معلومات التخزين</string>
-    <string name="drive_c">محرك القرص C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">الإجمالي</string>
-    <string name="clear_cache">مسح ذاكرة التخزين المؤقت</string>
-    <string name="estimated_used_space">المساحة المستخدمة التقديرية</string>
     <string name="advanced">متقدم</string>
     <string name="system">النظام</string>
     <string name="width">العرض</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">هل تريد تنزيل الملفات الشخصية المحددة؟</string>
     <string name="downloading_file">جارٍ تنزيل الملف...</string>
     <string name="a_network_error_occurred">حدث خطأ في الشبكة</string>
-    <string name="copy">نسخ</string>
     <string name="you_cannot_remove_this_component_version">لا يمكنك حذف إصدار المكوّن هذا</string>
     <string name="columns">الأعمدة</string>
     <string name="theme">المظهر</string>

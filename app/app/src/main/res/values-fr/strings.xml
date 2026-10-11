@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Modifier</string>
-    <string name="remove">Supprimer</string>
     <string name="add">Ajouter</string>
-    <string name="containers">Conteneurs</string>
     <string name="input_controls">Contrôles de saisie</string>
     <string name="no_items_to_display">Aucun élément à afficher</string>
-    <string name="new_container">Nouveau conteneur</string>
-    <string name="edit_container">Modifier le conteneur</string>
-    <string name="creating_container">Création du conteneur…</string>
-    <string name="removing_container">Suppression du conteneur…</string>
-    <string name="duplicating_container">Duplication du conteneur…</string>
     <string name="installing_system_files">Installation des fichiers système…</string>
     <string name="starting_up">Démarrage…</string>
     <string name="unable_to_install_system_files">Impossible d\'installer les fichiers système</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Aucun profil sélectionné</string>
     <string name="do_you_want_to_remove_this_profile">Voulez-vous supprimer ce profil ?</string>
     <string name="do_you_want_to_duplicate_this_profile">Voulez-vous dupliquer ce profil ?</string>
-    <string name="do_you_want_to_remove_this_container">Voulez-vous supprimer ce conteneur ?</string>
-    <string name="do_you_want_to_duplicate_this_container">Voulez-vous dupliquer ce conteneur ?</string>
     <string name="do_you_want_to_remove_this_controller">Voulez-vous supprimer ce contrôleur ?</string>
     <string name="do_you_want_to_remove_this_component_version">Voulez-vous supprimer cette version du composant ?</string>
     <string name="controls_editor">Éditeur de contrôles</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Appui avec deux doigts et glissement</string>
     <string name="touchpad_help_main_menu_title">Menu principal</string>
     <string name="touchpad_help_main_menu_description">Appui avec quatre doigts</string>
-    <string name="duplicate">Dupliquer</string>
     <string name="external_controllers">Contrôleurs externes</string>
     <string name="graphics_driver">Pilote graphique</string>
     <string name="audio_driver">Pilote audio</string>
@@ -78,12 +67,6 @@
     <string name="settings">Paramètres</string>
     <string name="range">Plage</string>
     <string name="version">Version</string>
-    <string name="storage_info">Informations de stockage</string>
-    <string name="drive_c">Lecteur C :</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Total</string>
-    <string name="clear_cache">Vider le cache</string>
-    <string name="estimated_used_space">Espace utilisé estimé</string>
     <string name="advanced">Avancé</string>
     <string name="system">Système</string>
     <string name="width">Largeur</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Voulez-vous télécharger les profils sélectionnés ?</string>
     <string name="downloading_file">Téléchargement du fichier…</string>
     <string name="a_network_error_occurred">Une erreur réseau s\'est produite</string>
-    <string name="copy">Copier</string>
     <string name="you_cannot_remove_this_component_version">Impossible de supprimer cette version du composant</string>
     <string name="columns">Colonnes</string>
     <string name="theme">Thème</string>

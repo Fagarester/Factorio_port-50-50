@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Edit</string>
-    <string name="remove">Remove</string>
     <string name="add">Add</string>
-    <string name="containers">Containers</string>
     <string name="input_controls">Input Controls</string>
     <string name="no_items_to_display">No items to display</string>
-    <string name="new_container">New Container</string>
-    <string name="edit_container">Edit Container</string>
-    <string name="creating_container">Creating Container...</string>
-    <string name="removing_container">Removing Container...</string>
-    <string name="duplicating_container">Duplicating Container...</string>
     <string name="installing_system_files">Installing System Files...</string>
     <string name="starting_up">Starting up...</string>
     <string name="unable_to_install_system_files">Unable to install system files</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">No profile selected</string>
     <string name="do_you_want_to_remove_this_profile">Do you want to remove this profile?</string>
     <string name="do_you_want_to_duplicate_this_profile">Do you want to duplicate this profile?</string>
-    <string name="do_you_want_to_remove_this_container">Do you want to remove this container?</string>
-    <string name="do_you_want_to_duplicate_this_container">Do you want to duplicate this container?</string>
     <string name="do_you_want_to_remove_this_controller">Do you want to remove this controller?</string>
     <string name="do_you_want_to_remove_this_component_version">Do you want to remove this component version?</string>
     <string name="controls_editor">Controls Editor</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Two fingers tap and move</string>
     <string name="touchpad_help_main_menu_title">Main Menu</string>
     <string name="touchpad_help_main_menu_description">Four fingers tap</string>
-    <string name="duplicate">Duplicate</string>
     <string name="external_controllers">External Controllers</string>
     <string name="graphics_driver">Graphics Driver</string>
     <string name="audio_driver">Audio Driver</string>
@@ -78,12 +67,6 @@
     <string name="settings">Settings</string>
     <string name="range">Range</string>
     <string name="version">Version</string>
-    <string name="storage_info">Storage Info</string>
-    <string name="drive_c">Game data</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Total</string>
-    <string name="clear_cache">Clear Cache</string>
-    <string name="estimated_used_space">Estimated Used Space</string>
     <string name="advanced">Advanced</string>
     <string name="system">System</string>
     <string name="width">Width</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Do you want to download the selected profiles?</string>
     <string name="downloading_file">Downloading File...</string>
     <string name="a_network_error_occurred">A network error occurred</string>
-    <string name="copy">Copy</string>
     <string name="you_cannot_remove_this_component_version">You cannot remove this component version</string>
     <string name="columns">Columns</string>
     <string name="theme">Theme</string>
@@ -168,4 +150,5 @@
     <string name="do_you_want_to_reset_configurations">Do you want to reset the configurations?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">The settings have been changed. Do you want to restart the app?</string>
     <string name="package_name_too_long">The package name is too long: the maximum is %1$d characters.</string>
+    <string name="start_game">Start game</string>
 </resources>

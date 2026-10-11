@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Редактировать</string>
-    <string name="remove">Удалить</string>
     <string name="add">Добавить</string>
-    <string name="containers">Контейнеры</string>
     <string name="input_controls">Управление вводом</string>
     <string name="no_items_to_display">Нет элементов для отображения</string>
-    <string name="new_container">Новый контейнер</string>
-    <string name="edit_container">Редактировать контейнер</string>
-    <string name="creating_container">Создание контейнера...</string>
-    <string name="removing_container">Удаление контейнера...</string>
-    <string name="duplicating_container">Дублирование контейнера...</string>
     <string name="installing_system_files">Установка системных файлов...</string>
     <string name="starting_up">Запуск...</string>
     <string name="unable_to_install_system_files">Невозможно установить системные файлы</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Профиль не выбран</string>
     <string name="do_you_want_to_remove_this_profile">Вы хотите удалить профиль?</string>
     <string name="do_you_want_to_duplicate_this_profile">Вы хотите дублировать профиль?</string>
-    <string name="do_you_want_to_remove_this_container">Вы хотите удалить контейнер?</string>
-    <string name="do_you_want_to_duplicate_this_container">Вы хотите дублировать контейнер?</string>
     <string name="do_you_want_to_remove_this_controller">Вы хотите удалить контроллер?</string>
     <string name="do_you_want_to_remove_this_component_version">Вы хотите удалить эту версию компонента?</string>
     <string name="controls_editor">Редактор управления</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Нажмите двумя пальцами и двигайте</string>
     <string name="touchpad_help_main_menu_title">Главное меню</string>
     <string name="touchpad_help_main_menu_description">Нажмите четырьмя пальцами</string>
-    <string name="duplicate">Дублировать</string>
     <string name="external_controllers">Внешние контроллеры</string>
     <string name="graphics_driver">Графический драйвер</string>
     <string name="audio_driver">Аудио драйвер</string>
@@ -78,11 +67,6 @@
     <string name="settings">Настройки</string>
     <string name="range">Диапазон</string>
     <string name="version">Версия</string>
-    <string name="storage_info">Информация о хранилище</string>
-    <string name="drive_c">Данные игры</string>
-    <string name="total">Всего</string>
-    <string name="clear_cache">Очистить кэш</string>
-    <string name="estimated_used_space">Расчетное используемое место</string>
     <string name="advanced">Продвинутые</string>
     <string name="system">Система</string>
     <string name="width">Ширина</string>
@@ -95,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Хотите загрузить выбранные профили?</string>
     <string name="downloading_file">Загрузка файла...</string>
     <string name="a_network_error_occurred">Произошла сетевая ошибка</string>
-    <string name="copy">Копировать</string>
     <string name="you_cannot_remove_this_component_version">Вы не можете удалить эту версию компонента</string>
     <string name="columns">Столбцы</string>
     <string name="theme">Тема</string>
@@ -158,4 +141,5 @@
     <string name="do_you_want_to_reset_configurations">Вы хотите сбросить настройки?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Настройки были изменены. Хотите перезапустить приложение?</string>
     <string name="package_name_too_long">Имя пакета слишком длинное: максимум %1$d симв.</string>
+    <string name="start_game">Запустить игру</string>
 </resources>

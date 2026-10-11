@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Factorio</string>
-    <string name="edit">Editează</string>
-    <string name="remove">Elimină</string>
     <string name="add">Adaugă</string>
-    <string name="containers">Containere</string>
     <string name="input_controls">Controale de intrare</string>
     <string name="no_items_to_display">Nu există elemente de afișat</string>
-    <string name="new_container">Container nou</string>
-    <string name="edit_container">Editează containerul</string>
-    <string name="creating_container">Se creează containerul...</string>
-    <string name="removing_container">Se elimină containerul...</string>
-    <string name="duplicating_container">Se duplică containerul...</string>
     <string name="installing_system_files">Se instalează fișierele de sistem...</string>
     <string name="starting_up">Se pornește...</string>
     <string name="unable_to_install_system_files">Imposibil de instalat fișierele de sistem</string>
@@ -38,8 +30,6 @@
     <string name="no_profile_selected">Niciun profil selectat</string>
     <string name="do_you_want_to_remove_this_profile">Doriți să eliminați acest profil?</string>
     <string name="do_you_want_to_duplicate_this_profile">Doriți să duplicați acest profil?</string>
-    <string name="do_you_want_to_remove_this_container">Doriți să eliminați acest container?</string>
-    <string name="do_you_want_to_duplicate_this_container">Doriți să duplicați acest container?</string>
     <string name="do_you_want_to_remove_this_controller">Doriți să eliminați acest controlor?</string>
     <string name="do_you_want_to_remove_this_component_version">Doriți să eliminați această versiune de componentă?</string>
     <string name="controls_editor">Editor controale</string>
@@ -67,7 +57,6 @@
     <string name="touchpad_help_mouse_scroll_wheel_description">Atingere cu două degete și glisare</string>
     <string name="touchpad_help_main_menu_title">Meniu principal</string>
     <string name="touchpad_help_main_menu_description">Atingere cu patru degete</string>
-    <string name="duplicate">Duplică</string>
     <string name="external_controllers">Controloare externe</string>
     <string name="graphics_driver">Driver grafic</string>
     <string name="audio_driver">Driver audio</string>
@@ -78,12 +67,6 @@
     <string name="settings">Setări</string>
     <string name="range">Interval</string>
     <string name="version">Versiune</string>
-    <string name="storage_info">Informații stocare</string>
-    <string name="drive_c">Unitatea C:</string>
-    <string name="cache" translatable="false">Cache</string>
-    <string name="total">Total</string>
-    <string name="clear_cache">Golește memoria cache</string>
-    <string name="estimated_used_space">Spațiu utilizat estimat</string>
     <string name="advanced">Avansat</string>
     <string name="system">Sistem</string>
     <string name="width">Lățime</string>
@@ -96,7 +79,6 @@
     <string name="do_you_want_to_download_the_selected_profiles">Doriți să descărcați profilurile selectate?</string>
     <string name="downloading_file">Se descarcă fișierul...</string>
     <string name="a_network_error_occurred">A apărut o eroare de rețea</string>
-    <string name="copy">Copiază</string>
     <string name="you_cannot_remove_this_component_version">Nu puteți elimina această versiune de componentă</string>
     <string name="columns">Coloane</string>
     <string name="theme">Temă</string>
