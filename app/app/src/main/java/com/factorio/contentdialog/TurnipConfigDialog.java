@@ -36,7 +36,8 @@ public class TurnipConfigDialog extends ContentDialog {
 
         setOnConfirmCallback(() -> {
             KeyValueSet newConfig = new KeyValueSet();
-            newConfig.put("version", StringUtils.parseNumber(sVersion.getSelectedItem()));
+            // the name is kept as is: it can be a custom build imported from a file, not only a number
+            newConfig.put("version", String.valueOf(sVersion.getSelectedItem()));
             newConfig.put("maxDeviceMemory", StringUtils.parseMemorySize(sMaxDeviceMemory.getSelectedItem()));
             newConfig.put("useHWBuf", cbUseHWBuf.isChecked() ? "1" : "0");
             newConfig.put("forceWaitForFences", cbForceWaitForFences.isChecked() ? "1" : "0");

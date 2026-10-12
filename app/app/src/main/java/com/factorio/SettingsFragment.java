@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -84,6 +85,8 @@ public class SettingsFragment extends Fragment {
         if (container != null) {
             loadScreenSizeSpinner(view, container.getScreenSize());
             graphicsDriverPicker = new GraphicsDriverPicker(view.findViewById(R.id.LLGraphicsDriver), container.getGraphicsDriver(), container.getGraphicsDriverConfig());
+            ((TextView)view.findViewById(R.id.TVDetectedGpu)).setText(GraphicsDriverPicker.getDetectedGpuText(context));
+            graphicsDriverPicker.attachInstallButton(view.findViewById(R.id.BTInstallDriver), activity);
             AppUtils.setSpinnerSelectionFromIdentifier(sAudioDriver, container.getAudioDriver());
             vAudioDriverConfig.setTag(container.getAudioDriverConfig());
             vAudioDriverConfig.setOnClickListener((v) -> (new AudioDriverConfigDialog(v)).show());

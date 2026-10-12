@@ -2,10 +2,12 @@ package com.factorio.contentdialog;
 
 import android.content.Context;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Spinner;
 
 import com.factorio.R;
 import com.factorio.core.AppUtils;
+import com.factorio.core.DriverPackages;
 import com.factorio.core.GPUHelper;
 import com.factorio.core.GeneralComponents;
 import com.factorio.core.KeyValueSet;
@@ -17,6 +19,10 @@ public class VortekConfigDialog extends ContentDialog {
     public static final String DEFAULT_VK_MAX_VERSION = GPUHelper.vkVersionMajor(VortekRendererComponent.VK_MAX_VERSION)+"."+GPUHelper.vkVersionMinor(VortekRendererComponent.VK_MAX_VERSION);
 
     public VortekConfigDialog(final View anchor) {
+        this(anchor, null);
+    }
+
+    public VortekConfigDialog(final View anchor, final Runnable onConfirmed) {
         super(anchor.getContext(), R.layout.vortek_config_dialog);
         Context context = anchor.getContext();
         setIcon(R.drawable.icon_display_settings);
@@ -47,6 +53,31 @@ public class VortekConfigDialog extends ContentDialog {
         String adrenotoolsDriver = config.get("adrenotoolsDriver");
         GeneralComponents.initViews(GeneralComponents.Type.ADRENOTOOLS_DRIVER, findViewById(R.id.AdrenotoolsDriverToolbox), sAdrenotoolsDriver, adrenotoolsDriver, "System");
 
+        // hint only: any driver can be used on any GPU, but tell the user when it was made for a different one
+        sAdrenotoolsDriver.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            private boolean first = true;
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (first) {
+                    first = false;
+                    return;
+                }
+                DriverPackages.Info info = DriverPackages.get(context, String.valueOf(parent.getItemAtPosition(position)));
+                if (info == null) return;
+                DriverPackages.GpuFamily device = DriverPackages.GpuFamily.detect(context);
+                if (!info.matchesDevice(device)) {
+                    AppUtils.showToast(context, context.getString(R.string.driver_other_gpu_warning, info.family.title, device.title));
+                }
+                if (!info.isSupportedByOs()) {
+                    AppUtils.showToast(context, context.getString(R.string.driver_needs_newer_android, info.minApi));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
         AppUtils.setSpinnerSelectionFromValue(sVkMaxVersion, config.get("vkMaxVersion", DEFAULT_VK_MAX_VERSION));
         AppUtils.setSpinnerSelectionFromMemorySize(sMaxDeviceMemory, config.get("maxDeviceMemory", "0"));
         AppUtils.setSpinnerSelectionFromNumber(sImageCacheSize, config.get("imageCacheSize", String.valueOf(VortekRendererComponent.IMAGE_CACHE_SIZE)));
@@ -68,6 +99,7 @@ public class VortekConfigDialog extends ContentDialog {
                 else newConfig.put("exposedDeviceExtensions", String.join("|", selectedItems));
             }
             anchor.setTag(newConfig.toString());
+            if (onConfirmed != null) onConfirmed.run();
         });
     }
 

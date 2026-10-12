@@ -3,6 +3,7 @@ package com.factorio.core;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -77,7 +78,7 @@ public abstract class GeneralComponents {
                 items = new String[]{DefaultVersion.TURNIP};
                 break;
             case ADRENOTOOLS_DRIVER:
-                items = new String[]{"System"};
+                items = new String[]{DriverPackages.SYSTEM, DriverPackages.AUTO};
                 break;
         }
 
@@ -94,9 +95,16 @@ public abstract class GeneralComponents {
         File componentDir = getComponentDir(type, context);
         ArrayList<String> result = new ArrayList<>();
 
+        if (type == Type.ADRENOTOOLS_DRIVER) {
+            for (DriverPackages.Info info : DriverPackages.list(context)) result.add(info.id);
+            return result;
+        }
+
         String[] names;
         if (componentDir.isDirectory() && (names = componentDir.list()) != null) {
-            for (String name : names) result.add(parseDisplayText(type, name));
+            for (String name : names) {
+                if (!name.startsWith(".")) result.add(parseDisplayText(type, name));
+            }
         }
         return result;
     }
@@ -110,22 +118,8 @@ public abstract class GeneralComponents {
 
     public static String getDefinitivePath(Type type, Context context, String identifier) {
         if (identifier.isEmpty()) return null;
-        if (type == Type.ADRENOTOOLS_DRIVER) {
-            if (isBuiltinComponent(type, identifier)) return null;
-            File source = type.getSource(context, identifier);
-            File[] manifestFiles = source.listFiles((file, name) -> name.endsWith(".json"));
-            if (manifestFiles != null) {
-                try {
-                    JSONObject manifestJSONObject = new JSONObject(FileUtils.readString(manifestFiles[0]));
-                    String libraryName = manifestJSONObject.optString("libraryName", "");
-                    File libraryFile = new File(source, libraryName);
-                    return libraryFile.isFile() ? libraryFile.getPath() : null;
-                }
-                catch (JSONException e) {
-                    return null;
-                }
-            }
-        }
+        // "System" -> null, "Auto" -> best installed package for this GPU, otherwise the package library (see DriverPackages)
+        if (type == Type.ADRENOTOOLS_DRIVER) return DriverPackages.resolveLibraryPath(context, identifier);
 
         return type.getSource(context, identifier).getPath();
     }
@@ -169,31 +163,54 @@ public abstract class GeneralComponents {
     }
 
     private static void openFileForInstall(final MainActivity activity, final Type type, final Spinner spinner, final String defaultItem) {
-        activity.setOpenFileCallback((uri) -> {
-            String path = FileUtils.getFilePathFromUri(uri);
-            if (path == null) return;
-
-            try {
-                File source = new File(path);
-                if (type == Type.ADRENOTOOLS_DRIVER) {
-                    byte[] manifestData = ZipUtils.read(source, "*.json");
-                    if (manifestData != null) {
-                        JSONObject manifestJSONObject = new JSONObject(new String(manifestData));
-                        String filename = manifestJSONObject.optString("name", manifestJSONObject.optString("libraryName", ""));
-                        File destination = new File(getComponentDir(type, activity), filename);
-                        if (destination.isDirectory()) FileUtils.delete(destination);
-                        destination.mkdirs();
-                        if (ZipUtils.extract(source, destination)) loadSpinner(type, spinner, filename, defaultItem);
-                    }
-                }
+        activity.setOpenFileCallback((uri) -> installFromUri(activity, uri, (result) -> {
+            if (result.kind == DriverPackages.Kind.TURNIP && type != Type.TURNIP) {
+                AppUtils.showToast(activity, activity.getString(R.string.driver_installed_as_turnip, result.id));
             }
-            catch (JSONException e) {}
-        });
+            else if (result.kind == DriverPackages.Kind.ADRENOTOOLS && type != Type.ADRENOTOOLS_DRIVER) {
+                AppUtils.showToast(activity, activity.getString(R.string.driver_installed_as_vortek, result.info.name));
+            }
+            else {
+                loadSpinner(type, spinner, result.id, defaultItem);
+                AppUtils.showToast(activity, describe(activity, result));
+            }
+        }));
 
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+    }
+
+    public static String describe(Context context, DriverPackages.InstallResult result) {
+        if (result.kind == DriverPackages.Kind.TURNIP) return context.getString(R.string.driver_installed_as_turnip, result.id);
+        String gpu = result.info.family == DriverPackages.GpuFamily.UNKNOWN ? "" : " ("+result.info.family.title+")";
+        return context.getString(R.string.driver_installed_as_vortek, result.info.name+gpu);
+    }
+
+    /** Reads the picked file directly from its Uri (works for Downloads/Telegram/Drive, not only for primary storage). */
+    public static void installFromUri(final Activity activity, final Uri uri, final Callback<DriverPackages.InstallResult> callback) {
+        if (uri == null) return;
+        final PreloaderDialog preloaderDialog = new PreloaderDialog(activity);
+        preloaderDialog.show(R.string.loading);
+        new Thread(() -> {
+            DriverPackages.InstallResult result = null;
+            String error = null;
+            try {
+                result = DriverPackages.install(activity, uri);
+            }
+            catch (Exception e) {
+                error = e.getMessage();
+            }
+
+            final DriverPackages.InstallResult finalResult = result;
+            final String finalError = error;
+            activity.runOnUiThread(() -> {
+                preloaderDialog.close();
+                if (finalResult != null) callback.call(finalResult);
+                else AppUtils.showToast(activity, activity.getString(R.string.driver_install_failed)+(finalError != null ? ": "+finalError : ""));
+            });
+        }).start();
     }
 
     private static void showDownloadableListDialog(Type type, final Spinner spinner, final String defaultItem) {
@@ -227,7 +244,13 @@ public abstract class GeneralComponents {
             InstallMode installMode = type.getInstallMode();
             switch (installMode) {
                 case DOWNLOAD:
-                    showDownloadableListDialog(type, spinner, defaultItem);
+                    // Turnip can be downloaded OR replaced with any build the user has (.tzst), the type is detected from the file
+                    final String[] sources = new String[]{context.getString(R.string.download_from_repository), context.getString(R.string.install_from_file)};
+                    ContentDialog.showSelectionList(context, R.string.install_component, sources, false, (positions) -> {
+                        if (positions.isEmpty()) return;
+                        if (positions.get(0) == 0) showDownloadableListDialog(type, spinner, defaultItem);
+                        else openFileForInstall((MainActivity)context, type, spinner, defaultItem);
+                    });
                     break;
                 case FILE:
                     openFileForInstall((MainActivity)context, type, spinner, defaultItem);

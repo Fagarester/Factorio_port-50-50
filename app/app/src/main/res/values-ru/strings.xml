@@ -134,4 +134,15 @@
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Настройки были изменены. Хотите перезапустить приложение?</string>
     <string name="package_name_too_long">Имя пакета слишком длинное: максимум %1$d симв.</string>
     <string name="start_game">Запустить игру</string>
+    <string name="driver_installed_as_turnip">Сборка Turnip %1$s установлена</string>
+    <string name="driver_installed_as_vortek">Драйвер установлен: %1$s</string>
+    <string name="driver_install_failed">Не удалось установить драйвер</string>
+    <string name="download_from_repository">Скачать из репозитория</string>
+    <string name="install_from_file">Установить из файла</string>
+    <string name="driver_other_gpu_warning">Этот драйвер сделан для %1$s, а у вас %2$s. Он может не работать.</string>
+    <string name="driver_needs_newer_android">Для этого драйвера нужен Android API %1$d или новее, будет использован системный драйвер.</string>
+    <string name="driver_selected_automatically">выбран автоматически</string>
+    <string name="detected_gpu">Определён GPU</string>
+    <string name="install_driver_from_file">Установить драйвер из файла</string>
+    <string name="show_controls_with_gamepad">Показывать экран управления при подключённом геймпаде</string>
 </resources>

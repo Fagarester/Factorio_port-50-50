@@ -131,4 +131,15 @@
     <string name="low_latency">Низька задержка</string>
     <string name="power_saving">Енергозбереження</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Налаштування змінено. Бажаєте перезапустити додаток?</string>
+    <string name="driver_installed_as_turnip">Збірку Turnip %1$s встановлено</string>
+    <string name="driver_installed_as_vortek">Драйвер встановлено: %1$s</string>
+    <string name="driver_install_failed">Не вдалося встановити драйвер</string>
+    <string name="download_from_repository">Завантажити з репозиторію</string>
+    <string name="install_from_file">Встановити з файлу</string>
+    <string name="driver_other_gpu_warning">Цей драйвер зроблено для %1$s, а у вас %2$s. Він може не працювати.</string>
+    <string name="driver_needs_newer_android">Для цього драйвера потрібен Android API %1$d або новіший, буде використано системний драйвер.</string>
+    <string name="driver_selected_automatically">вибрано автоматично</string>
+    <string name="detected_gpu">Визначено GPU</string>
+    <string name="install_driver_from_file">Встановити драйвер з файлу</string>
+    <string name="show_controls_with_gamepad">Показувати екран керування при підключеному геймпаді</string>
 </resources>

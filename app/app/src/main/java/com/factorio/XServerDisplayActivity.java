@@ -5,8 +5,12 @@ import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.input.InputManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -103,6 +107,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private String screenEffectProfile;
     private static boolean running = false;
 
+    // on-screen controls follow the gamepad: connected -> hidden, disconnected -> shown again
+    private InputManager.InputDeviceListener gamepadListener;
+    private boolean controlsHiddenByGamepad = false;
+    private boolean showControlsWithGamepad = false; // user opt-in (input controls dialog)
+
     // true while the game screen exists (MainActivity uses it to know that settings changes need a restart)
     public static boolean isRunning() {
         return running;
@@ -131,6 +140,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.menu_item_logs).setVisible(enableLogs);
         navigationView.setNavigationItemSelectedListener(this);
+        findViewById(R.id.LLExit).setOnClickListener((v) -> exit()); // "Exit" is pinned to the bottom of the drawer
 
         rootFS = RootFS.find(this);
 
@@ -235,6 +245,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     protected void onDestroy() {
         running = false;
+        if (gamepadListener != null) {
+            InputManager inputManager = (InputManager)getSystemService(Context.INPUT_SERVICE);
+            if (inputManager != null) inputManager.unregisterInputDeviceListener(gamepadListener);
+            gamepadListener = null;
+        }
         winHandler.gamepadHandler.stopBridge();
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
@@ -516,6 +531,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             ControlsProfile defaultProfile = inputControlsManager.getProfile(DEFAULT_NATIVE_CONTROLS_PROFILE_ID);
             if (defaultProfile != null) showInputControls(defaultProfile);
         }
+        setupGamepadAutoControls();
 
         if (MainActivity.DEBUG_MODE) rootView.addView(AppUtils.createDebugMsgTextView(this));
         AppUtils.observeSoftKeyboardVisibility(drawerLayout, renderer::setScreenOffsetYRelativeToCursor);
@@ -546,6 +562,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         final CheckBox cbRelativeMouseMovement = dialog.findViewById(R.id.CBRelativeMouseMovement);
         cbRelativeMouseMovement.setChecked(xServer.isRelativeMouseMovement());
 
+        final CheckBox cbShowControlsWithGamepad = dialog.findViewById(R.id.CBShowControlsWithGamepad);
+        cbShowControlsWithGamepad.setChecked(showControlsWithGamepad);
+
         final CheckBox cbShowTouchscreenControls = dialog.findViewById(R.id.CBShowTouchscreenControls);
         cbShowTouchscreenControls.setChecked(inputControlsView.isShowTouchscreenControls());
 
@@ -565,11 +584,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         dialog.setOnConfirmCallback(() -> {
             xServer.setRelativeMouseMovement(cbRelativeMouseMovement.isChecked());
             inputControlsView.setShowTouchscreenControls(cbShowTouchscreenControls.isChecked());
+            showControlsWithGamepad = cbShowControlsWithGamepad.isChecked();
+            preferences.edit().putBoolean("show_controls_with_gamepad", showControlsWithGamepad).apply();
             int position = sProfile.getSelectedItemPosition();
             if (position > 0) {
                 showInputControls(inputControlsManager.getProfiles().get(position - 1));
             }
             else hideInputControls();
+            updateControlsForGamepad(-1);
         });
 
         dialog.show();
@@ -606,6 +628,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     private void hideInputControls() {
+        controlsHiddenByGamepad = false;
         inputControlsView.setShowTouchscreenControls(true);
         inputControlsView.setVisibility(View.GONE);
         inputControlsView.setProfile(null);
@@ -620,6 +643,59 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         inputControlsView.invalidate();
+    }
+
+    // ------------------------------------------------------------------ gamepad <-> on-screen controls
+
+    private void setupGamepadAutoControls() {
+        showControlsWithGamepad = preferences.getBoolean("show_controls_with_gamepad", false);
+
+        InputManager inputManager = (InputManager)getSystemService(Context.INPUT_SERVICE);
+        if (inputManager != null && gamepadListener == null) {
+            gamepadListener = new InputManager.InputDeviceListener() {
+                @Override public void onInputDeviceAdded(int deviceId) { updateControlsForGamepad(-1); }
+                @Override public void onInputDeviceRemoved(int deviceId) { updateControlsForGamepad(deviceId); }
+                @Override public void onInputDeviceChanged(int deviceId) {}
+            };
+            inputManager.registerInputDeviceListener(gamepadListener, new Handler(Looper.getMainLooper()));
+        }
+        updateControlsForGamepad(-1);
+    }
+
+    private static boolean isGamepadConnected(int ignoredDeviceId) {
+        for (int deviceId : InputDevice.getDeviceIds()) {
+            if (deviceId == ignoredDeviceId) continue; // the device that is being removed may still be in the list
+            if (ExternalController.isGameController(InputDevice.getDevice(deviceId))) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Gamepad connected    -> the on-screen controls are hidden (the screen works as a plain touchpad).
+     * Gamepad disconnected -> the controls come back.
+     * "Show controls with gamepad" in the input controls dialog turns the hiding off.
+     */
+    private void updateControlsForGamepad(int ignoredDeviceId) {
+        if (inputControlsView == null || touchpadView == null) return;
+
+        boolean hide = isGamepadConnected(ignoredDeviceId) && !showControlsWithGamepad;
+        if (hide) {
+            if (inputControlsView.getVisibility() == View.VISIBLE && inputControlsView.getProfile() != null) {
+                controlsHiddenByGamepad = true;
+                inputControlsView.setVisibility(View.GONE);
+
+                touchpadView.setSensitivity(globalCursorSpeed);
+                touchpadView.setPointerButtonLeftEnabled(true);
+                touchpadView.setPointerButtonRightEnabled(true);
+                touchpadView.setEnabled(true);
+                xServerView.getRenderer().setCursorVisible(true);
+            }
+        }
+        else if (controlsHiddenByGamepad) {
+            controlsHiddenByGamepad = false;
+            ControlsProfile profile = inputControlsView.getProfile();
+            if (profile != null) showInputControls(profile);
+        }
     }
 
     private void extractGraphicsDriverFiles() {

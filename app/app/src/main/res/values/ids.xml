@@ -5,4 +5,5 @@
     <item name="menu_item_task_manager" type="id" />
     <item name="menu_item_active_windows" type="id" />
     <item name="menu_item_magnifier" type="id" />
+    <item name="menu_item_exit" type="id" /> <!-- "Exit" is a pinned row in xserver_display_activity.xml, not a menu item -->
 </resources>

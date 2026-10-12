@@ -34,6 +34,12 @@
         android:text="@string/show_touchscreen_controls" />
 
     <CheckBox
+        android:id="@+id/CBShowControlsWithGamepad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/show_controls_with_gamepad" />
+
+    <CheckBox
         android:id="@+id/CBRelativeMouseMovement"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
