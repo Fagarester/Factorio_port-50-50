@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="screen_size_entries">
+        <item>@string/custom</item>
+        <item>640x360 (16:9)</item>
+        <item>640x480 (4:3)</item>
+        <item>800x600 (4:3)</item>
+        <item>854x480 (16:9)</item>
+        <item>960x544 (16:9)</item>
+        <item>1024x768 (4:3)</item>
+        <item>1280x720 (16:9)</item>
+        <item>1280x800 (16:10)</item>
+        <item>1280x1024 (5:4)</item>
+        <item>1366x768 (16:9)</item>
+        <item>1440x900 (16:10)</item>
+        <item>1600x900 (16:9)</item>
+        <item>1920x1080 (16:9)</item>
+    </string-array>
+    <string-array name="audio_driver_entries">
+        <item>ALSA</item>
+        <item>PulseAudio</item>
+    </string-array>
+    <string-array name="binding_type_entries">
+        <item>Keyboard</item>
+        <item>Mouse</item>
+        <item>Gamepad</item>
+    </string-array>
+    <string-array name="max_device_memory_entries">
+        <item>@string/zero_no_limit</item>
+        <item>512 MB</item>
+        <item>1 GB</item>
+        <item>2 GB</item>
+        <item>4 GB</item>
+        <item>6 GB</item>
+        <item>8 GB</item>
+        <item>12 GB</item>
+    </string-array>
+    <string-array name="image_cache_size_entries">
+        <item>64 MB</item>
+        <item>128 MB</item>
+        <item>256 MB</item>
+        <item>512 MB</item>
+        <item>1024 MB</item>
+    </string-array>
+    <string-array name="audio_performance_mode_entries">
+        <item>@string/none</item>
+        <item>@string/low_latency</item>
+        <item>@string/power_saving</item>
+    </string-array>
+    <string-array name="opengl_version_entries">
+        <item>2.0</item>
+        <item>2.1</item>
+        <item>3.0</item>
+        <item>3.1</item>
+        <item>3.2</item>
+        <item>3.3</item>
+        <item>4.0</item>
+    </string-array>
+    <string-array name="vk_version_entries">
+        <item>1.0</item>
+        <item>1.1</item>
+        <item>1.2</item>
+        <item>1.3</item>
+    </string-array>
+    <string-array name="language_entries">
+        <item>English</item>
+        <item>中文 (简体)</item>
+        <item>Español</item>
+        <item>हिन्दी</item>
+        <item>العربية</item>
+        
+        <item>Français</item>
+        <item>বাংলা</item>
+        <item>Português (Brasil)</item>
+        <item>Русский</item>
+        <item>日本語</item>
+        
+        <item>Беларускі</item>
+        <item>Deutsch</item>
+        <item>Basa Jawa</item>
+        <item>한국어</item>
+        <item>Қазақша</item>
+        
+        <item>Tiếng Việt</item>
+        <item>मराठी</item>
+        <item>தமிழ்</item>
+        <item>Türkçe</item>
+        <item>اردو</item>
+        
+        <item>Italiano</item>
+        <item>ไทย</item>
+        <item>ગુજરાતી</item>
+        <item>ಕನ್ನಡ</item>
+        <item>Gaeilge</item>
+        
+        <item>Українська</item>
+        <item>Polski</item>
+        <item>Română</item>
+        <item>Nederlands</item>
+        <item>Magyar</item>
+    </string-array>
+    <string-array name="resource_memory_type_entries">
+        <item>@string/auto</item>
+        <item>Opaque FD</item>
+        <item>DMA Buffer</item>
+        <item>Native Hardware Buffer</item>
+    </string-array>
+</resources>
