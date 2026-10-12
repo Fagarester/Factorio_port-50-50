@@ -39,7 +39,6 @@ import com.factorio.contentdialog.ContentDialog;
 import com.factorio.contentdialog.DebugDialog;
 import com.factorio.contentdialog.ScreenEffectDialog;
 import com.factorio.contentdialog.TurnipConfigDialog;
-import com.factorio.contentdialog.VirGLConfigDialog;
 import com.factorio.core.AppUtils;
 import com.factorio.core.DefaultVersion;
 import com.factorio.core.EnvVars;
@@ -56,6 +55,7 @@ import com.factorio.inputcontrols.InputControlsManager;
 import com.factorio.math.Mathf;
 import com.factorio.renderer.GLRenderer;
 import com.factorio.widget.InputControlsView;
+import com.factorio.widget.LogView;
 import com.factorio.widget.MagnifierView;
 import com.factorio.widget.TouchpadView;
 import com.factorio.widget.XServerView;
@@ -69,7 +69,6 @@ import com.factorio.xenvironment.components.GuestProgramLauncherComponent;
 import com.factorio.xenvironment.components.NetworkInfoUpdateComponent;
 import com.factorio.xenvironment.components.PulseAudioComponent;
 import com.factorio.xenvironment.components.SysVSharedMemoryComponent;
-import com.factorio.xenvironment.components.VirGLRendererComponent;
 import com.factorio.xenvironment.components.VortekRendererComponent;
 import com.factorio.xenvironment.components.XServerComponent;
 import com.factorio.xserver.ScreenInfo;
@@ -110,6 +109,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     // on-screen controls follow the gamepad: connected -> hidden, disconnected -> shown again
     private InputManager.InputDeviceListener gamepadListener;
     private boolean controlsHiddenByGamepad = false;
+    private PreloaderDialog preloaderDialog;
+    private volatile boolean firstWindowShown = false;
     private boolean showControlsWithGamepad = false; // user opt-in (input controls dialog)
 
     // true while the game screen exists (MainActivity uses it to know that settings changes need a restart)
@@ -126,7 +127,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         AppUtils.keepScreenOn(this);
         setContentView(R.layout.xserver_display_activity);
 
-        final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
+        preloaderDialog = new PreloaderDialog(this);
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         drawerLayout = findViewById(R.id.DrawerLayout);
@@ -179,6 +180,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 if (!flags[0] && window.isRenderable() && !window.getClassName().isEmpty()) {
                     xServerView.getRenderer().setCursorVisible(true);
                     preloaderDialog.closeOnUiThread();
+                    firstWindowShown = true;
                     flags[0] = true;
                 }
             }
@@ -340,6 +342,30 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
 
+    private void showEarlyExitDialog(int status) {
+        if (preloaderDialog != null) preloaderDialog.close();
+
+        String tail = "";
+        try {
+            File logDir = LogView.getLogFile().getParentFile();
+            String log = logDir != null ? FileUtils.readString(new File(logDir, "factorio-native.log")) : null;
+            if (log != null && !log.trim().isEmpty()) {
+                String[] lines = log.trim().split("\n");
+                StringBuilder sb = new StringBuilder();
+                for (int i = Math.max(0, lines.length - 8); i < lines.length; i++) sb.append(lines[i].length() > 220 ? lines[i].substring(0, 220) : lines[i]).append('\n');
+                tail = "\n\n"+sb;
+            }
+        }
+        catch (Exception e) {}
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.game_exited_early)
+            .setMessage(getString(R.string.game_exited_early_message, status)+tail)
+            .setCancelable(false)
+            .setPositiveButton(R.string.exit, (dialog, which) -> exit())
+            .show();
+    }
+
     private void exit() {
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
@@ -479,12 +505,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             VortekRendererComponent vortekRendererComponent = new VortekRendererComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.VORTEK_SERVER_PATH), options);
             environment.addComponent(vortekRendererComponent);
         }
-        if (graphicsDriver[1].equals(GraphicsDrivers.VIRGL)) {
-            environment.addComponent(new VirGLRendererComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.VIRGL_SERVER_PATH)));
-        }
 
         guestProgramLauncherComponent.setEnvVars(envVars);
-        guestProgramLauncherComponent.setTerminationCallback((status) -> exit());
+        guestProgramLauncherComponent.setTerminationCallback((status) -> runOnUiThread(() -> {
+            // The game died before it opened a window (usually a broken graphics driver): do not hang on the loading
+            // animation / silently kill the app, show what happened.
+            if (!firstWindowShown && status != null && status != 0 && !isFinishing()) showEarlyExitDialog(status);
+            else exit();
+        }));
         environment.addComponent(guestProgramLauncherComponent);
 
         setupNativeGamepadBridge();
@@ -703,10 +731,19 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         String cacheId = "";
         if (graphicsDriver[0].equals(GraphicsDrivers.TURNIP)) {
-            cacheId += graphicsDriver[0]+"-"+graphicsDriverConfig[0].get("version", DefaultVersion.TURNIP);
+            String turnipVersion = graphicsDriverConfig[0].get("version", DefaultVersion.TURNIP);
+            cacheId += graphicsDriver[0]+"-"+turnipVersion;
+
+            // an imported build that was re-installed under the same name must be extracted again
+            File turnipFile = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.TURNIP, this), "turnip-"+turnipVersion+".tzst");
+            if (turnipFile.isFile() && !GeneralComponents.isBuiltinComponent(GeneralComponents.Type.TURNIP, turnipVersion)) cacheId += "-"+turnipFile.lastModified();
         }
         else cacheId += graphicsDriver[0]+"-"+DefaultVersion.valueOf(graphicsDriver[0]);
-        cacheId += "-"+graphicsDriver[1]+"-"+DefaultVersion.valueOf(graphicsDriver[1]);
+        // Zink is versioned like Turnip: the built-in one is the known-good build, imported builds live next to it
+        String zinkVersion = graphicsDriverConfig[1].get("version", DefaultVersion.ZINK);
+        cacheId += "-"+graphicsDriver[1]+"-"+zinkVersion;
+        File zinkFile = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.ZINK, this), "zink-"+zinkVersion+".tzst");
+        if (zinkFile.isFile() && !GeneralComponents.isBuiltinComponent(GeneralComponents.Type.ZINK, zinkVersion)) cacheId += "-"+zinkFile.lastModified();
 
         boolean changed = !cacheId.equals(container.getExtra("graphicsDriver"));
         File rootDir = rootFS.getRootDir();
@@ -715,7 +752,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (changed) {
             FileUtils.delete(new File(libDir, "libvulkan_freedreno.so"));
             FileUtils.delete(new File(libDir, "libvulkan_vortek.so"));
-            FileUtils.delete(new File(libDir, "libGL.so.1.7.0"));
+            File[] oldGL = libDir.listFiles((dir, name) -> name.startsWith("libGL.so")); // any libGL version of a previous Zink
+            if (oldGL != null) for (File file : oldGL) FileUtils.delete(file);
 
             File vulkanICDDir = new File(rootDir, "/usr/share/vulkan/icd.d");
             FileUtils.delete(vulkanICDDir);
@@ -744,23 +782,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 envVars.put("ZINK_CONTEXT_THREADED", "1");
                 if (graphicsDriver[0].equals(GraphicsDrivers.VORTEK)) envVars.put("MESA_GL_VERSION_OVERRIDE", "3.3");
 
-                if (changed) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/zink-"+DefaultVersion.ZINK+".tzst", rootDir);
-                break;
-            case GraphicsDrivers.VIRGL:
-                envVars.put("GALLIUM_DRIVER", "virpipe");
-                envVars.put("VIRGL_NO_READBACK", "true");
-                envVars.put("VIRGL_SERVER_PATH", rootDir+UnixSocketConfig.VIRGL_SERVER_PATH);
-                VirGLConfigDialog.setEnvVars(graphicsDriverConfig[1], envVars);
-
-                if (changed) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/virgl-"+DefaultVersion.VIRGL+".tzst", rootDir);
-                break;
-            case GraphicsDrivers.GLADIO:
-                envVars.put("GLADIO_NO_ERROR", "1");
-
-                if (changed || MainActivity.DEBUG_MODE) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/gladio-"+DefaultVersion.GLADIO+".tzst", rootDir);
-                break;
-            case GraphicsDrivers.OPENGL:
-                if (changed || MainActivity.DEBUG_MODE) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/opengl-"+DefaultVersion.OPENGL+".tzst", rootDir);
+                if (changed) GeneralComponents.extractFile(GeneralComponents.Type.ZINK, this, zinkVersion, DefaultVersion.ZINK);
                 break;
         }
     }

@@ -8,8 +8,8 @@ import android.widget.LinearLayout;
 import com.factorio.MainActivity;
 import com.factorio.R;
 import com.factorio.contentdialog.TurnipConfigDialog;
-import com.factorio.contentdialog.VirGLConfigDialog;
 import com.factorio.contentdialog.VortekConfigDialog;
+import com.factorio.contentdialog.ZinkConfigDialog;
 import com.factorio.core.AppUtils;
 import com.factorio.core.DriverPackages;
 import com.factorio.core.GPUHelper;
@@ -36,6 +36,7 @@ public class GraphicsDriverPicker {
     private final LinearLayout container;
     private final Context context;
     private final TaggedSelectionBox vulkanBox;
+    private final TaggedSelectionBox glBox;
     private final LinkedHashMap<String, DriverPackages.Info> packages = new LinkedHashMap<>();
     private String currentLabel = ITEM_VORTEK;
 
@@ -61,13 +62,13 @@ public class GraphicsDriverPicker {
         container.addView(vulkanBox);
 
         // ---- OpenGL ----
-        final TaggedSelectionBox glBox = new TaggedSelectionBox(context);
+        glBox = new TaggedSelectionBox(context);
         glBox.setLabel("OpenGL");
         glBox.setItems(GraphicsDrivers.getItems("OpenGL"));
         glBox.setSelectedItem(GraphicsDrivers.getName(identifiers[1]));
         glBox.setTag(configs[1].toString());
         glBox.setOnButtonClickListener(() -> {
-            if (StringUtils.parseIdentifier(glBox.getSelectedItem()).equals(GraphicsDrivers.VIRGL)) (new VirGLConfigDialog(glBox)).show();
+            if (StringUtils.parseIdentifier(glBox.getSelectedItem()).equals(GraphicsDrivers.ZINK)) (new ZinkConfigDialog(glBox)).show();
         });
         container.addView(glBox);
     }
@@ -143,6 +144,16 @@ public class GraphicsDriverPicker {
     }
 
     private void onDriverInstalled(DriverPackages.InstallResult result) {
+        if (result.kind == DriverPackages.Kind.ZINK) {
+            // OpenGL row: Zink with the imported build
+            KeyValueSet zinkConfig = new KeyValueSet();
+            zinkConfig.put("version", result.id);
+            glBox.setSelectedItem(GraphicsDrivers.getName(GraphicsDrivers.ZINK));
+            glBox.setTag(zinkConfig.toString());
+            AppUtils.showToast(context, GeneralComponents.describe(context, result)+" — "+context.getString(R.string.driver_selected_automatically));
+            return;
+        }
+
         reloadVulkanItems();
 
         KeyValueSet config;

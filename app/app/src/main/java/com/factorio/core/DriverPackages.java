@@ -7,6 +7,9 @@ import android.os.Build;
 import android.provider.OpenableColumns;
 import android.util.Log;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -84,7 +87,7 @@ public abstract class DriverPackages {
         }
     }
 
-    public enum Kind {ADRENOTOOLS, TURNIP}
+    public enum Kind {ADRENOTOOLS, TURNIP, ZINK}
 
     public static class Info {
         public String id;
@@ -274,7 +277,7 @@ public abstract class DriverPackages {
 
             if (count == 4 && magic[0] == 0x50 && magic[1] == 0x4B) return installZip(context, in);
             if (count == 4 && (magic[0] & 0xff) == 0x28 && (magic[1] & 0xff) == 0xB5 && (magic[2] & 0xff) == 0x2F && (magic[3] & 0xff) == 0xFD) {
-                return installTurnipArchive(context, in, displayName);
+                return installGlibcArchive(context, uri, in, displayName);
             }
             throw new IOException("Unknown driver format (expected .zip with meta.json or .tzst)");
         }
@@ -332,7 +335,34 @@ public abstract class DriverPackages {
         }
     }
 
-    private static InstallResult installTurnipArchive(Context context, InputStream in, String displayName) throws IOException {
+    /**
+     * glibc packages for the rootfs are told apart by the files inside:
+     *   usr/lib/libvulkan_freedreno.so -> Turnip,   usr/lib/libGL.so* -> Zink (OpenGL on top of Vulkan).
+     */
+    private static Kind sniffGlibcArchive(Context context, Uri uri) throws IOException {
+        try (InputStream raw = context.getContentResolver().openInputStream(uri)) {
+            if (raw == null) throw new IOException("Cannot open the file");
+            try (InputStream zstd = new ZstdCompressorInputStream(new BufferedInputStream(raw, 1 << 16));
+                 TarArchiveInputStream tar = new TarArchiveInputStream(zstd)) {
+                TarArchiveEntry entry;
+                boolean hasGL = false;
+                while ((entry = (TarArchiveEntry)tar.getNextEntry()) != null) {
+                    String name = entry.getName();
+                    name = name.substring(name.lastIndexOf('/') + 1);
+                    if (name.equals("libvulkan_freedreno.so")) return Kind.TURNIP;
+                    if (name.startsWith("libGL.so")) hasGL = true;
+                }
+                if (hasGL) return Kind.ZINK;
+            }
+        }
+        throw new IOException("The archive has neither libvulkan_freedreno.so (Turnip) nor libGL.so (Zink)");
+    }
+
+    private static InstallResult installGlibcArchive(Context context, Uri uri, InputStream in, String displayName) throws IOException {
+        Kind kind = sniffGlibcArchive(context, uri);
+        GeneralComponents.Type type = kind == Kind.ZINK ? GeneralComponents.Type.ZINK : GeneralComponents.Type.TURNIP;
+        String prefix = type == GeneralComponents.Type.ZINK ? "zink" : "turnip";
+
         String base = displayName != null ? displayName : "";
         base = base.replaceAll("(?i)(\\.tar)?\\.(tzst|zst)$", "");
 
@@ -340,12 +370,16 @@ public abstract class DriverPackages {
         Matcher matcher = Pattern.compile("(\\d+(?:\\.\\d+)+)").matcher(base);
         if (matcher.find()) id = matcher.group(1);
         else {
-            id = sanitizeId(base.replaceAll("(?i)^turnip-?", ""));
+            id = sanitizeId(base.replaceAll("(?i)^"+prefix+"-?", ""));
             if (id.isEmpty()) id = "custom-"+(System.currentTimeMillis() / 1000);
         }
 
-        File dir = GeneralComponents.getComponentDir(GeneralComponents.Type.TURNIP, context);
-        File destination = new File(dir, "turnip-"+id+".tzst");
+        // the built-in version (e.g. Turnip 26.2.0, Zink 22.2.5) is the known-good build and always wins over a file with
+        // the same name, so a rebuilt driver would be ignored
+        if (GeneralComponents.isBuiltinComponent(type, id)) id += "-custom";
+
+        File dir = GeneralComponents.getComponentDir(type, context);
+        File destination = new File(dir, prefix+"-"+id+".tzst");
         File tmp = new File(dir, ".tmp-"+destination.getName());
         try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp))) {
             byte[] buffer = new byte[1 << 16];
@@ -357,6 +391,6 @@ public abstract class DriverPackages {
             tmp.delete();
             throw new IOException("Cannot save "+destination.getName());
         }
-        return new InstallResult(Kind.TURNIP, id, null);
+        return new InstallResult(kind, id, null);
     }
 }

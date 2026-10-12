@@ -1,7 +1,7 @@
 # Factorio (Android, native ARM64)
 
 Форк Winlator, оставленный только ради запуска **нативного ARM64-билда Factorio** на Android
-(glibc rootfs + Turnip/Zink/VirGL/Vortek/Gladio, мост геймпадов Selkies input interposer).
+(glibc rootfs + Turnip/Zink/Vortek, мост геймпадов Selkies input interposer).
 Wine, Box64, DXVK, VKD3D, WineD3D, Win-компоненты, ярлыки, MIDI и файловый менеджер вырезаны.
 
 *Fork of Winlator reduced to run the native ARM64 build of Factorio. Wine/Box64/DXVK/VKD3D/etc. are removed.*
@@ -39,4 +39,4 @@ Wine, Box64, DXVK, VKD3D, WineD3D, Win-компоненты, ярлыки, MIDI 
 собранные библиотеки можно класть в архивы как есть. Маркер должен остаться ровно 36 байт.
 
 ## Благодарности
-Winlator (brunodev85), GLIBC-патчи Termux Pacman, Mesa, Turnip, VirGL, PulseAudio. Лицензия GPL-3.0 (LICENSE).
+Winlator (brunodev85), GLIBC-патчи Termux Pacman, Mesa, Turnip, PulseAudio. Лицензия GPL-3.0 (LICENSE).

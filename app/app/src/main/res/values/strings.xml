@@ -154,4 +154,8 @@
     <string name="detected_gpu">Detected GPU</string>
     <string name="install_driver_from_file">Install driver from file</string>
     <string name="show_controls_with_gamepad">Show on-screen controls when a gamepad is connected</string>
+    <string name="game_exited_early">The game stopped before its window opened</string>
+    <string name="game_exited_early_message">Exit code: %1$d. Most often the graphics driver is the cause: choose another one in Settings → Graphics driver.\n\nLast lines of the game log:</string>
+    <string name="driver_installed_as_zink">Zink build %1$s installed</string>
+    <string name="driver_pick_in_its_list">choose it in its own list</string>
 </resources>

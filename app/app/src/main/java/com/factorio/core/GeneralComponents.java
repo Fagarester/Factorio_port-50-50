@@ -30,7 +30,7 @@ public abstract class GeneralComponents {
     private static final String INSTALLABLE_COMPONENTS_URL = "https://raw.githubusercontent.com/brunodev85/winlator/main/installable_components/%s";
 
     public enum Type {
-        TURNIP, ADRENOTOOLS_DRIVER;
+        TURNIP, ZINK, ADRENOTOOLS_DRIVER;
 
         private String lowerName() {
             return name().toLowerCase(Locale.ENGLISH);
@@ -40,6 +40,8 @@ public abstract class GeneralComponents {
             switch (this) {
                 case TURNIP:
                     return "Turnip";
+                case ZINK:
+                    return "Zink";
                 case ADRENOTOOLS_DRIVER:
                     return "Adrenotools Driver";
             }
@@ -48,7 +50,7 @@ public abstract class GeneralComponents {
         }
 
         private String assetFolder() {
-            return this == TURNIP ? "graphics_driver" : "";
+            return (this == TURNIP || this == ZINK) ? "graphics_driver" : "";
         }
 
         private File getSource(Context context, String identifier) {
@@ -62,11 +64,11 @@ public abstract class GeneralComponents {
         }
 
         private InstallMode getInstallMode() {
-            return this == ADRENOTOOLS_DRIVER ? InstallMode.FILE : InstallMode.DOWNLOAD;
+            return (this == ADRENOTOOLS_DRIVER || this == ZINK) ? InstallMode.FILE : InstallMode.DOWNLOAD; // only Turnip has a download list
         }
 
         private boolean isVersioned() {
-            return this == TURNIP;
+            return this == TURNIP || this == ZINK;
         }
     }
 
@@ -76,6 +78,9 @@ public abstract class GeneralComponents {
         switch (type) {
             case TURNIP:
                 items = new String[]{DefaultVersion.TURNIP};
+                break;
+            case ZINK:
+                items = new String[]{DefaultVersion.ZINK};
                 break;
             case ADRENOTOOLS_DRIVER:
                 items = new String[]{DriverPackages.SYSTEM, DriverPackages.AUTO};
@@ -164,16 +169,12 @@ public abstract class GeneralComponents {
 
     private static void openFileForInstall(final MainActivity activity, final Type type, final Spinner spinner, final String defaultItem) {
         activity.setOpenFileCallback((uri) -> installFromUri(activity, uri, (result) -> {
-            if (result.kind == DriverPackages.Kind.TURNIP && type != Type.TURNIP) {
-                AppUtils.showToast(activity, activity.getString(R.string.driver_installed_as_turnip, result.id));
-            }
-            else if (result.kind == DriverPackages.Kind.ADRENOTOOLS && type != Type.ADRENOTOOLS_DRIVER) {
-                AppUtils.showToast(activity, activity.getString(R.string.driver_installed_as_vortek, result.info.name));
-            }
-            else {
+            // the type is detected from the file; if it is not the type of this dialog, only tell where it went
+            if (typeOf(result.kind) == type) {
                 loadSpinner(type, spinner, result.id, defaultItem);
                 AppUtils.showToast(activity, describe(activity, result));
             }
+            else AppUtils.showToast(activity, describe(activity, result)+" — "+activity.getString(R.string.driver_pick_in_its_list));
         }));
 
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -182,8 +183,17 @@ public abstract class GeneralComponents {
         activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
     }
 
+    public static Type typeOf(DriverPackages.Kind kind) {
+        switch (kind) {
+            case TURNIP: return Type.TURNIP;
+            case ZINK: return Type.ZINK;
+            default: return Type.ADRENOTOOLS_DRIVER;
+        }
+    }
+
     public static String describe(Context context, DriverPackages.InstallResult result) {
         if (result.kind == DriverPackages.Kind.TURNIP) return context.getString(R.string.driver_installed_as_turnip, result.id);
+        if (result.kind == DriverPackages.Kind.ZINK) return context.getString(R.string.driver_installed_as_zink, result.id);
         String gpu = result.info.family == DriverPackages.GpuFamily.UNKNOWN ? "" : " ("+result.info.family.title+")";
         return context.getString(R.string.driver_installed_as_vortek, result.info.name+gpu);
     }

@@ -172,6 +172,9 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         // The folder is copied once into rootfs/opt/mesa-kgsl and put first in the library path.
         // Variables set by the container (MESA_LOADER_DRIVER_OVERRIDE, LIBGL_DRIVERS_PATH, ...) win over the defaults below.
         String libPath = rootFS.getLibDir().getPath();
+        // Libraries a driver package brought along (see build-turnip.yml): searched LAST, so rootfs libraries always win
+        File driverDepsDir = new File(rootFS.getLibDir(), "turnip-deps");
+        if (driverDepsDir.isDirectory()) libPath += ":"+driverDepsDir.getPath();
         String mesaSrc = envVars.get("NATIVE_MESA_SRC");
         if (mesaSrc != null && !mesaSrc.isEmpty()) {
             File mesaSrcDir = new File(mesaSrc);

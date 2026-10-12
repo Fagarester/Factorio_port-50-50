@@ -9,8 +9,6 @@ public abstract class GraphicsDrivers {
     public static final String TURNIP = "turnip";
     public static final String VORTEK = "vortek";
     public static final String ZINK = "zink";
-    public static final String VIRGL = "virgl";
-    public static final String GLADIO = "gladio";
     public static final String OPENGL = "opengl";
     public static final String DEFAULT_VULKAN_DRIVER = VORTEK;
     public static final String DEFAULT_OPENGL_DRIVER = ZINK;
@@ -20,8 +18,6 @@ public abstract class GraphicsDrivers {
             case TURNIP: return "Turnip";
             case VORTEK: return "Vortek";
             case ZINK: return "Zink";
-            case VIRGL: return "VirGL";
-            case GLADIO: return "Gladio";
             case OPENGL: return "OpenGL";
             default: return "None";
         }
@@ -32,7 +28,7 @@ public abstract class GraphicsDrivers {
     }
 
     public static boolean isOpenGLDriver(String identifier) {
-        return identifier != null && (identifier.equals(ZINK) || identifier.equals(VIRGL) || identifier.equals(GLADIO) || identifier.equals(OPENGL));
+        return identifier != null && (identifier.equals(ZINK));
     }
 
     public static String[] getItems(String apiName) {
@@ -40,7 +36,7 @@ public abstract class GraphicsDrivers {
             return new String[]{getName(TURNIP), getName(VORTEK)};
         }
         else if (apiName.equalsIgnoreCase("OPENGL")) {
-            return new String[]{getName(ZINK), getName(VIRGL), getName(GLADIO)}; // "OpenGL" (native kgsl) removed: it does not work on stock Mesa
+            return new String[]{getName(ZINK)}; // VirGL and Gladio were removed; "OpenGL" (native kgsl) does not work on stock Mesa
         }
         else return new String[0];
     }
@@ -61,8 +57,8 @@ public abstract class GraphicsDrivers {
             else identifiers = new String[]{DEFAULT_VULKAN_DRIVER, DEFAULT_OPENGL_DRIVER};
         }
 
-        // containers created earlier may still have the removed "opengl" driver saved -> use Zink instead
-        if (identifiers.length > 1 && OPENGL.equals(identifiers[1])) identifiers[1] = DEFAULT_OPENGL_DRIVER;
+        // containers created earlier may still have a removed OpenGL driver saved (opengl, virgl, gladio) -> use Zink instead
+        if (identifiers.length > 1 && !ZINK.equals(identifiers[1])) identifiers[1] = DEFAULT_OPENGL_DRIVER;
         return identifiers;
     }
 

@@ -145,4 +145,8 @@
     <string name="detected_gpu">Определён GPU</string>
     <string name="install_driver_from_file">Установить драйвер из файла</string>
     <string name="show_controls_with_gamepad">Показывать экран управления при подключённом геймпаде</string>
+    <string name="game_exited_early">Игра остановилась до открытия окна</string>
+    <string name="game_exited_early_message">Код выхода: %1$d. Чаще всего виноват графический драйвер: выберите другой в Настройках → Графический драйвер.\n\nПоследние строки лога игры:</string>
+    <string name="driver_installed_as_zink">Сборка Zink %1$s установлена</string>
+    <string name="driver_pick_in_its_list">выберите её в своём списке</string>
 </resources>
