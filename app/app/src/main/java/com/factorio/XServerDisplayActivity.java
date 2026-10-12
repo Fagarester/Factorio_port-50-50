@@ -42,6 +42,8 @@ import com.factorio.contentdialog.TurnipConfigDialog;
 import com.factorio.core.AppUtils;
 import com.factorio.core.DefaultVersion;
 import com.factorio.core.EnvVars;
+import com.factorio.core.DriverPackages;
+import com.factorio.core.DriverReport;
 import com.factorio.core.FileUtils;
 import com.factorio.core.GeneralComponents;
 import com.factorio.core.KeyValueSet;
@@ -194,6 +196,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         Executors.newSingleThreadExecutor().execute(() -> {
             setupSystemFiles();
             extractGraphicsDriverFiles();
+            writeDriverReport();
             setupXEnvironment();
         });
     }
@@ -341,6 +344,56 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         return preferences;
     }
 
+
+    /** Documents/Factorio/driver-report.txt: which driver files are REALLY in the rootfs (size, hash, Mesa version inside). */
+    private void writeDriverReport() {
+        try {
+            File rootDir = rootFS.getRootDir();
+            File libDir = rootFS.getLibDir();
+            StringBuilder sb = new StringBuilder();
+            sb.append("Driver report ").append(new java.util.Date()).append("\n");
+            sb.append("App version code: ").append(AppUtils.getVersionCode(this)).append("\n\n");
+
+            if (graphicsDriver[0].equals(GraphicsDrivers.TURNIP)) {
+                String version = graphicsDriverConfig[0].get("version", DefaultVersion.TURNIP);
+                sb.append("VULKAN: Turnip, selected version '").append(version).append("'");
+                if (GeneralComponents.isBuiltinComponent(GeneralComponents.Type.TURNIP, version)) sb.append(" (built-in)\n");
+                else {
+                    File file = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.TURNIP, this), "turnip-"+version+".tzst");
+                    sb.append(" (imported file ").append(file.length()).append(" bytes, ").append(new java.util.Date(file.lastModified())).append(")\n");
+                }
+                sb.append(DriverReport.describe(new File(libDir, "libvulkan_freedreno.so"))).append("\n");
+                String icd = FileUtils.readString(new File(rootDir, "usr/share/vulkan/icd.d/freedreno_icd.aarch64.json"));
+                sb.append("  ICD: ").append(icd != null ? icd.replaceAll("\\s+", " ").trim() : "MISSING").append("\n");
+                String[] deps = new File(libDir, "turnip-deps").list();
+                sb.append("  turnip-deps: ").append(deps != null ? java.util.Arrays.toString(deps) : "none").append("\n");
+            }
+            else {
+                sb.append("VULKAN: Vortek, adrenotools driver '").append(graphicsDriverConfig[0].get("adrenotoolsDriver", DriverPackages.SYSTEM)).append("' -> ");
+                String path = GeneralComponents.getDefinitivePath(GeneralComponents.Type.ADRENOTOOLS_DRIVER, this, graphicsDriverConfig[0].get("adrenotoolsDriver", DriverPackages.SYSTEM));
+                sb.append(path != null ? path : "system driver").append("\n");
+                if (path != null) sb.append(DriverReport.describe(new File(path))).append("\n");
+            }
+
+            if (graphicsDriver[1].equals(GraphicsDrivers.ZINK)) {
+                String version = graphicsDriverConfig[1].get("version", DefaultVersion.ZINK);
+                sb.append("\nOPENGL: Zink, selected version '").append(version).append("'");
+                sb.append(GeneralComponents.isBuiltinComponent(GeneralComponents.Type.ZINK, version) ? " (built-in)\n" : " (imported)\n");
+                File[] gl = libDir.listFiles((dir, name) -> name.startsWith("libGL.so."));
+                if (gl != null && gl.length > 0) {
+                    java.util.Arrays.sort(gl);
+                    sb.append(DriverReport.describe(gl[gl.length - 1])).append("\n");
+                }
+                else sb.append("  libGL.so.*: MISSING\n");
+            }
+
+            File logDir = LogView.getLogFile().getParentFile();
+            DriverReport.write(logDir, sb.toString());
+        }
+        catch (Exception e) {
+            android.util.Log.w("DriverReport", e);
+        }
+    }
 
     private void showEarlyExitDialog(int status) {
         if (preloaderDialog != null) preloaderDialog.close();
