@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">माउस इनपुट अक्षम करें</string>
     <string name="move_cursor_to_touchpoint">कर्सर को टच पॉइंट पर ले जाएँ</string>
     <string name="sync_every_frame">हर फ्रेम सिंक करें</string>
-    <string name="preferred_input_api">पसंदीदा इनपुट API</string>
-    <string name="game_controllers">गेम कंट्रोलर</string>
     <string name="reinstall_system_files">सिस्टम फ़ाइलें पुनः इंस्टॉल करें</string>
     <string name="do_you_want_to_reinstall_system_files">क्या आप सिस्टम फ़ाइलें पुनः इंस्टॉल करना चाहते हैं?</string>
     <string name="mouse">माउस</string>
@@ -133,11 +131,5 @@
     <string name="both">दोनों</string>
     <string name="low_latency">कम विलंबता</string>
     <string name="power_saving">पावर बचत</string>
-    <string name="player">खिलाड़ी</string>
-    <string name="enable_vibration">वाइब्रेशन सक्षम करें</string>
-    <string name="mode">मोड</string>
-    <string name="external_controller">बाहरी कंट्रोलर</string>
-    <string name="controls_profile">नियंत्रण प्रोफ़ाइल</string>
-    <string name="do_you_want_to_reset_configurations">क्या आप कॉन्फ़िगरेशन रीसेट करना चाहते हैं?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">सेटिंग्स बदल दी गई हैं। क्या आप ऐप पुनः आरंभ करना चाहते हैं?</string>
 </resources>

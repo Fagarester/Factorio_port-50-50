@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Díchumasaigh ionchur luchóige</string>
     <string name="move_cursor_to_touchpoint">Bog cúrsóir chuig pointe teagmhála</string>
     <string name="sync_every_frame">Sioncronú gach fráma</string>
-    <string name="preferred_input_api">API ionchurtha is fearr leat</string>
-    <string name="game_controllers">Rialairí cluiche</string>
     <string name="reinstall_system_files">Athshuiteáil comhaid córais</string>
     <string name="do_you_want_to_reinstall_system_files">An bhfuil tú ag iarraidh comhaid córais a athshuiteáil?</string>
     <string name="mouse">Luchóg</string>
@@ -133,11 +131,5 @@
     <string name="both">An dá cheann</string>
     <string name="low_latency">Moill íseal</string>
     <string name="power_saving">Coigilt cumhachta</string>
-    <string name="player">Imreoir</string>
-    <string name="enable_vibration">Cumasaigh crith</string>
-    <string name="mode">Mód</string>
-    <string name="external_controller">Rialaire seachtrach</string>
-    <string name="controls_profile">Próifíl rialuithe</string>
-    <string name="do_you_want_to_reset_configurations">An bhfuil tú ag iarraidh na cumraíochtaí a athshocrú?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Athraíodh na socruithe. An bhfuil tú ag iarraidh an aip a atosú?</string>
 </resources>

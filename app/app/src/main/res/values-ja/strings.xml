@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">マウス入力を無効にする</string>
     <string name="move_cursor_to_touchpoint">タッチポイントにカーソルを移動</string>
     <string name="sync_every_frame">毎フレーム同期</string>
-    <string name="preferred_input_api">優先入力API</string>
-    <string name="game_controllers">ゲームコントローラー</string>
     <string name="reinstall_system_files">システムファイルを再インストール</string>
     <string name="do_you_want_to_reinstall_system_files">システムファイルを再インストールしますか？</string>
     <string name="mouse">マウス</string>
@@ -133,11 +131,5 @@
     <string name="both">両方</string>
     <string name="low_latency">低遅延</string>
     <string name="power_saving">省電力</string>
-    <string name="player">プレイヤー</string>
-    <string name="enable_vibration">振動を有効にする</string>
-    <string name="mode">モード</string>
-    <string name="external_controller">外部コントローラー</string>
-    <string name="controls_profile">コントロールプロファイル</string>
-    <string name="do_you_want_to_reset_configurations">設定をリセットしますか？</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">設定が変更されました。アプリを再起動しますか？</string>
 </resources>

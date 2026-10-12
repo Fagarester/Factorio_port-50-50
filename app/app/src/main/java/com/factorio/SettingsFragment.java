@@ -26,7 +26,6 @@ import com.factorio.container.GraphicsDrivers;
 import com.factorio.contentdialog.AddEnvVarDialog;
 import com.factorio.contentdialog.AudioDriverConfigDialog;
 import com.factorio.contentdialog.ContentDialog;
-import com.factorio.contentdialog.GamepadPlayerConfigDialog;
 import com.factorio.core.AppUtils;
 import com.factorio.core.EnvVars;
 import com.factorio.core.LocaleHelper;
@@ -35,7 +34,6 @@ import com.factorio.widget.ColorPickerView;
 import com.factorio.widget.EnvVarsView;
 import com.factorio.widget.LogView;
 import com.factorio.widget.SeekBar;
-import com.factorio.winhandler.GamepadHandler;
 import com.factorio.xenvironment.RootFSInstaller;
 
 public class SettingsFragment extends Fragment {
@@ -70,8 +68,8 @@ public class SettingsFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.settings_fragment, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup root, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.settings_fragment, root, false);
         final Context context = getContext();
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
         final MainActivity activity = (MainActivity)getActivity();
@@ -127,9 +125,6 @@ public class SettingsFragment extends Fragment {
         cpvCursorColor.setPalette(0xffffff, 0x000000, 0x651fff, 0xffea00, 0xff9100, 0xf50057, 0x00b0ff, 0x1de9b6);
         cpvCursorColor.setColor(preferences.getInt("cursor_color", 0xffffff));
 
-        final Spinner sPreferredInputApi = view.findViewById(R.id.SPreferredInputApi);
-        sPreferredInputApi.setSelection(preferences.getInt("preferred_input_api", GamepadHandler.PreferredInputApi.AUTO.ordinal()));
-
         final Spinner sLanguage = view.findViewById(R.id.SLanguage);
         sLanguage.setSelection(LocaleHelper.getLocaleIndex(context));
         final int oldLCIndex = sLanguage.getSelectedItemPosition();
@@ -137,8 +132,6 @@ public class SettingsFragment extends Fragment {
         view.findViewById(R.id.BTReinstallSystemFiles).setOnClickListener((v) -> {
             ContentDialog.confirm(context, R.string.do_you_want_to_reinstall_system_files, () -> RootFSInstaller.install((MainActivity)getActivity()));
         });
-
-        loadGamepadPlayerConfigs(view);
 
         view.findViewById(R.id.BTConfirm).setOnClickListener((v) -> {
             if (container != null) {
@@ -159,8 +152,6 @@ public class SettingsFragment extends Fragment {
             editor.putInt("cursor_color", cpvCursorColor.getColor());
             editor.putBoolean("enable_debug_logs", cbEnableDebugLogs.isChecked());
             editor.putBoolean("save_logs_to_file", cbSaveLogsToFile.isChecked());
-            editor.putInt("preferred_input_api", sPreferredInputApi.getSelectedItemPosition());
-            putGamepadPlayerConfigs(view, editor);
 
             int newTheme = oldTheme;
             int checkedId = rgAppTheme.getCheckedRadioButtonId();
@@ -193,35 +184,6 @@ public class SettingsFragment extends Fragment {
         });
 
         return view;
-    }
-
-    private void loadGamepadPlayerConfigs(View view) {
-        LinearLayout container = view.findViewById(R.id.LLGamepadPlayer);
-        view.findViewById(R.id.BTResetGamepadPlayerConfigs).setOnClickListener((v) -> {
-            ContentDialog.confirm(v.getContext(), R.string.do_you_want_to_reset_configurations, () -> {
-                for (int i = 0; i < container.getChildCount(); i++) container.getChildAt(i).setTag("");
-            });
-        });
-
-        for (int i = 0; i < container.getChildCount(); i++) {
-            final View child = container.getChildAt(i);
-            child.setTag(preferences.getString("gamepad_player"+i, ""));
-            final byte slot = (byte)i;
-            child.setOnClickListener((v) -> (new GamepadPlayerConfigDialog(child, slot)).show());
-        }
-    }
-
-    private void putGamepadPlayerConfigs(View view, SharedPreferences.Editor editor) {
-        LinearLayout container = view.findViewById(R.id.LLGamepadPlayer);
-        for (int i = 0; i < container.getChildCount(); i++) {
-            View child = container.getChildAt(i);
-            String config = child.getTag().toString();
-            String key = "gamepad_player"+i;
-            if (!config.isEmpty()) {
-                editor.putString(key, child.getTag().toString());
-            }
-            else editor.remove(key);
-        }
     }
 
     private static String getScreenSize(View view) {

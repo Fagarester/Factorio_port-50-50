@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Desactivar entrada del ratón</string>
     <string name="move_cursor_to_touchpoint">Mover cursor al punto de toque</string>
     <string name="sync_every_frame">Sincronizar cada fotograma</string>
-    <string name="preferred_input_api">API de entrada preferida</string>
-    <string name="game_controllers">Mandos de juego</string>
     <string name="reinstall_system_files">Reinstalar archivos del sistema</string>
     <string name="do_you_want_to_reinstall_system_files">¿Deseas reinstalar los archivos del sistema?</string>
     <string name="mouse">Ratón</string>
@@ -133,11 +131,5 @@
     <string name="both">Ambos</string>
     <string name="low_latency">Baja latencia</string>
     <string name="power_saving">Ahorro de energía</string>
-    <string name="player">Jugador</string>
-    <string name="enable_vibration">Activar vibración</string>
-    <string name="mode">Modo</string>
-    <string name="external_controller">Controlador externo</string>
-    <string name="controls_profile">Perfil de controles</string>
-    <string name="do_you_want_to_reset_configurations">¿Deseas restablecer la configuración?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Los ajustes han cambiado. ¿Deseas reiniciar la aplicación?</string>
 </resources>

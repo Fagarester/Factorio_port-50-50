@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">تعطيل إدخال الماوس</string>
     <string name="move_cursor_to_touchpoint">نقل المؤشر إلى نقطة اللمس</string>
     <string name="sync_every_frame">مزامنة كل إطار</string>
-    <string name="preferred_input_api">واجهة الإدخال المفضلة</string>
-    <string name="game_controllers">وحدات التحكم بالألعاب</string>
     <string name="reinstall_system_files">إعادة تثبيت ملفات النظام</string>
     <string name="do_you_want_to_reinstall_system_files">هل تريد إعادة تثبيت ملفات النظام؟</string>
     <string name="mouse">الماوس</string>
@@ -133,11 +131,5 @@
     <string name="both">كلاهما</string>
     <string name="low_latency">تأخير منخفض</string>
     <string name="power_saving">توفير الطاقة</string>
-    <string name="player">المشغّل</string>
-    <string name="enable_vibration">تفعيل الاهتزاز</string>
-    <string name="mode">الوضع</string>
-    <string name="external_controller">وحدة تحكم خارجية</string>
-    <string name="controls_profile">ملف شخصي لأدوات التحكم</string>
-    <string name="do_you_want_to_reset_configurations">هل تريد إعادة ضبط الإعدادات؟</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">تم تغيير الإعدادات. هل تريد إعادة تشغيل التطبيق؟</string>
 </resources>

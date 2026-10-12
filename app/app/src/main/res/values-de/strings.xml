@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Mauseingabe deaktivieren</string>
     <string name="move_cursor_to_touchpoint">Cursor zum Berührungspunkt bewegen</string>
     <string name="sync_every_frame">Jeden Frame synchronisieren</string>
-    <string name="preferred_input_api">Bevorzugte Eingabe-API</string>
-    <string name="game_controllers">Gamecontroller</string>
     <string name="reinstall_system_files">Systemdateien neu installieren</string>
     <string name="do_you_want_to_reinstall_system_files">Möchten Sie die Systemdateien neu installieren?</string>
     <string name="mouse">Maus</string>
@@ -133,11 +131,5 @@
     <string name="both">Beides</string>
     <string name="low_latency">Niedrige Latenz</string>
     <string name="power_saving">Energiesparen</string>
-    <string name="player">Spieler</string>
-    <string name="enable_vibration">Vibration aktivieren</string>
-    <string name="mode">Modus</string>
-    <string name="external_controller">Externer Controller</string>
-    <string name="controls_profile">Steuerungsprofil</string>
-    <string name="do_you_want_to_reset_configurations">Möchten Sie die Konfigurationen zurücksetzen?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Die Einstellungen wurden geändert. Möchten Sie die App neu starten?</string>
 </resources>

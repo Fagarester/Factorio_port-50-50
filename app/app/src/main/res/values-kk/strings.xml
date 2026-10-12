@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Тышқан енгізуін өшіру</string>
     <string name="move_cursor_to_touchpoint">Курсорды жанасу нүктесіне жылжыту</string>
     <string name="sync_every_frame">Әр кадрды синхрондау</string>
-    <string name="preferred_input_api">Артықшылықты енгізу API</string>
-    <string name="game_controllers">Ойын контроллерлері</string>
     <string name="reinstall_system_files">Жүйелік файлдарды қайта орнату</string>
     <string name="do_you_want_to_reinstall_system_files">Жүйелік файлдарды қайта орнату керек пе?</string>
     <string name="mouse">Тышқан</string>
@@ -133,11 +131,5 @@
     <string name="both">Екеуі де</string>
     <string name="low_latency">Төмен кідіріс</string>
     <string name="power_saving">Қуатты үнемдеу</string>
-    <string name="player">Ойыншы</string>
-    <string name="enable_vibration">Діріл қосу</string>
-    <string name="mode">Режим</string>
-    <string name="external_controller">Сыртқы контроллер</string>
-    <string name="controls_profile">Басқару профилі</string>
-    <string name="do_you_want_to_reset_configurations">Конфигурацияларды қалпына келтіру керек пе?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Параметрлер өзгертілді. Бағдарламаны қайта іске қосу керек пе?</string>
 </resources>

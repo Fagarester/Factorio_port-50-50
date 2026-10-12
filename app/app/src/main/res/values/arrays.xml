@@ -42,12 +42,6 @@
         <item>512 MB</item>
         <item>1024 MB</item>
     </string-array>
-    <string-array name="preferred_input_api_entries">
-        <item>@string/auto</item>
-        <item>DirectInput</item>
-        <item>XInput</item>
-        <item>@string/both</item>
-    </string-array>
     <string-array name="audio_performance_mode_entries">
         <item>@string/none</item>
         <item>@string/low_latency</item>

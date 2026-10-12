@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Wyłącz wejście myszy</string>
     <string name="move_cursor_to_touchpoint">Przesuń kursor do punktu dotyku</string>
     <string name="sync_every_frame">Synchronizuj każdą klatkę</string>
-    <string name="preferred_input_api">Preferowane API wejścia</string>
-    <string name="game_controllers">Kontrolery gier</string>
     <string name="reinstall_system_files">Zainstaluj ponownie pliki systemowe</string>
     <string name="do_you_want_to_reinstall_system_files">Czy chcesz ponownie zainstalować pliki systemowe?</string>
     <string name="mouse">Mysz</string>
@@ -133,11 +131,5 @@
     <string name="both">Oba</string>
     <string name="low_latency">Niskie opóźnienie</string>
     <string name="power_saving">Oszczędzanie energii</string>
-    <string name="player">Gracz</string>
-    <string name="enable_vibration">Włącz wibracje</string>
-    <string name="mode">Tryb</string>
-    <string name="external_controller">Zewnętrzny kontroler</string>
-    <string name="controls_profile">Profil sterowania</string>
-    <string name="do_you_want_to_reset_configurations">Czy chcesz zresetować konfiguracje?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Ustawienia zostały zmienione. Czy chcesz ponownie uruchomić aplikację?</string>
 </resources>

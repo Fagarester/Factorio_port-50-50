@@ -151,12 +151,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         audioDriverConfig = new KeyValueSet(container.getAudioDriverConfig());
         screenInfo = new ScreenInfo(container.getScreenSize());
 
-        int preferredInputApiIdx = preferences.getInt("preferred_input_api", GamepadHandler.PreferredInputApi.AUTO.ordinal());
-
         this.graphicsDriver = GraphicsDrivers.parseIdentifiers(graphicsDriver);
         this.graphicsDriverConfig = GraphicsDrivers.parseConfigs(graphicsDriver, graphicsDriverConfig);
-
-        winHandler.gamepadHandler.setPreferredInputApi(GamepadHandler.PreferredInputApi.values()[preferredInputApiIdx]);
 
         preloaderDialog.show(R.string.starting_up);
 

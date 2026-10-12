@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Вимкнути введення мишею</string>
     <string name="move_cursor_to_touchpoint">Переміщати курсор у точку дотику</string>
     <string name="sync_every_frame">Синхронізувати кожен кадр</string>
-    <string name="preferred_input_api">Пріоритетний API введення</string>
-    <string name="game_controllers">Ігрові контролери</string>
     <string name="reinstall_system_files">Перевстановити системні файли</string>
     <string name="do_you_want_to_reinstall_system_files">Бажаєте перевстановити системні файли?</string>
     <string name="mouse">Миша</string>
@@ -132,11 +130,5 @@
     <string name="both">Обидва</string>
     <string name="low_latency">Низька задержка</string>
     <string name="power_saving">Енергозбереження</string>
-    <string name="player">Гравець:</string>
-    <string name="enable_vibration">Увімкнути вібрацію</string>
-    <string name="mode">Режим</string>
-    <string name="external_controller">Зовнішній контролер</string>
-    <string name="controls_profile">Профіль керування</string>
-    <string name="do_you_want_to_reset_configurations">Ви хочете скинути налаштування?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Налаштування змінено. Бажаєте перезапустити додаток?</string>
 </resources>

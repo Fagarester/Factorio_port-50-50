@@ -91,8 +91,6 @@
     <string name="disable_mouse_input">Disable Mouse Input</string>
     <string name="move_cursor_to_touchpoint">Move Cursor to Touchpoint</string>
     <string name="sync_every_frame">Sync every frame</string>
-    <string name="preferred_input_api">Preferred Input API</string>
-    <string name="game_controllers">Game Controllers</string>
     <string name="reinstall_system_files">Reinstall System Files</string>
     <string name="do_you_want_to_reinstall_system_files">Do you want to reinstall system files?</string>
     <string name="mouse">Mouse</string>
@@ -142,12 +140,6 @@
     <string name="both">Both</string>
     <string name="low_latency">Low Latency</string>
     <string name="power_saving">Power Saving</string>
-    <string name="player">Player</string>
-    <string name="enable_vibration">Enable Vibration</string>
-    <string name="mode">Mode</string>
-    <string name="external_controller">External Controller</string>
-    <string name="controls_profile">Controls Profile</string>
-    <string name="do_you_want_to_reset_configurations">Do you want to reset the configurations?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">The settings have been changed. Do you want to restart the app?</string>
     <string name="package_name_too_long">The package name is too long: the maximum is %1$d characters.</string>
     <string name="start_game">Start game</string>

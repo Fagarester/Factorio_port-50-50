@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Fare Girişini Devre Dışı Bırak</string>
     <string name="move_cursor_to_touchpoint">İmleci Dokunma Noktasına Taşı</string>
     <string name="sync_every_frame">Her Karede Eşitle</string>
-    <string name="preferred_input_api">Tercih Edilen Giriş API\'si</string>
-    <string name="game_controllers">Oyun Denetleyicileri</string>
     <string name="reinstall_system_files">Sistem Dosyalarını Yeniden Yükle</string>
     <string name="do_you_want_to_reinstall_system_files">Sistem dosyalarını yeniden yüklemek istiyor musunuz?</string>
     <string name="mouse">Fare</string>
@@ -133,11 +131,5 @@
     <string name="both">Her İkisi</string>
     <string name="low_latency">Düşük Gecikme</string>
     <string name="power_saving">Güç Tasarrufu</string>
-    <string name="player">Oyuncu</string>
-    <string name="enable_vibration">Titreşimi Etkinleştir</string>
-    <string name="mode">Mod</string>
-    <string name="external_controller">Harici Denetleyici</string>
-    <string name="controls_profile">Kontrol Profili</string>
-    <string name="do_you_want_to_reset_configurations">Yapılandırmaları sıfırlamak istiyor musunuz?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Ayarlar değiştirildi. Uygulamayı yeniden başlatmak istiyor musunuz?</string>
 </resources>

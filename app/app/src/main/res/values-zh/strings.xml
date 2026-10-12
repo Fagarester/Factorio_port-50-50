@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">禁用鼠标输入</string>
     <string name="move_cursor_to_touchpoint">将光标移至触摸点</string>
     <string name="sync_every_frame">每帧同步</string>
-    <string name="preferred_input_api">首选输入 API</string>
-    <string name="game_controllers">游戏控制器</string>
     <string name="reinstall_system_files">重新安装系统文件</string>
     <string name="do_you_want_to_reinstall_system_files">是否重新安装系统文件？</string>
     <string name="mouse">鼠标</string>
@@ -133,11 +131,5 @@
     <string name="both">两者</string>
     <string name="low_latency">低延迟</string>
     <string name="power_saving">节能</string>
-    <string name="player">播放器</string>
-    <string name="enable_vibration">启用振动</string>
-    <string name="mode">模式</string>
-    <string name="external_controller">外部控制器</string>
-    <string name="controls_profile">控制配置文件</string>
-    <string name="do_you_want_to_reset_configurations">是否重置配置？</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">设置已更改，是否重启应用？</string>
 </resources>

@@ -120,11 +120,8 @@ public class GamepadHandler {
 
     private void updateGamepadSlots() {
         if (gamepadPlayerConfigs == null) {
-            SharedPreferences preferences = winHandler.activity.getPreferences();
             gamepadPlayerConfigs = new GamepadPlayerConfig[GAMEPAD_MAX_COUNT];
-            for (byte i = 0; i < GAMEPAD_MAX_COUNT; i++) {
-                gamepadPlayerConfigs[i] = new GamepadPlayerConfig(preferences.getString("gamepad_player"+i, ""));
-            }
+            for (byte i = 0; i < GAMEPAD_MAX_COUNT; i++) gamepadPlayerConfigs[i] = new GamepadPlayerConfig(""); // default configuration
         }
 
         InputControlsView controlsView = winHandler.activity.getInputControlsView();

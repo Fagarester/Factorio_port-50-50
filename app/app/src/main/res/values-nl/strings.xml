@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Muisinvoer uitschakelen</string>
     <string name="move_cursor_to_touchpoint">Cursor naar aanraakpunt verplaatsen</string>
     <string name="sync_every_frame">Elk frame synchroniseren</string>
-    <string name="preferred_input_api">Voorkeurs-invoer-API</string>
-    <string name="game_controllers">Gamecontrollers</string>
     <string name="reinstall_system_files">Systeembestanden opnieuw installeren</string>
     <string name="do_you_want_to_reinstall_system_files">Wilt u de systeembestanden opnieuw installeren?</string>
     <string name="mouse">Muis</string>
@@ -133,11 +131,5 @@
     <string name="both">Beide</string>
     <string name="low_latency">Lage latentie</string>
     <string name="power_saving">Energiebesparing</string>
-    <string name="player">Speler</string>
-    <string name="enable_vibration">Trillen inschakelen</string>
-    <string name="mode">Modus</string>
-    <string name="external_controller">Externe controller</string>
-    <string name="controls_profile">Besturingsprofiel</string>
-    <string name="do_you_want_to_reset_configurations">Wilt u de configuraties resetten?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">De instellingen zijn gewijzigd. Wilt u de app opnieuw starten?</string>
 </resources>

@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Dezactivează intrarea mouse-ului</string>
     <string name="move_cursor_to_touchpoint">Mută cursorul la punctul de atingere</string>
     <string name="sync_every_frame">Sincronizează la fiecare cadru</string>
-    <string name="preferred_input_api">API de intrare preferat</string>
-    <string name="game_controllers">Controlere de joc</string>
     <string name="reinstall_system_files">Reinstalează fișierele de sistem</string>
     <string name="do_you_want_to_reinstall_system_files">Doriți să reinstalați fișierele de sistem?</string>
     <string name="mouse">Mouse</string>
@@ -133,11 +131,5 @@
     <string name="both">Ambele</string>
     <string name="low_latency">Latență scăzută</string>
     <string name="power_saving">Economisire energie</string>
-    <string name="player">Jucător</string>
-    <string name="enable_vibration">Activează vibrația</string>
-    <string name="mode">Mod</string>
-    <string name="external_controller">Controlor extern</string>
-    <string name="controls_profile">Profil de controale</string>
-    <string name="do_you_want_to_reset_configurations">Doriți să resetați configurațiile?</string>
     <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Setările au fost modificate. Doriți să reporniți aplicația?</string>
 </resources>
