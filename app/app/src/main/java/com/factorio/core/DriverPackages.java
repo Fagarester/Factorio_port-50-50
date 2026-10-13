@@ -367,14 +367,14 @@ public abstract class DriverPackages {
         base = base.replaceAll("(?i)(\\.tar)?\\.(tzst|zst)$", "");
 
         String id;
-        Matcher matcher = Pattern.compile("(\\d+(?:\\.\\d+)+)").matcher(base);
+        Matcher matcher = Pattern.compile("(\\d+(?:\\.\\d+)+(?:-[A-Za-z0-9.]+)*)").matcher(base);
         if (matcher.find()) id = matcher.group(1);
         else {
             id = sanitizeId(base.replaceAll("(?i)^"+prefix+"-?", ""));
             if (id.isEmpty()) id = "custom-"+(System.currentTimeMillis() / 1000);
         }
 
-        // the built-in version (e.g. Turnip 26.2.0, Zink 22.2.5) is the known-good build and always wins over a file with
+        // the built-in version (e.g. Turnip 26.2.0, Zink 26.2.0) is the known-good build and always wins over a file with
         // the same name, so a rebuilt driver would be ignored
         if (GeneralComponents.isBuiltinComponent(type, id)) id += "-custom";
 

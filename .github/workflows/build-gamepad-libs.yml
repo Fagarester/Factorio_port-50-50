@@ -1,0 +1,46 @@
+name: Build gamepad libs (Selkies input interposer + fake udev, aarch64 glibc)
+
+# Output artifact "input_interposer" -> copy both files into
+#   app/app/src/main/assets/input_interposer/
+# They are preloaded into native glibc games (Factorio) with the loader's --preload option.
+# Build on the OLDEST glibc you can: the rootfs glibc must be >= the runner glibc.
+#   ubuntu-22.04-arm = glibc 2.35, ubuntu-24.04-arm = glibc 2.39
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'ARM runner'
+        required: true
+        type: choice
+        default: 'ubuntu-22.04-arm'
+        options:
+          - ubuntu-22.04-arm
+          - ubuntu-24.04-arm
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential
+          make -C input-interposer CFLAGS="-O2"
+          make -C fake-udev
+          mkdir -p out/input_interposer
+          cp input-interposer/selkies_input_interposer.so out/input_interposer/
+          # real file instead of symlink (SONAME is libudev.so.1)
+          cp fake-udev/libudev.so.1.0.0-fake out/input_interposer/libudev.so.1
+          file out/input_interposer/*
+          echo "Highest glibc symbol versions required:"
+          for f in out/input_interposer/*; do
+            objdump -T "$f" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: input_interposer
+          path: out/input_interposer/
