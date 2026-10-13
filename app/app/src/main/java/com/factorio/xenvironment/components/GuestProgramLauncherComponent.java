@@ -180,11 +180,12 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             File mesaSrcDir = new File(mesaSrc);
             File mesaDir = new File(rootDir, "/opt/mesa-kgsl");
             File mesaMark = new File(mesaDir, ".copy_done");
-            if (mesaSrcDir.isDirectory() && !mesaMark.exists()) {
+            // copied again whenever the source folder changed (a rebuilt Mesa put into the same folder used to be ignored)
+            String signature = mesaSrcDir.isDirectory() ? folderSignature(mesaSrcDir) : "";
+            String copiedSignature = mesaMark.exists() ? FileUtils.readString(mesaMark) : null;
+            if (mesaSrcDir.isDirectory() && (copiedSignature == null || !copiedSignature.equals(signature))) {
                 FileUtils.delete(mesaDir);
-                if (FileUtils.copy(mesaSrcDir, mesaDir)) {
-                    try { mesaMark.createNewFile(); } catch (Exception e) {}
-                }
+                if (FileUtils.copy(mesaSrcDir, mesaDir)) FileUtils.writeString(mesaMark, signature);
             }
             if (mesaMark.exists()) {
                 libPath = mesaDir+"/lib:"+libPath;
@@ -273,5 +274,23 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 }
             }
         }
+    }
+
+    /** file count + total size + newest modification time: cheap, and changes when a new build replaces the old one */
+    private static String folderSignature(File dir) {
+        long[] acc = new long[3];
+        collectSignature(dir, acc);
+        return acc[0]+"/"+acc[1]+"/"+acc[2];
+    }
+
+    private static void collectSignature(File file, long[] acc) {
+        File[] children = file.listFiles();
+        if (children == null) {
+            acc[0]++;
+            acc[1] += file.length();
+            acc[2] = Math.max(acc[2], file.lastModified());
+            return;
+        }
+        for (File child : children) collectSignature(child, acc);
     }
 }

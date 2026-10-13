@@ -387,6 +387,31 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 else sb.append("  libGL.so.*: MISSING\n");
             }
 
+            // direct OpenGL (NATIVE_MESA_SRC): without this section the report only described Zink while the game ran on something else
+            EnvVars containerVars = new EnvVars(container.getEnvVars());
+            String mesaSrc = containerVars.get("NATIVE_MESA_SRC");
+            if (mesaSrc != null && !mesaSrc.isEmpty()) {
+                sb.append("\nNATIVE OPENGL (NATIVE_MESA_SRC='").append(mesaSrc).append("') - overrides Zink\n");
+                File src = new File(mesaSrc);
+                sb.append("  source folder: ").append(src.isDirectory() ? "found" : "NOT FOUND / not readable").append("\n");
+                File copy = new File(rootDir, "opt/mesa-kgsl");
+                sb.append("  copy in rootfs: ").append(copy.isDirectory() ? "yes" : "NO").append("\n");
+                sb.append("  env: MESA_LOADER_DRIVER_OVERRIDE=").append(containerVars.has("MESA_LOADER_DRIVER_OVERRIDE") ? containerVars.get("MESA_LOADER_DRIVER_OVERRIDE") : "(default: kgsl)")
+                  .append("  LIBGL_DRIVERS_PATH=").append(containerVars.has("LIBGL_DRIVERS_PATH") ? containerVars.get("LIBGL_DRIVERS_PATH") : "(default: "+copy+"/dri)").append("\n");
+                for (String sub : new String[]{"lib", "dri"}) {
+                    File[] files = new File(copy, sub).listFiles();
+                    sb.append("  ").append(sub).append("/: ");
+                    if (files == null || files.length == 0) { sb.append("EMPTY or missing\n"); continue; }
+                    java.util.Arrays.sort(files);
+                    sb.append("\n");
+                    for (File file : files) sb.append("    ").append(file.getName()).append("  ").append(file.length()).append(" bytes\n");
+                }
+                File[] dri = new File(copy, "dri").listFiles();
+                if (dri != null) for (File file : dri) if (file.isFile() && file.length() > 1000000) sb.append(DriverReport.describe(file)).append("\n");
+                File[] gl = new File(copy, "lib").listFiles((dir, name) -> name.startsWith("libGL.so."));
+                if (gl != null && gl.length > 0) { java.util.Arrays.sort(gl); sb.append(DriverReport.describe(gl[gl.length - 1])).append("\n"); }
+            }
+
             File logDir = LogView.getLogFile().getParentFile();
             DriverReport.write(logDir, sb.toString());
         }

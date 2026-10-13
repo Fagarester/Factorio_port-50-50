@@ -9,6 +9,6 @@ https://github.com/The412Banner/Banners-Turnip
 - `a8xx_shared_mem.py`, `a840v2.py` - скрипты поверх стека (shared mem 64 КиБ, chip_id A840v2);
 - `a8xx-winnative/0001-0005` - серия Max / MaxsTechReview (mesh shaders через compute, wave32, исправления зависаний A8xx);
 - `linux/` - два KGSL-патча для glibc-сборки (DRM-узел, calibrated timestamps);
-- `common/apply_common.sh` - применяет серию winnative и проверяет, что в Mesa есть исправления из MR 44838.
+- `apply_series.sh` - применяет патчи по одному и только целиком (остальные пропускает с отчётом); `common/apply_common.sh` - оригинал Banner'а (строгий), в нашем workflow не используется.
 
-Патчи рассчитаны на Mesa `main` не старше 2026-10-08. На стабильных тегах (26.2.x) сборка остановится на проверке в `apply_common.sh`.
+Патчи привязаны к коду Mesa: на коммите `4da08cb` (2026-09-30) Banner проверил весь набор без отказов, на более новых часть патчей может не ложиться.
