@@ -107,13 +107,16 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
         PointerWindowEvent.Detail detailA = PointerWindowEvent.Detail.NONLINEAR;
         PointerWindowEvent.Detail detailB = PointerWindowEvent.Detail.NONLINEAR;
 
+        // X11 protocol: pointer moves from A to its descendant B -> Leave(A, Inferior), Enter(B, Ancestor);
+        // from A to its ancestor B -> Leave(A, Ancestor), Enter(B, Inferior). It was reversed, and SDL ignores
+        // EnterNotify with detail=Inferior, so the game never got the mouse focus.
         if (windowA.isAncestorOf(windowB)) {
-            detailA = PointerWindowEvent.Detail.ANCESTOR;
-            detailB = PointerWindowEvent.Detail.INFERIOR;
+            detailA = PointerWindowEvent.Detail.INFERIOR;
+            detailB = PointerWindowEvent.Detail.ANCESTOR;
         }
         else if (windowB.isAncestorOf(windowA)) {
-            detailB = PointerWindowEvent.Detail.ANCESTOR;
-            detailA = PointerWindowEvent.Detail.INFERIOR;
+            detailA = PointerWindowEvent.Detail.ANCESTOR;
+            detailB = PointerWindowEvent.Detail.INFERIOR;
         }
 
         Bitmask keyButMask = getKeyButMask();
@@ -144,6 +147,7 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
 
     private int inputLogCount = 0;
     private int inputOkCount = 0;
+    private int keyOkCount = 0;
 
     private void inputDbg(String message) {
         if (inputLogCount++ < 400) xServer.debugPrint("INPUT: " + message);
@@ -314,7 +318,7 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
         }
 
         if (!eventWindow.attributes.isEnabled()) { inputDbg("key " + (keycode & 0xff) + " dropped: window is disabled (" + describe(eventWindow) + ")"); return; }
-        if (inputOkCount++ < 20) inputDbg("key " + (keycode & 0xff) + " delivered to " + describe(eventWindow));
+        if (keyOkCount++ < 20) inputDbg("key " + (keycode & 0xff) + " delivered to " + describe(eventWindow));
 
         Bitmask keyButMask = getKeyButMask();
         short x = xServer.pointer.getX();
