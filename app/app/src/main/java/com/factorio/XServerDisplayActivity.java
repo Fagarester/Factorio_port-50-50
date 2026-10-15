@@ -534,6 +534,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             envVars.put("NATIVE_PRELOAD", libDir.getPath()+"/selkies_input_interposer.so:"+libDir.getPath()+"/libudev.so.1");
             envVars.put("SELKIES_JS_SOCKET_PATH", socketDir.getPath());
             envVars.put("SELKIES_REAL_LIBUDEV", "none");
+            envVars.put("JS_LOG", "1"); // interposer prints every gamepad open/read to the game log
 
             winHandler.gamepadHandler.startBridge(socketDir);
         }
