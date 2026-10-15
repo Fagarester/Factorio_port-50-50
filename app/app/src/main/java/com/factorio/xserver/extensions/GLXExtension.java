@@ -365,7 +365,7 @@ public class GLXExtension extends Extension {
         if (!buildBannerPrinted) {
             buildBannerPrinted = true;
             // Lets any log show which server build produced it (APK must contain all of these fixes).
-            xServer.debugPrint("BUILD v29: ext-unread-skip, glx-createctx-noreply, glx-attribs-noreply, glx-isdirect, dri3-size-fix, dmabuf-sync, present-blank-guard, input-diagnostics, focus-fallback");
+            xServer.debugPrint("BUILD v30: ext-unread-skip, glx-createctx-noreply, glx-attribs-noreply, glx-isdirect, dri3-size-fix, dmabuf-sync, present-blank-guard, input-diagnostics, focus-fallback, focusin-fix");
         }
         xServer.debugPrint("GLX handleRequest: opcode=" + opcode);
         switch (opcode) {
