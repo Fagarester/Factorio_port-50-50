@@ -2,7 +2,7 @@ name: Build glxtest (GLX probe for the app's X server)
 
 # Tiny arm64 glibc binary. It prints GLXTEST: <step> to stderr after every GLX step
 # (XOpenDisplay, ChooseVisual, CreateContext, MakeCurrent, glGetString, first SwapBuffers).
-# v5: also an INPUT PROBE: selects key/button/motion/enter/leave/focus events, prints GLXTEST-EV lines and flashes the window white on every tap or key (40 s run).
+# v6: INPUT PROBE with 3 phases (Xlib XPending, Xlib+XSync, xcb poll) and a pre-GL event check; coloured bar on top = phase; white flash on every tap/key (30 s).
 # v2: a watchdog thread. If a step does not finish in 6 s it prints, for every thread, the state,
 # the current syscall and the file it works on (X socket / /dev/kgsl-3d0 / futex), plus a main-thread backtrace.
 # The binary links to libGL.so.1 at runtime (the one from opt/mesa-kgsl/lib via LD_LIBRARY_PATH), like the game.
@@ -38,6 +38,7 @@ jobs:
           #include <pthread.h>
           #include <execinfo.h>
           #include <poll.h>
+          #include <dlfcn.h>
           #include <time.h>
           #include <X11/Xlib.h>
           #include <X11/Xutil.h>
@@ -171,6 +172,44 @@ jobs:
               }
           }
           
+          /* ---- xcb-level event polling through dlsym (no link-time dependency on libxcb / libX11-xcb) ---- */
+          typedef struct xcb_connection_t xcb_connection_t;
+          typedef struct { unsigned char response_type; unsigned char detail; unsigned short sequence; unsigned char rest[28]; } xcb_ev_t;
+          static void *(*p_XGetXCBConnection)(Display *) = NULL;
+          static xcb_ev_t *(*p_xcb_poll_for_event)(xcb_connection_t *) = NULL;
+          static xcb_ev_t *(*p_xcb_poll_for_queued_event)(xcb_connection_t *) = NULL;
+          static xcb_connection_t *g_xcb = NULL;
+          static int xcb_ev_count[40];
+          
+          static int init_xcb(Display *dpy) {
+              p_XGetXCBConnection = (void *(*)(Display *))dlsym(RTLD_DEFAULT, "XGetXCBConnection");
+              p_xcb_poll_for_event = (xcb_ev_t *(*)(xcb_connection_t *))dlsym(RTLD_DEFAULT, "xcb_poll_for_event");
+              p_xcb_poll_for_queued_event = (xcb_ev_t *(*)(xcb_connection_t *))dlsym(RTLD_DEFAULT, "xcb_poll_for_queued_event");
+              if (!p_XGetXCBConnection || !p_xcb_poll_for_event) {
+                  fprintf(stderr, "GLXTEST-EV: xcb polling unavailable (XGetXCBConnection=%p xcb_poll_for_event=%p)\n", (void *)p_XGetXCBConnection, (void *)p_xcb_poll_for_event);
+                  return 0;
+              }
+              g_xcb = (xcb_connection_t *)p_XGetXCBConnection(dpy);
+              fprintf(stderr, "GLXTEST-EV: xcb polling available, connection=%p\n", (void *)g_xcb);
+              return g_xcb != NULL;
+          }
+          
+          static void pump_xcb(void) {
+              for (int n = 0; n < 200; n++) {
+                  xcb_ev_t *e = p_xcb_poll_for_event(g_xcb);
+                  if (!e) break;
+                  int t = e->response_type & 0x7f;
+                  if (t >= 0 && t < 40) { xcb_ev_count[t]++; ev_count[t]++; }
+                  if (t == 4 || t == 2) flash_frames = 20;
+                  if (ev_printed < 160 && (t != 6 || xcb_ev_count[6] <= 3)) {
+                      ev_printed++;
+                      unsigned short ex = e->rest[20] | (e->rest[21] << 8), ey = e->rest[22] | (e->rest[23] << 8);
+                      fprintf(stderr, "GLXTEST-EV: [xcb] type=%d detail=%u seq=%u x=%u y=%u\n", t, e->detail, e->sequence, ex, ey);
+                  }
+                  free(e);
+              }
+          }
+          
           static void print_event_summary(int frame) {
               fprintf(stderr, "GLXTEST-EV: summary at frame %d: Key=%d/%d Button=%d/%d Motion=%d Enter=%d Leave=%d FocusIn=%d FocusOut=%d Generic=%d\n",
                       frame, ev_count[KeyPress], ev_count[KeyRelease], ev_count[ButtonPress], ev_count[ButtonRelease], ev_count[MotionNotify],
@@ -192,6 +231,7 @@ jobs:
               g_xfd = ConnectionNumber(dpy);
               int scr = DefaultScreen(dpy);
           
+              int have_xcb = init_xcb(dpy);
               STEP("glXChooseVisual");
               int attr[] = { GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE, 16, None };
               XVisualInfo *vi = glXChooseVisual(dpy, scr, attr);
@@ -214,6 +254,10 @@ jobs:
                                      EnterWindowMask | LeaveWindowMask | FocusChangeMask | StructureNotifyMask | ExposureMask);
               XMapWindow(dpy, win);
               XSync(dpy, False);
+              /* Events right after the map, BEFORE any GL/DRI3 code ran: do Enter/MapNotify arrive in plain Xlib? */
+              for (int k = 0; k < 20; k++) { XSync(dpy, False); handle_events(dpy); usleep(25000); }
+              fprintf(stderr, "GLXTEST-EV: pre-GL events done\n");
+              print_event_summary(-1);
           
               STEP("glXCreateContext (direct)");
               GLXContext ctx = glXCreateContext(dpy, vi, NULL, True);
@@ -235,14 +279,20 @@ jobs:
               static const float col[4][3] = { {1,0,0}, {0,1,0}, {0,0,1}, {1,1,1} };
               static const char *colname[4] = { "RED", "GREEN", "BLUE", "WHITE" };
               glEnable(GL_SCISSOR_TEST);
-              for (int i = 0; i < 2400; i++) {
-                  handle_events(dpy);
+              for (int i = 0; i < 1800; i++) {
+                  int phase = i / 600;   /* 0: plain Xlib, 1: Xlib + XSync every 10 frames, 2: xcb polling */
+                  if (i % 600 == 0) fprintf(stderr, "GLXTEST-EV: === PHASE %d (%s): tap, type and scroll for about 8 seconds ===\n", phase + 1,
+                                            phase == 0 ? "Xlib XPending" : phase == 1 ? "Xlib + XSync" : (have_xcb ? "xcb poll" : "xcb unavailable, Xlib"));
+                  if (phase == 1 && i % 10 == 0) XSync(dpy, False);
+                  if (phase == 2 && have_xcb) pump_xcb(); else handle_events(dpy);
                   if (i % 120 == 0) print_event_summary(i);
                   int c = (i / 60) % 4;
                   glScissor(0, 0, 1280, 720);
                   if (flash_frames > 0) { glClearColor(1.0f, 1.0f, 1.0f, 1.0f); flash_frames--; }
                   else glClearColor(col[c][0], col[c][1], col[c][2], 1.0f);
                   glClear(GL_COLOR_BUFFER_BIT);
+                  { static const float pc[3][3] = { {1,1,0}, {0,1,1}, {1,0,1} };
+                    glScissor(0, 670, 1280, 50); glClearColor(pc[phase][0], pc[phase][1], pc[phase][2], 1.0f); glClear(GL_COLOR_BUFFER_BIT); }
                   glScissor((i * 6) % 1100, 300, 160, 160);   /* moving black square */
                   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
                   glClear(GL_COLOR_BUFFER_BIT);
@@ -257,8 +307,8 @@ jobs:
                   if (i == 0) STEP("first swap returned");
                   usleep(16000);
               }
-              print_event_summary(2400);
-              STEP("DONE (2400 frames); exiting with _exit(0), teardown skipped on purpose");
+              print_event_summary(1800);
+              STEP("DONE (1800 frames); exiting with _exit(0), teardown skipped on purpose");
               _exit(0);   /* normal glXDestroyContext/XCloseDisplay teardown crashed with SIGSYS (exit 159) in earlier runs */
           }
           CEOF
