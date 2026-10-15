@@ -1,0 +1,407 @@
+name: Build Zink xlib (Bruno/Grima04 recipe, new Mesa)
+
+# Recipe = Winlator's Zink: Mesa gallium-xlib with Zink inside ONE libGL.so
+#   meson: -Dgallium-drivers=zink,softpipe -Ddri3=false -Dglx=gallium-xlib -Dplatforms=x11
+#          -Dvulkan-drivers= -Dllvm=disabled  prefix=/data/data/@@@@@@@@@@@@@@@@@@@@@@@@@/usr
+# The package contains ONLY libGL.so* (+ a few X libs if libGL needs them),
+# so it cannot overwrite libEGL/libgbm/libglapi in rootfs (that is what broke the old Zink).
+
+on:
+  workflow_dispatch:
+    inputs:
+      mesa_ref:
+        description: 'Mesa tag (mesa-26.2.0, mesa-26.1.5 ...)'
+        required: true
+        default: 'mesa-26.2.0'
+      runner:
+        description: 'ARM runner'
+        required: true
+        type: choice
+        default: 'ubuntu-24.04-arm'
+        options:
+          - ubuntu-24.04-arm
+          - ubuntu-22.04-arm
+
+env:
+  PFX: /data/data/@@@@@@@@@@@@@@@@@@@@@@@@@/usr
+
+jobs:
+  build:
+    name: zink-xlib
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 90
+    env:
+      MESA_REF: ${{ inputs.mesa_ref }}
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git pkg-config bison flex zstd zip patch \
+            python3 python3-venv python3-pip \
+            libdrm-dev libexpat1-dev zlib1g-dev \
+            libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev \
+            libxdamage-dev libxxf86vm-dev libxrandr-dev libxshmfence-dev \
+            libxcb1-dev libxcb-glx0-dev libxcb-dri2-0-dev libxcb-dri3-dev \
+            libxcb-present-dev libxcb-randr0-dev libxcb-shm0-dev \
+            libxcb-sync-dev libxcb-xfixes0-dev
+
+      - name: Install meson and python modules (venv)
+        run: |
+          python3 -m venv "$HOME/venv"
+          "$HOME/venv/bin/pip" install --upgrade pip
+          "$HOME/venv/bin/pip" install meson ninja mako pyyaml packaging pycparser ply
+          echo "$HOME/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Clone Mesa
+        run: |
+          git ls-remote --exit-code --heads --tags \
+            https://gitlab.freedesktop.org/mesa/mesa.git "$MESA_REF" \
+            || { echo "::error::Ref '$MESA_REF' not found"; exit 1; }
+          git clone --depth 1 --branch "$MESA_REF" \
+            https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
+
+      - name: Force Zink into xlib libGL (what Grima04/Bruno patches do)
+        working-directory: mesa-src
+        run: |
+          M=src/gallium/targets/libgl-xlib/meson.build
+          echo "===== original $M ====="; cat "$M"
+          echo "===== where zink is mentioned in xlib/sw code ====="
+          grep -rn -i "zink" src/gallium/targets/libgl-xlib src/gallium/auxiliary/target-helpers/inline_sw_helper.h || true
+          # xlib.c includes inline_sw_helper.h which calls zink_create_screen(), but never
+          # includes the zink header -> "implicit declaration". Declare it before the include.
+          X=src/gallium/targets/libgl-xlib/xlib.c
+          python3 - "$X" <<'PY'
+          import sys, re
+          p = sys.argv[1]
+          t = open(p).read()
+          decl = ("#ifdef GALLIUM_ZINK\n"
+                  "struct sw_winsys;\nstruct pipe_screen_config;\nstruct pipe_screen;\n"
+                  "struct pipe_screen *zink_create_screen(struct sw_winsys *winsys, const struct pipe_screen_config *config);\n"
+                  "#endif\n")
+          m = re.search(r'^#include\s+[<"][^>"]*inline_sw_helper\.h[>"].*$', t, re.M)
+          if not m:
+              sys.exit("inline_sw_helper.h include not found in xlib.c")
+          t = t[:m.start()] + decl + t[m.start():]
+          open(p, "w").write(t)
+          print("declaration inserted into", p)
+          PY
+          git diff -- "$X"
+          if grep -q "driver_zink" "$M"; then
+            echo "driver_zink already linked into libgl-xlib"
+          elif grep -q "driver_swrast" "$M"; then
+            sed -i '0,/driver_swrast/s//driver_swrast, driver_zink/' "$M"
+            echo "===== patched ====="; git diff -- "$M"
+          else
+            echo "::error::cannot find driver_swrast in $M, need manual patch (see log above)"; exit 1
+          fi
+          # Zink needs Mesa's xmlconfig (driParseConfigFiles/driQueryOptionb); xlib target does not link it.
+          U=src/util/meson.build
+          echo "===== xmlconfig in $U ====="; grep -n "xmlconfig" "$U" || true
+          if grep -q "idep_xmlconfig[^_a-z]" "$M"; then
+            echo "xmlconfig already linked"
+          elif grep -q "^idep_xmlconfig *=" "$U"; then
+            sed -i '0,/driver_zink/s//driver_zink, idep_xmlconfig/' "$M"; echo "linked idep_xmlconfig"
+          elif grep -q "^libxmlconfig *=" "$U"; then
+            sed -i '0,/driver_zink/s//driver_zink, declare_dependency(link_with : libxmlconfig)/' "$M"; echo "linked libxmlconfig"
+          else
+            echo "::error::no xmlconfig target found in $U (see list above)"; exit 1
+          fi
+          echo "===== final diff ====="; git diff -- "$M"
+
+      - name: Port Bruno sw-winsys presentation to Zink (fixes black screen)
+        working-directory: mesa-src
+        run: |
+          echo "===== current zink_flush_frontbuffer in this Mesa ====="
+          awk '/^zink_flush_frontbuffer/,/^}/' src/gallium/drivers/zink/zink_screen.c | head -80
+          echo "===== sw_winsys.h ====="
+          grep -rn -A4 "displaytarget_display\|displaytarget_create" src/gallium/include/frontend/sw_winsys.h src/gallium/frontends/sw_winsys.h 2>/dev/null || true
+          cat > /tmp/port_zink_sw.py <<'PYEOF'
+          #!/usr/bin/env python3
+          """Port Bruno's (Winlator) Zink software-winsys presentation to a new Mesa tree.
+          Run from the Mesa source root. Only zink_screen.c / zink_context.c are touched
+          (winsys + displaytarget are kept in file-scope statics, so no header edits needed).
+          """
+          import re, sys, pathlib
+
+          def rd(p): return pathlib.Path(p).read_text()
+          def wr(p, t): pathlib.Path(p).write_text(t)
+          def die(msg):
+              print("::error::" + msg); sys.exit(1)
+
+          Z   = "src/gallium/drivers/zink/"
+          SCR = Z + "zink_screen.c"
+          SCH = Z + "zink_screen.h"
+          CTX = Z + "zink_context.c"
+          SWH = "src/gallium/include/frontend/sw_winsys.h"
+          if not pathlib.Path(SWH).exists():
+              SWH = "src/gallium/frontends/sw_winsys.h"
+
+          def params_of(sig):
+              out = []
+              for p in sig.split(","):
+                  ids = re.findall(r"[A-Za-z_]\w*", p)
+                  if ids: out.append(ids[-1])
+              return out
+
+          def count_params(proto):
+              return len([p for p in proto.split(",") if p.strip()])
+
+          sw = rd(SWH)
+          m = re.search(r"\(\s*\*\s*displaytarget_display\s*\)\s*\(([^;]*?)\)\s*;", sw, re.S)
+          if not m: die("displaytarget_display prototype not found in " + SWH)
+          n_disp = count_params(m.group(1))
+          m = re.search(r"\(\s*\*\s*displaytarget_create\s*\)\s*\(([^;]*?)\)\s*;", sw, re.S)
+          if not m: die("displaytarget_create prototype not found in " + SWH)
+          n_create = count_params(m.group(1))
+          has_destroy = bool(re.search(r"\(\s*\*\s*displaytarget_destroy\s*\)", sw))
+          print("displaytarget_display params:", n_disp, " displaytarget_create params:", n_create, " destroy:", has_destroy)
+          if n_create != 8:
+              print("::warning::displaytarget_create has %d params (expected 8), check generated call" % n_create)
+
+          has_copy_ctx = bool(re.search(r"\bcopy_context\b", rd(SCH)))
+          print("screen->copy_context exists:", has_copy_ctx)
+
+          t = rd(SCR)
+          if "zink_sw_present_ported" in t:
+              print("zink_screen.c already patched"); sys.exit(0)
+
+          mf = re.search(r"^zink_flush_frontbuffer\s*\(([^)]*)\)\s*\{", t, re.M)
+          if not mf: die("zink_flush_frontbuffer not found in zink_screen.c")
+          P = params_of(mf.group(1))
+          print("zink_flush_frontbuffer params:", P)
+          if len(P) < 6: die("unexpected zink_flush_frontbuffer signature: %s" % P)
+          PSCR, PCTX, PRES, LEVEL, LAYER, HANDLE = P[:6]
+          extra = P[6:]
+          if n_disp >= 5:
+              nboxes = extra[0] if len(extra) >= 2 else "0"
+              box = extra[-1] if extra else "NULL"
+              disp_args = "%s, %s, %s" % (HANDLE, nboxes, box)
+          else:
+              box = extra[-1] if extra else "NULL"
+              disp_args = "%s, %s" % (HANDLE, box)
+
+          copy_ctx_expr = "zink_sw_copy_ctx"
+          destroy_line = "ws_fb->displaytarget_destroy(ws_fb, e->dt);" if has_destroy else "/* no displaytarget_destroy */"
+
+          # ---- file-scope state, inserted before the function's return-type line ----
+          glob = """#include <stdbool.h>
+          #include <stdint.h>
+          #include "frontend/sw_winsys.h"
+          #include "util/u_inlines.h"
+          #include "util/u_math.h"
+          #include "util/format/u_format.h"
+
+          /* zink_sw_present_ported: Winlator xlib presentation (Bruno's approach) */
+          struct zink_sw_dt_entry {
+             struct pipe_resource *res;
+             struct sw_displaytarget *dt;
+             unsigned stride, w, h;
+          };
+          static struct sw_winsys *zink_sw_winsys_g;
+          static struct zink_sw_dt_entry zink_sw_dt_cache[32];
+          static struct pipe_context *zink_sw_copy_ctx;
+
+          """
+          prev_line_start = t.rfind("\n", 0, mf.start() - 1) + 1
+          t = t[:prev_line_start] + glob + t[prev_line_start:]
+          mf = re.search(r"^zink_flush_frontbuffer\s*\(([^)]*)\)\s*\{", t, re.M)
+
+          block = """
+             {
+                struct sw_winsys *ws_fb = zink_sw_winsys_g;
+                if (ws_fb) {
+                   struct zink_sw_dt_entry *e = NULL, *freeslot = NULL;
+                   for (unsigned i = 0; i < 32; i++) {
+                      if (zink_sw_dt_cache[i].res == %(PRES)s) { e = &zink_sw_dt_cache[i]; break; }
+                      if (!zink_sw_dt_cache[i].res && !freeslot) freeslot = &zink_sw_dt_cache[i];
+                   }
+                   if (e && (e->w != %(PRES)s->width0 || e->h != %(PRES)s->height0)) {
+                      if (e->dt) %(DESTROY)s
+                      e->dt = NULL; e->res = NULL; freeslot = e; e = NULL;
+                   }
+                   if (!e) {
+                      e = freeslot ? freeslot : &zink_sw_dt_cache[0];
+                      e->res = %(PRES)s; e->w = %(PRES)s->width0; e->h = %(PRES)s->height0;
+                      e->dt = ws_fb->displaytarget_create(ws_fb, %(PRES)s->bind, %(PRES)s->format,
+                                                          %(PRES)s->width0, %(PRES)s->height0,
+                                                          64, NULL, &e->stride);
+                   }
+                   if (!zink_sw_copy_ctx)
+                      zink_sw_copy_ctx = %(PSCR)s->context_create(%(PSCR)s, NULL, 0);
+                   if (!zink_sw_copy_ctx)
+                      zink_sw_copy_ctx = %(PCTX)s;
+                   if (e->dt) {
+                      void *dt_map = zink_sw_copy_ctx ? ws_fb->displaytarget_map(ws_fb, e->dt, 0) : NULL;
+                      if (dt_map) {
+                         struct pipe_context *cctx = %(CCTX)s;
+                         struct pipe_transfer *transfer = NULL;
+                         void *res_map = pipe_texture_map(cctx, %(PRES)s, %(LEVEL)s, %(LAYER)s, PIPE_MAP_READ, 0, 0,
+                                                          u_minify(%(PRES)s->width0, %(LEVEL)s),
+                                                          u_minify(%(PRES)s->height0, %(LEVEL)s),
+                                                          &transfer);
+                         if (res_map) {
+                            util_copy_rect((uint8_t *)dt_map, %(PRES)s->format, e->stride, 0, 0,
+                                           transfer->box.width, transfer->box.height,
+                                           (const uint8_t *)res_map, transfer->stride, 0, 0);
+                            pipe_texture_unmap(cctx, transfer);
+                         }
+                         ws_fb->displaytarget_unmap(ws_fb, e->dt);
+                      }
+                      ws_fb->displaytarget_display(ws_fb, e->dt, %(DISP)s);
+                      return;
+                   }
+                }
+             }
+          """ % dict(PSCR=PSCR, PRES=PRES, LEVEL=LEVEL, LAYER=LAYER, CCTX=copy_ctx_expr, DISP=disp_args, DESTROY=destroy_line, PCTX=PCTX)
+          t = t[:mf.end()] + block + t[mf.end():]
+
+          # remember winsys at zink_create_screen entry
+          mc = re.search(r"^zink_create_screen\s*\(([^)]*)\)\s*\{", t, re.M)
+          if not mc: die("zink_create_screen not found")
+          Pc = params_of(mc.group(1))
+          if not Pc: die("zink_create_screen has no params")
+          t = t[:mc.end()] + "\n   zink_sw_winsys_g = %s;\n" % Pc[0] + t[mc.end():]
+
+          wr(SCR, t); print("zink_screen.c patched (winsys param = %s)" % Pc[0])
+
+          # ---------------- zink_context.c: ZINK_CONTEXT_THREADED ----------------
+          c = rd(CTX)
+          if "ZINK_CONTEXT_THREADED" in c:
+              print("zink_context.c already has ZINK_CONTEXT_THREADED")
+          else:
+              mx = re.search(r"^zink_context_create\s*\(\s*struct\s+pipe_screen\s*\*\s*\w+\s*,\s*void\s*\*\s*\w+\s*,\s*unsigned\s+(\w+)\s*\)\s*\{", c, re.M)
+              if not mx:
+                  print("::warning::zink_context_create not found, ZINK_CONTEXT_THREADED not ported")
+              else:
+                  fl = mx.group(1)
+                  add = """
+             {
+                const char *zink_ctx_thr = getenv("ZINK_CONTEXT_THREADED");
+                %(f)s &= ~PIPE_CONTEXT_PREFER_THREADED;
+                if (zink_ctx_thr && (!strcmp(zink_ctx_thr, "true") || !strcmp(zink_ctx_thr, "1")))
+                   %(f)s |= PIPE_CONTEXT_PREFER_THREADED;
+             }
+          """ % dict(f=fl)
+                  c = c[:mx.end()] + add + c[mx.end():]
+                  c = "#include <stdlib.h>\n#include <string.h>\n" + c
+                  wr(CTX, c); print("zink_context.c: ZINK_CONTEXT_THREADED ported (default OFF)")
+          print("DONE")
+          PYEOF
+          python3 /tmp/port_zink_sw.py
+          echo "===== diff stat ====="; git diff --stat
+
+      - name: Configure
+        working-directory: mesa-src
+        run: |
+          F=$(ls meson.options meson_options.txt 2>/dev/null | head -n1)
+          python3 - "$F" > /tmp/opts.txt <<'PY'
+          import re, sys
+          print("\n".join(re.findall(r"option\(\s*['\"]([^'\"]+)['\"]", open(sys.argv[1]).read())))
+          PY
+          ARGS=()
+          add() {
+            if grep -qx -- "$1" /tmp/opts.txt; then ARGS+=("-D$1=$2")
+            else echo "::notice::option '$1' not in this Mesa, skipped"; fi
+          }
+          GLXVAL=xlib
+          if ! grep -q "'xlib'" "$F" && grep -q "gallium-xlib" "$F"; then GLXVAL=gallium-xlib; fi
+          add platforms x11
+          add gallium-drivers softpipe,zink
+          add vulkan-drivers ""
+          add dri-drivers ""
+          add llvm disabled
+          add gallium-va disabled
+          add lmsensors disabled
+          add libunwind disabled
+          add valgrind disabled
+          add egl disabled
+          add gbm disabled
+          add gles1 disabled
+          add gles2 disabled
+          add glx "$GLXVAL"
+          add dri3 disabled
+          echo "Options: ${ARGS[*]}"
+          meson setup build --buildtype=release -Dstrip=true \
+            -Dprefix="$PFX" -Dlibdir=lib "${ARGS[@]}" \
+            || { tail -60 build/meson-logs/meson-log.txt; exit 1; }
+
+      - name: Build
+        working-directory: mesa-src
+        run: ninja -C build -j"$(nproc)"
+
+      - name: Diagnose sw_winsys / zink_screen.c errors (only on failure)
+        if: failure()
+        working-directory: mesa-src
+        run: |
+          echo "===== every definition of struct sw_winsys ====="
+          grep -rn -E "^struct sw_winsys[[:space:]]*\{|^struct sw_winsys$" src --include=*.h --include=*.c || true
+          echo "===== sw_winsys.h lines 40-160 ====="
+          sed -n 40,160p src/gallium/include/frontend/sw_winsys.h || true
+          echo "===== where zink_screen.c gets sw_winsys ====="
+          grep -n "sw_winsys" src/gallium/drivers/zink/zink_screen.c | head -40
+          echo "===== errors of zink_screen.c only ====="
+          ninja -C build src/gallium/drivers/zink/libzink.a.p/zink_screen.c.o 2>&1 | grep -E "error|note:" | head -40 || true
+          echo "===== our inserted block (as compiled) ====="
+          grep -n "zink_sw_winsys_g\|ws_fb->" src/gallium/drivers/zink/zink_screen.c | head -30
+
+      - name: Install to stage and keep only libGL
+        run: |
+          rm -rf stage
+          DESTDIR="$PWD/stage" ninja -C mesa-src/build install
+          ROOT="stage${PFX%/usr}"; LIB="$ROOT/usr/lib"
+          echo "===== everything Mesa installed ====="
+          find "$ROOT" \( -type f -o -type l \) | sort
+          # keep only libGL*, drop all the rest
+          find "$LIB" -mindepth 1 -maxdepth 1 ! -name 'libGL.so*' -exec rm -rf {} +
+          rm -rf "$ROOT/usr/share" "$ROOT/usr/include" "$ROOT/usr/bin"
+          [ -e "$LIB/libGL.so.1" ] || { echo "::error::libGL.so.1 was not built"; exit 1; }
+          ls -la "$LIB"
+
+      - name: Check that Zink is really inside libGL
+        run: |
+          LIB="stage${PFX%/usr}/usr/lib"
+          L=$(readlink -f "$LIB/libGL.so.1")
+          N=$(strings "$L" | grep -c "ZINK_DEBUG" || true)
+          echo "ZINK_DEBUG strings in libGL: $N"
+          [ "$N" -gt 0 ] || { echo "::error::No Zink inside libGL (only software renderer)"; exit 1; }
+
+      - name: Bundle X libs that libGL needs and rootfs may lack
+        run: |
+          ROOT="stage${PFX%/usr}"; DST="$ROOT/usr/lib"
+          NEED=$(readelf -d "$(readlink -f "$DST/libGL.so.1")" | sed -n 's/.*Shared library: \[\(.*\)\]/\1/p')
+          echo "libGL NEEDED:"; echo "$NEED"
+          for n in $NEED; do
+            case "$n" in
+              libxcb-*|libX11-xcb*|libxshmfence*|libXxf86vm*|libXdamage*|libXfixes*|libXrandr*|libXrender*) ;;
+              *) continue ;;
+            esac
+            src=$(ldconfig -p | awk -v n="$n" '$1==n{print $NF; exit}')
+            if [ -n "$src" ]; then cp -L "$src" "$DST/$n"; echo "bundled $n"
+            else echo "::warning::$n not found on runner"; fi
+          done
+
+      - name: Package
+        run: |
+          VER="${MESA_REF#mesa-}"
+          ROOT="stage${PFX%/usr}"
+          mkdir -p out
+          tar --owner=0 --group=0 --numeric-owner -C "$ROOT" -cf - usr \
+            | zstd -19 -T0 -o "out/zink-${VER}.tzst"
+          tar -C "$ROOT" -tf <(zstd -dc "out/zink-${VER}.tzst") | tee out/contents.txt
+          {
+            echo "## libGL NEEDED / GLIBC"
+            L=$(readlink -f "$ROOT/usr/lib/libGL.so.1")
+            readelf -d "$L" | grep NEEDED
+            objdump -T "$L" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -n1
+          } | tee out/deps.txt "$GITHUB_STEP_SUMMARY"
+          ls -lh out
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zink-xlib
+          path: out/*
+          if-no-files-found: error
+          
