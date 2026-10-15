@@ -188,6 +188,16 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 if (FileUtils.copy(mesaSrcDir, mesaDir)) FileUtils.writeString(mesaMark, signature);
             }
             if (mesaMark.exists()) {
+                // The Mesa package ships X11/xcb helper libraries built on another distro. They would shadow the rootfs
+                // ones that SDL/libX11 in the game use, so keep only what the rootfs does not have itself.
+                File[] bundled = new File(mesaDir, "lib").listFiles();
+                if (bundled != null) {
+                    for (File lib : bundled) {
+                        String n = lib.getName();
+                        boolean shared = n.startsWith("libX11-xcb.so") || n.startsWith("libxcb-") || n.startsWith("libXxf86vm.so") || n.startsWith("libarchive.so");
+                        if (shared && new File(rootFS.getLibDir(), n).exists()) lib.delete();
+                    }
+                }
                 libPath = mesaDir+"/lib:"+libPath;
                 envVars.put("LD_LIBRARY_PATH", libPath);
                 if (!envVars.has("LIBGL_DRIVERS_PATH")) envVars.put("LIBGL_DRIVERS_PATH", mesaDir+"/dri");
