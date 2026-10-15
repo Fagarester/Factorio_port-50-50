@@ -23,6 +23,8 @@ public class Drawable extends XResource {
     private boolean offscreenStorage = false;
     private Callback<Drawable> onDestroyListener;
     public final Object renderLock = new Object();
+    /** dma-buf fd kept open for DMA_BUF_IOCTL_SYNC (DRI3 pixmaps backed by a dma-buf), -1 otherwise. */
+    public volatile int syncFd = -1;
 
     static {
         System.loadLibrary("winlator");

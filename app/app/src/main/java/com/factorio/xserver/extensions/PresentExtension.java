@@ -23,6 +23,8 @@ import com.factorio.xserver.errors.XRequestError;
 import com.factorio.xserver.events.PresentCompleteNotify;
 import com.factorio.xserver.events.PresentIdleNotify;
 
+import com.factorio.sysvshm.SysVSharedMemory;
+import java.nio.ByteBuffer;
 import java.io.IOException;
 
 public class PresentExtension extends Extension {
@@ -103,6 +105,24 @@ public class PresentExtension extends Extension {
         }
     }
 
+    private static final int SAMPLES = 128;
+    private int presentCount = 0;
+    private int skippedBlank = 0;
+    private int blankRun = 0;
+
+    /** Counts non-zero 32-bit pixels among SAMPLES evenly spaced positions of the buffer (diagnostics and blank-frame guard). */
+    private static int sampleNonZero(ByteBuffer data) {
+        if (data == null) return SAMPLES;   // unknown storage: never skip
+        int words = data.capacity() / 4;
+        if (words <= 0) return SAMPLES;
+        int nonZero = 0;
+        for (int i = 0; i < SAMPLES; i++) {
+            long idx = (long)i * (words - 1) / (SAMPLES - 1);
+            if (data.getInt((int)(idx * 4)) != 0) nonZero++;
+        }
+        return nonZero;
+    }
+
     private void presentPixmap(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int windowId = inputStream.readInt();
         int pixmapId = inputStream.readInt();
@@ -124,7 +144,25 @@ public class PresentExtension extends Extension {
 
         synchronized (content.renderLock) {
             if (pixmap != null) {
-                content.copyArea((short)0, (short)0, xOff, yOff, pixmap.drawable.width, pixmap.drawable.height, pixmap.drawable);
+                Drawable src = pixmap.drawable;
+                int syncFd = src.syncFd;
+                if (syncFd >= 0) SysVSharedMemory.dmabufSync(syncFd, true);   // invalidate CPU cache before reading GPU-written memory
+
+                int nonZero = sampleNonZero(src.getData());
+                presentCount++;
+                if (presentCount <= 40 || presentCount % 300 == 0 || nonZero == 0) {
+                    xServer.debugPrint("PRESENT #"+presentCount+" pixmap="+pixmapId+" "+src.width+"x"+src.height+" sampled non-zero pixels: "+nonZero+"/"+SAMPLES+(syncFd >= 0 ? " (dma-buf sync)" : ""));
+                }
+
+                // dma-buf (native OpenGL) only: a buffer that is still completely zero was not rendered yet.
+                // Keep the previous picture for up to 3 such frames in a row instead of flashing black; a real black
+                // screen (longer than that) is still shown.
+                if (nonZero > 0) blankRun = 0; else blankRun++;
+                boolean skip = syncFd >= 0 && nonZero == 0 && blankRun <= 3;
+                if (skip) skippedBlank++;
+                else content.copyArea((short)0, (short)0, xOff, yOff, src.width, src.height, src);
+
+                if (syncFd >= 0) SysVSharedMemory.dmabufSync(syncFd, false);
                 sendIdleNotify(window, pixmap, serial, idleFence);
             }
             else content.forceUpdate();

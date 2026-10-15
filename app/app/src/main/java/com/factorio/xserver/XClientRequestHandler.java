@@ -169,7 +169,19 @@ public class XClientRequestHandler implements RequestHandler {
         try {
             if (opcode < 0) {
                 Extension extension = client.xServer.getExtension(opcode);
-                if (extension != null) extension.handleRequest(client, inputStream, outputStream);
+                // Unknown extension: report an error instead of leaving the request unread and unanswered
+                // (the client would wait on the socket forever).
+                if (extension == null) throw new BadImplementation();
+                extension.handleRequest(client, inputStream, outputStream);
+
+                // Safety net: a handler that read less than the whole request body (e.g. GLXCreateContext
+                // is 24 bytes but was parsed as 21) would leave the rest in the stream, and the next request
+                // would be parsed from the middle of it, so the server stops answering that client.
+                int unread = client.getRemainingRequestLength();
+                if (unread > 0) {
+                    client.xServer.debugPrint("ext request left "+unread+" unread byte(s), skipped (opcode="+(opcode & 0xff)+" minor="+(requestData & 0xff)+")");
+                    inputStream.skip(unread);
+                }
             }
             else {
                 switch (opcode) {

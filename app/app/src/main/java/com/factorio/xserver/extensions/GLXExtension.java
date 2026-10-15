@@ -29,6 +29,7 @@ public class GLXExtension extends Extension {
     public static final byte MAJOR_VERSION = 1;
     public static final byte MINOR_VERSION = 4;
     private static final byte DEFAULT_FBCONFIG_ID = 1;
+    private static boolean buildBannerPrinted = false;
     private final SparseArray<SparseLongArray> clientGLXContexts = new SparseArray<>();
     private final SparseArray<SparseLongArray> clientGLContexts = new SparseArray<>();
     private final String glxExtensions = "GLX_ARB_create_context GLX_ARB_get_proc_address";
@@ -49,6 +50,13 @@ public class GLXExtension extends Extension {
         private static final byte CREATE_GL_CONTEXT = 1;
         private static final byte DESTROY_GL_CONTEXT = 2;
         private static final byte CREATE_CONTEXT = 3;
+        private static final byte MAKE_CURRENT = 5;
+        private static final byte IS_DIRECT = 6;
+        private static final byte CLIENT_INFO = 20;
+        private static final byte MAKE_CONTEXT_CURRENT = 26;
+        private static final byte GET_DRAWABLE_ATTRIBUTES = 29;
+        private static final byte SET_CLIENT_INFO_ARB = 33;
+        private static final byte SET_CLIENT_INFO_2_ARB = 35;
         private static final byte DESTROY_CONTEXT = 4;
         private static final byte QUERY_VERSION = 7;
         private static final byte QUERY_EXTENSIONS_STRING = 18;
@@ -127,18 +135,51 @@ public class GLXExtension extends Extension {
 
         if (contextId == 0) throw new GLXBadContext();
         createGLXContextForClient(client, contextId, shareList);
-        xServer.debugPrint("GLX createContext: about to write reply");
+        // GLXCreateContext has NO reply in the GLX protocol. The old code wrote a 32-byte reply here,
+        // which is a protocol violation; the generic handler now also skips the 3 padding bytes of the request.
+        xServer.debugPrint("GLX createContext: done (no reply, as per protocol)");
+    }
+
+    // GLXIsDirect (opcode 6): Mesa's glXCreateContext asks the server whether the context is direct and
+    // fails (returns NULL) when it gets an error instead of a reply. The client renders directly.
+    private void isDirect(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4); // context id
 
         try (XStreamLock lock = outputStream.lock()) {
-            xServer.debugPrint("GLX createContext: lock acquired, writing bytes");
             outputStream.writeByte(RESPONSE_CODE_SUCCESS);
-            xServer.debugPrint("GLX createContext: wrote byte 1");
             outputStream.writeByte((byte)0);
-            xServer.debugPrint("GLX createContext: wrote byte 2");
             outputStream.writeShort(client.getSequenceNumber());
-            xServer.debugPrint("GLX createContext: wrote short");
-            outputStream.writePad(28);
-            xServer.debugPrint("GLX createContext: wrote pad, done");
+            outputStream.writeInt(0);
+            outputStream.writeByte((byte)1); // isDirect
+            outputStream.writePad(23);
+        }
+    }
+
+    // GLXGetDrawableAttributes (29): reply with an empty attribute list (Mesa treats a missing reply/error as failure).
+    private void getDrawableAttributes(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4); // drawable
+
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(0);   // extra length in words
+            outputStream.writeInt(0);   // numAttribs
+            outputStream.writePad(20);
+        }
+    }
+
+    // GLXMakeCurrent (5) / GLXMakeContextCurrent (26): reply with a non-zero context tag.
+    private void makeCurrentReply(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        client.skipRequest();
+
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(0);
+            outputStream.writeInt(1); // contextTag
+            outputStream.writePad(20);
         }
     }
 
@@ -309,20 +350,23 @@ public class GLXExtension extends Extension {
             if (name == GLXEnums.GLX_CONTEXT_MAJOR_VERSION_ARB) glMajorVersion = value;
             else if (name == GLXEnums.GLX_CONTEXT_MINOR_VERSION_ARB) glMinorVersion = value;
         }
+        xServer.debugPrint("GLX createContextAttribsARB: requested GL "+glMajorVersion+"."+glMinorVersion);
 
-        boolean success = glMajorVersion <= 3 && glMinorVersion <= 3;
-        if (success) createGLXContextForClient(client, contextId, shareContext);
-
-        try (XStreamLock lock = outputStream.lock()) {
-            outputStream.writeByte(success ? RESPONSE_CODE_SUCCESS : RESPONSE_CODE_ERROR);
-            outputStream.writeByte((byte)0);
-            outputStream.writeShort(client.getSequenceNumber());
-            outputStream.writePad(28);
-        }
+        // GLXCreateContextAttribsARB has NO reply in the GLX protocol: the client uses xcb_request_check(), which
+        // asserts ("Assertion `!reply' failed") when it receives a reply for it. The old code wrote a 32-byte reply
+        // (and, for versions above 3.3, a malformed "error" packet). The context is rendered by the client itself
+        // (direct rendering), so the requested version is not limited here; only a server-side placeholder is created.
+        createGLXContextForClient(client, contextId, shareContext);
     }
+
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData();
+        if (!buildBannerPrinted) {
+            buildBannerPrinted = true;
+            // Lets any log show which server build produced it (APK must contain all of these fixes).
+            xServer.debugPrint("BUILD v29: ext-unread-skip, glx-createctx-noreply, glx-attribs-noreply, glx-isdirect, dri3-size-fix, dmabuf-sync, present-blank-guard, input-diagnostics, focus-fallback");
+        }
         xServer.debugPrint("GLX handleRequest: opcode=" + opcode);
         switch (opcode) {
             case ClientOpcodes.CREATE_GL_CONTEXT:
@@ -354,6 +398,21 @@ public class GLXExtension extends Extension {
                 break;
             case ClientOpcodes.CREATE_CONTEXT_ATTRIBS_ARB:
                 createContextAttribsARB(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.IS_DIRECT:
+                isDirect(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.MAKE_CURRENT:
+            case ClientOpcodes.MAKE_CONTEXT_CURRENT:
+                makeCurrentReply(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.GET_DRAWABLE_ATTRIBUTES:
+                getDrawableAttributes(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.CLIENT_INFO:
+            case ClientOpcodes.SET_CLIENT_INFO_ARB:
+            case ClientOpcodes.SET_CLIENT_INFO_2_ARB:
+                client.skipRequest(); // no reply in the protocol; accepted and ignored (was answered with an X error)
                 break;
             default:
                 throw new BadImplementation();

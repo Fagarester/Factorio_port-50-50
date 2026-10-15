@@ -142,6 +142,18 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
         sendEvent(windowB, Event.ENTER_WINDOW, new EnterNotify(detailB, xServer.windowManager.rootWindow, windowB, null, xB, yB, localPointB[0], localPointB[1], keyButMask, mode, sameScreenAndFocus));
     }
 
+    private int inputLogCount = 0;
+    private int inputOkCount = 0;
+
+    private void inputDbg(String message) {
+        if (inputLogCount++ < 120) xServer.debugPrint("INPUT: " + message);
+    }
+
+    private static String describe(Window w) {
+        if (w == null) return "null";
+        return "id=" + w.id + " name='" + w.getName() + "' class='" + w.getClassName() + "' mapped=" + w.attributes.isMapped() + " " + w.getWidth() + "x" + w.getHeight();
+    }
+
     @Override
     public void onPointerButtonPress(Pointer.Button button) {
         if (xServer.isRelativeMouseMovement()) {
@@ -155,6 +167,10 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
                 grabWindow = pointWindow.getAncestorWithEventId(Event.BUTTON_PRESS);
                 if (grabWindow != null) xServer.grabManager.activatePointerGrab(grabWindow);
             }
+
+            if (grabWindow == null) inputDbg("button " + button + " dropped: no window under the pointer (" + describe(pointWindow) + ") or its parents listens for ButtonPress");
+            else if (!grabWindow.attributes.isEnabled()) inputDbg("button " + button + " dropped: window is disabled (" + describe(grabWindow) + ")");
+            else if (inputOkCount++ < 8) inputDbg("button " + button + " delivered to " + describe(grabWindow));
 
             if (grabWindow != null && grabWindow.attributes.isEnabled()) {
                 Bitmask eventMask = createPointerEventMask();
@@ -239,7 +255,7 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
     @Override
     public void onKeyPress(byte keycode, int keysym) {
         Window focusedWindow = xServer.windowManager.getFocusedWindow();
-        if (focusedWindow == null) return;
+        if (focusedWindow == null) { inputDbg("key " + (keycode & 0xff) + " dropped: no window has the input focus"); return; }
         updatePointWindow();
 
         Window eventWindow = null;
@@ -249,11 +265,12 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
             child = eventWindow.isAncestorOf(pointWindow) ? pointWindow : null;
         }
         if (eventWindow == null) {
-            if (!focusedWindow.hasEventListenerFor(Event.KEY_PRESS)) return;
+            if (!focusedWindow.hasEventListenerFor(Event.KEY_PRESS)) { inputDbg("key " + (keycode & 0xff) + " dropped: focused window listens for no KeyPress (" + describe(focusedWindow) + ")"); return; }
             eventWindow = focusedWindow;
         }
 
-        if (!eventWindow.attributes.isEnabled()) return;
+        if (!eventWindow.attributes.isEnabled()) { inputDbg("key " + (keycode & 0xff) + " dropped: window is disabled (" + describe(eventWindow) + ")"); return; }
+        if (inputOkCount++ < 8) inputDbg("key " + (keycode & 0xff) + " delivered to " + describe(eventWindow));
 
         Bitmask keyButMask = getKeyButMask();
         short x = xServer.pointer.getX();

@@ -13,6 +13,8 @@
 #include <jni.h>
 #include <android/log.h>
 #include <android/sharedmem.h>
+#include <sys/ioctl.h>
+#include <stdint.h>
 
 #define __u32 uint32_t
 #include <linux/ashmem.h>
@@ -96,4 +98,18 @@ Java_com_factorio_sysvshm_SysVSharedMemory_createMemoryFd(JNIEnv *env, jclass ob
     if (fd < 0) return -1;
 
     return fd;
+}
+/* dma-buf CPU access bracket (DMA_BUF_IOCTL_SYNC): invalidates the CPU cache before the CPU reads memory that the GPU wrote.
+   Defined locally so the code builds with any NDK header level. */
+struct fio_dma_buf_sync { uint64_t flags; };
+#define FIO_DMA_BUF_SYNC_READ  (1 << 0)
+#define FIO_DMA_BUF_SYNC_START (0 << 2)
+#define FIO_DMA_BUF_SYNC_END   (1 << 2)
+#define FIO_DMA_BUF_IOCTL_SYNC _IOW('b', 0, struct fio_dma_buf_sync)
+
+JNIEXPORT jint JNICALL
+Java_com_factorio_sysvshm_SysVSharedMemory_dmabufSync(JNIEnv *env, jclass obj, jint fd, jboolean start) {
+    struct fio_dma_buf_sync sync;
+    sync.flags = FIO_DMA_BUF_SYNC_READ | (start ? FIO_DMA_BUF_SYNC_START : FIO_DMA_BUF_SYNC_END);
+    return ioctl(fd, FIO_DMA_BUF_IOCTL_SYNC, &sync);
 }

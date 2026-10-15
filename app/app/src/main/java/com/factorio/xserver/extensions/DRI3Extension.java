@@ -24,6 +24,7 @@ import com.factorio.xserver.errors.BadPixmap;
 import com.factorio.xserver.errors.BadWindow;
 import com.factorio.xserver.errors.XRequestError;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -33,6 +34,10 @@ public class DRI3Extension extends Extension {
     private final Callback<Drawable> onDestroyDrawableListener = (drawable) -> {
         ByteBuffer data = drawable.getData();
         SysVSharedMemory.unmapSHMSegment(data, data.capacity());
+        if (drawable.syncFd >= 0) {
+            XConnectorEpoll.closeFd(drawable.syncFd);
+            drawable.syncFd = -1;
+        }
     };
 
     private static abstract class ClientOpcodes {
@@ -161,10 +166,49 @@ public class DRI3Extension extends Extension {
         pixmapFromFd(client, pixmapId, width, height, stride, offset, depth, fd, size);
     }
 
+    private static String readSmall(String path) {
+        try (FileInputStream in = new FileInputStream(path)) {
+            byte[] b = new byte[512];
+            int n = in.read(b);
+            return n > 0 ? new String(b, 0, n).replace('\n', ' ').replace('\t', ' ') : "";
+        }
+        catch (Throwable t) {
+            return "unreadable:" + t.getClass().getSimpleName();
+        }
+    }
+
+    private static String linkOf(int fd) {
+        try {
+            return android.system.Os.readlink("/proc/self/fd/" + fd);
+        }
+        catch (Throwable t) {
+            return "?";
+        }
+    }
+
     private void pixmapFromFd(XClient client, int pixmapId, short width, short height, int stride, int offset, byte depth, int fd, long size)  throws IOException, XRequestError {
         try {
-            ByteBuffer buffer = SysVSharedMemory.mapSHMSegment(fd, size, offset, true);
-            if (buffer == null) throw new BadAlloc();
+            // Diagnostics: what kind of fd did the client send (memfd / ashmem / dma-buf / kgsl)?
+            xServer.debugPrint("DRI3 pixmapFromFd: fd="+fd+" -> "+(fd >= 0 ? linkOf(fd) : "none")+" size="+size+" offset="+offset+
+                " stride="+stride+" "+width+"x"+height+" depth="+depth+" | fdinfo: "+(fd >= 0 ? readSmall("/proc/self/fdinfo/"+fd) : ""));
+
+            // The Freedreno/KGSL client sends size=0 for its dma-buf (system heap) buffers; mmap(len=0) always fails
+            // with EINVAL (that was the BadAlloc). The visible part of the buffer is stride * height.
+            long needed = (long)(stride & 0xffff) * (height & 0xffff);
+            if (size < needed) {
+                xServer.debugPrint("DRI3 pixmapFromFd: client size "+size+" is smaller than stride*height, using "+needed);
+                size = needed;
+            }
+
+            ByteBuffer buffer = fd >= 0 ? SysVSharedMemory.mapSHMSegment(fd, size, offset, true) : null;
+            if (buffer == null && fd >= 0) {
+                xServer.debugPrint("DRI3 pixmapFromFd: read-only mmap failed, retrying read/write");
+                buffer = SysVSharedMemory.mapSHMSegment(fd, size, offset, false);
+            }
+            if (buffer == null) {
+                xServer.debugPrint("DRI3 pixmapFromFd: mmap failed -> BadAlloc");
+                throw new BadAlloc();
+            }
 
             short totalWidth = (short)(stride / 4);
             Drawable drawable = xServer.drawableManager.createDrawable(pixmapId, totalWidth, height, depth);
@@ -172,9 +216,16 @@ public class DRI3Extension extends Extension {
             drawable.setTexture(null);
             drawable.setOnDestroyListener(onDestroyDrawableListener);
             xServer.pixmapManager.createPixmap(drawable);
+
+            // Keep the fd of a dma-buf so Present can bracket CPU reads with DMA_BUF_IOCTL_SYNC.
+            if (fd >= 0 && SysVSharedMemory.dmabufSync(fd, true) == 0) {
+                SysVSharedMemory.dmabufSync(fd, false);
+                drawable.syncFd = fd;
+                fd = -1;   // ownership moved to the drawable; closed in onDestroyDrawableListener
+            }
         }
         finally {
-            XConnectorEpoll.closeFd(fd);
+            if (fd >= 0) XConnectorEpoll.closeFd(fd);
         }
     }
 

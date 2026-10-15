@@ -94,4 +94,7 @@ public class SysVSharedMemory {
     public static native ByteBuffer mapSHMSegment(int fd, long size, int offset, boolean readonly);
 
     public static native void unmapSHMSegment(ByteBuffer data, long size);
+
+    /** DMA_BUF_IOCTL_SYNC (read). Returns 0 on success, -1 if the fd is not a dma-buf. */
+    public static native int dmabufSync(int fd, boolean start);
 }

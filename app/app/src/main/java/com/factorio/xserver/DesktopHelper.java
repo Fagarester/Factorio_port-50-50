@@ -21,9 +21,21 @@ public abstract class DesktopHelper {
         xServer.windowManager.addOnWindowModificationListener(new WindowManager.OnWindowModificationListener() {
             @Override
             public void onMapWindow(Window window) {
+                focusDbg(xServer, "map " + describe(window) + " applicationWindow=" + window.isApplicationWindow() + " topLevel=" + (window.getParent() == xServer.windowManager.rootWindow));
                 setFocusedWindow(xServer, window);
             }
         });
+    }
+
+    private static int focusLogCount = 0;
+
+    private static void focusDbg(XServer xServer, String message) {
+        if (focusLogCount++ < 150) xServer.debugPrint("FOCUS: " + message);
+    }
+
+    private static String describe(Window w) {
+        if (w == null) return "null";
+        return "id=" + w.id + " name='" + w.getName() + "' class='" + w.getClassName() + "' mapped=" + w.attributes.isMapped() + " " + w.getWidth() + "x" + w.getHeight();
     }
 
     private static void updateFocusedWindow(XServer xServer) {
@@ -56,6 +68,16 @@ public abstract class DesktopHelper {
         else if (window.isDialogBox()) {
             winHandler.bringToFront(window.getClassName(), window.getHandle());
         }
+        else if (window.getParent() == xServer.windowManager.rootWindow && window.isRenderable() && !window.getClassName().isEmpty()) {
+            // Fallback: a top-level window with a class that does not satisfy isApplicationWindow() (no WM_NAME / window group yet)
+            // would never get the keyboard focus, and the game would ignore the keys. Only used while nothing useful has the focus.
+            Window current = xServer.windowManager.getFocusedWindow();
+            if (current == null || current == xServer.windowManager.rootWindow) {
+                focusDbg(xServer, "fallback focus -> " + describe(window));
+                xServer.windowManager.setFocus(window, WindowManager.FocusRevertTo.POINTER_ROOT);
+            }
+        }
+        else focusDbg(xServer, "not focusable: " + describe(window));
     }
 
     private static void setupXResources(XServer xServer) {
