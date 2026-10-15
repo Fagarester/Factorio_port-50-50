@@ -1,0 +1,274 @@
+name: Build glxtest (GLX probe for the app's X server)
+
+# Tiny arm64 glibc binary. It prints GLXTEST: <step> to stderr after every GLX step
+# (XOpenDisplay, ChooseVisual, CreateContext, MakeCurrent, glGetString, first SwapBuffers).
+# v5: also an INPUT PROBE: selects key/button/motion/enter/leave/focus events, prints GLXTEST-EV lines and flashes the window white on every tap or key (40 s run).
+# v2: a watchdog thread. If a step does not finish in 6 s it prints, for every thread, the state,
+# the current syscall and the file it works on (X socket / /dev/kgsl-3d0 / futex), plus a main-thread backtrace.
+# The binary links to libGL.so.1 at runtime (the one from opt/mesa-kgsl/lib via LD_LIBRARY_PATH), like the game.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential libx11-dev libgl-dev
+      - name: Write source
+        run: |
+          mkdir -p src out
+          cat > src/glxtest.c <<'CEOF'
+          // GLX probe with a watchdog. Prints GLXTEST: <step> after every GLX step. If a step does not finish
+          // within 6 s the watchdog thread prints, for every thread of this process: state, current syscall and the
+          // file behind its first argument (fd), plus a backtrace of the main thread. This tells whether the hang is
+          // a wait on the X socket, a GPU/KGSL ioctl, a futex deadlock or a busy loop.
+          #define _GNU_SOURCE
+          #include <stdio.h>
+          #include <stdlib.h>
+          #include <string.h>
+          #include <unistd.h>
+          #include <stdint.h>
+          #include <sys/syscall.h>
+          #include <dirent.h>
+          #include <signal.h>
+          #include <pthread.h>
+          #include <execinfo.h>
+          #include <poll.h>
+          #include <time.h>
+          #include <X11/Xlib.h>
+          #include <X11/Xutil.h>
+          #include <GL/glx.h>
+          #include <GL/gl.h>
+          
+          static volatile int g_step = 0;
+          static pthread_t g_main;
+          static pid_t g_main_tid;
+          static volatile int g_xfd = -1;
+          #define STEP(s) do { g_step++; fprintf(stderr, "GLXTEST: %s\n", s); fflush(stderr); } while (0)
+          
+          static const char *sysname(long nr) {
+              switch (nr) {            /* aarch64 */
+              case 22: return "epoll_pwait"; case 29: return "ioctl"; case 63: return "read"; case 64: return "write";
+              case 65: return "readv"; case 66: return "writev"; case 73: return "ppoll"; case 98: return "futex";
+              case 101: return "nanosleep"; case 115: return "clock_nanosleep"; case 134: return "rt_sigaction";
+              case 135: return "rt_sigprocmask"; case 206: return "sendto"; case 207: return "recvfrom";
+              case 211: return "sendmsg"; case 212: return "recvmsg"; case 222: return "mmap"; case 233: return "madvise";
+              case 241: return "perf_event_open"; case 261: return "prlimit64"; case 280: return "bpf";
+              case 291: return "statx"; case 293: return "rseq"; case 98+1000: return "?";
+              default: return "?";
+              }
+          }
+          
+          static void on_usr1(int sig) {
+              (void)sig;
+              static const char m[] = "GLXTEST-BT: handler started\n";
+              if (write(2, m, sizeof m - 1) < 0) {}
+              void *bt[48];
+              int n = backtrace(bt, 48);
+              fprintf(stderr, "GLXTEST-BT: main thread stack, %d frames\n", n);
+              backtrace_symbols_fd(bt, n, 2);
+          }
+          
+          static void dump_threads(int step) {
+              fprintf(stderr, "GLXTEST-WD: no progress for 6 s, stuck after step #%d; X connection fd = %d, main tid = %d\n", step, g_xfd, (int)g_main_tid);
+              DIR *d = opendir("/proc/self/task");
+              if (!d) { fprintf(stderr, "GLXTEST-WD: cannot open /proc/self/task\n"); return; }
+              struct dirent *e;
+              while ((e = readdir(d))) {
+                  if (e->d_name[0] == '.') continue;
+                  char path[256], buf[512] = "", comm[64] = "?", state = '?', sc[256] = "(unreadable)";
+                  FILE *f;
+                  snprintf(path, sizeof path, "/proc/self/task/%s/comm", e->d_name);
+                  if ((f = fopen(path, "r"))) { if (fgets(comm, sizeof comm, f)) comm[strcspn(comm, "\n")] = 0; fclose(f); }
+                  snprintf(path, sizeof path, "/proc/self/task/%s/stat", e->d_name);
+                  if ((f = fopen(path, "r"))) {
+                      if (fgets(buf, sizeof buf, f)) { char *p = strrchr(buf, ')'); if (p && p[1] == ' ') state = p[2]; }
+                      fclose(f);
+                  }
+                  snprintf(path, sizeof path, "/proc/self/task/%s/syscall", e->d_name);
+                  long nr = -2; unsigned long long a0 = 0;
+                  if ((f = fopen(path, "r"))) {
+                      if (fgets(sc, sizeof sc, f)) {
+                          sc[strcspn(sc, "\n")] = 0;
+                          if (sscanf(sc, "%ld %llx", &nr, &a0) < 1) nr = -2;
+                      }
+                      fclose(f);
+                  }
+                  char target[256] = "";
+                  if (nr == 29 || nr == 63 || nr == 64 || nr == 65 || nr == 66 || nr == 206 || nr == 207 || nr == 211 || nr == 212) {
+                      char lp[64];
+                      snprintf(lp, sizeof lp, "/proc/self/fd/%llu", a0);
+                      ssize_t l = readlink(lp, target, sizeof target - 1);
+                      if (l > 0) target[l] = 0; else snprintf(target, sizeof target, "(fd %llu: ?)", a0);
+                  }
+                  if (nr == 73) {   /* ppoll: arg0 is a pointer to struct pollfd; the process memory is shared, so read it */
+                      struct pollfd *pf = (struct pollfd *)(uintptr_t)a0;
+                      int pfd = pf->fd;
+                      char lp[64];
+                      snprintf(lp, sizeof lp, "/proc/self/fd/%d", pfd);
+                      ssize_t l = readlink(lp, target, sizeof target - 1);
+                      if (l > 0) target[l] = 0; else snprintf(target, sizeof target, "(fd %d: ?)", pfd);
+                      char extra[64]; snprintf(extra, sizeof extra, " [poll fd=%d events=0x%x%s]", pfd, pf->events, pfd == g_xfd ? " = X SOCKET" : "");
+                      strncat(target, extra, sizeof target - strlen(target) - 1);
+                  }
+                  char sigblk[64] = "";
+                  snprintf(path, sizeof path, "/proc/self/task/%s/status", e->d_name);
+                  if ((f = fopen(path, "r"))) {
+                      char ln[160];
+                      while (fgets(ln, sizeof ln, f)) if (!strncmp(ln, "SigBlk:", 7)) { ln[strcspn(ln, "\n")] = 0; snprintf(sigblk, sizeof sigblk, "%s", ln); break; }
+                      fclose(f);
+                  }
+                  fprintf(stderr, "GLXTEST-WD: tid=%s name=%s state=%c syscall=%ld(%s) fd0=%s | %s | raw: %s\n",
+                          e->d_name, comm, state, nr, nr >= 0 ? sysname(nr) : "-", target, sigblk, sc);
+              }
+              closedir(d);
+              pthread_kill(g_main, SIGUSR1);   /* backtrace of the main thread */
+          }
+          
+          static void *watchdog(void *arg) {
+              (void)arg;
+              int last = -1, still = 0, dumps = 0;
+              for (;;) {
+                  sleep(3);
+                  if (g_step != last) { last = g_step; still = 0; dumps = 0; continue; }
+                  if (++still >= 2 && dumps < 3) { dump_threads(last); dumps++; still = 0; }
+              }
+              return NULL;
+          }
+          
+          static int ev_count[40];
+          static int ev_printed = 0;
+          static int flash_frames = 0;   /* whole window turns white for a moment when a button/key event arrives */
+          
+          static void handle_events(Display *dpy) {
+              while (XPending(dpy)) {
+                  XEvent e;
+                  XNextEvent(dpy, &e);
+                  int t = e.type;
+                  if (t >= 0 && t < 40) ev_count[t]++;
+                  const char *name = t == KeyPress ? "KeyPress" : t == KeyRelease ? "KeyRelease" : t == ButtonPress ? "ButtonPress" :
+                      t == ButtonRelease ? "ButtonRelease" : t == MotionNotify ? "MotionNotify" : t == EnterNotify ? "EnterNotify" :
+                      t == LeaveNotify ? "LeaveNotify" : t == FocusIn ? "FocusIn" : t == FocusOut ? "FocusOut" : t == GenericEvent ? "GenericEvent" : "other";
+                  int important = (t != MotionNotify);
+                  if (t == ButtonPress || t == KeyPress) flash_frames = 20;
+                  if (ev_printed < 80 && (important || ev_count[t] <= 3)) {
+                      ev_printed++;
+                      if (t == ButtonPress || t == ButtonRelease || t == MotionNotify)
+                          fprintf(stderr, "GLXTEST-EV: %s x=%d y=%d button/state=%u\n", name, e.xbutton.x, e.xbutton.y, t == MotionNotify ? e.xmotion.state : e.xbutton.button);
+                      else if (t == KeyPress || t == KeyRelease)
+                          fprintf(stderr, "GLXTEST-EV: %s keycode=%u\n", name, e.xkey.keycode);
+                      else if (t == EnterNotify || t == LeaveNotify)
+                          fprintf(stderr, "GLXTEST-EV: %s mode=%d detail=%d\n", name, e.xcrossing.mode, e.xcrossing.detail);
+                      else if (t == FocusIn || t == FocusOut)
+                          fprintf(stderr, "GLXTEST-EV: %s mode=%d detail=%d\n", name, e.xfocus.mode, e.xfocus.detail);
+                      else
+                          fprintf(stderr, "GLXTEST-EV: %s (type %d)\n", name, t);
+                  }
+              }
+          }
+          
+          static void print_event_summary(int frame) {
+              fprintf(stderr, "GLXTEST-EV: summary at frame %d: Key=%d/%d Button=%d/%d Motion=%d Enter=%d Leave=%d FocusIn=%d FocusOut=%d Generic=%d\n",
+                      frame, ev_count[KeyPress], ev_count[KeyRelease], ev_count[ButtonPress], ev_count[ButtonRelease], ev_count[MotionNotify],
+                      ev_count[EnterNotify], ev_count[LeaveNotify], ev_count[FocusIn], ev_count[FocusOut], ev_count[GenericEvent]);
+          }
+          
+          int main(void) {
+              setvbuf(stderr, NULL, _IONBF, 0);
+              g_main = pthread_self();
+              g_main_tid = (pid_t)syscall(178 /* gettid on aarch64 */);
+              { void *pre[4]; backtrace(pre, 4); }   /* load libgcc_s now, not inside the signal handler */
+              signal(SIGUSR1, on_usr1);
+              pthread_t wd;
+              pthread_create(&wd, NULL, watchdog, NULL);
+          
+              STEP("XOpenDisplay");
+              Display *dpy = XOpenDisplay(NULL);
+              if (!dpy) { STEP("FAIL XOpenDisplay"); return 1; }
+              g_xfd = ConnectionNumber(dpy);
+              int scr = DefaultScreen(dpy);
+          
+              STEP("glXChooseVisual");
+              int attr[] = { GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE, 16, None };
+              XVisualInfo *vi = glXChooseVisual(dpy, scr, attr);
+              if (!vi) { STEP("FAIL glXChooseVisual"); return 2; }
+          
+              STEP("XCreateWindow");
+              Window root = RootWindow(dpy, scr);
+              XSetWindowAttributes swa = {0};
+              swa.colormap = XCreateColormap(dpy, root, vi->visual, AllocNone);
+              Window win = XCreateWindow(dpy, root, 0, 0, 1280, 720, 0, vi->depth,
+                                         InputOutput, vi->visual, CWColormap, &swa);
+              /* The app reveals the game screen only for a mapped window with a non-empty WM_CLASS (like SDL sets). */
+              XClassHint ch;
+              char cname[] = "glxtest";
+              ch.res_name = cname;
+              ch.res_class = cname;
+              XSetClassHint(dpy, win, &ch);
+              XStoreName(dpy, win, "glxtest");
+              XSelectInput(dpy, win, KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+                                     EnterWindowMask | LeaveWindowMask | FocusChangeMask | StructureNotifyMask | ExposureMask);
+              XMapWindow(dpy, win);
+              XSync(dpy, False);
+          
+              STEP("glXCreateContext (direct)");
+              GLXContext ctx = glXCreateContext(dpy, vi, NULL, True);
+              if (!ctx) { STEP("FAIL glXCreateContext"); return 3; }
+              STEP("glXCreateContext returned");
+              fprintf(stderr, "GLXTEST: direct rendering = %d\n", glXIsDirect(dpy, ctx));
+          
+              STEP("glXMakeCurrent");
+              if (!glXMakeCurrent(dpy, win, ctx)) { STEP("FAIL glXMakeCurrent"); return 4; }
+          
+              STEP("glGetString");
+              fprintf(stderr, "GLXTEST: GL_VENDOR   = %s\n", (const char *)glGetString(GL_VENDOR));
+              fprintf(stderr, "GLXTEST: GL_RENDERER = %s\n", (const char *)glGetString(GL_RENDERER));
+              fprintf(stderr, "GLXTEST: GL_VERSION  = %s\n", (const char *)glGetString(GL_VERSION));
+          
+              /* 25 seconds: the whole window changes colour every second (red, green, blue, white) and a black square moves.
+                 The center-bottom-left pixel is read back from the GPU so the log shows whether GL itself renders correctly,
+                 independently of what reaches the screen. */
+              static const float col[4][3] = { {1,0,0}, {0,1,0}, {0,0,1}, {1,1,1} };
+              static const char *colname[4] = { "RED", "GREEN", "BLUE", "WHITE" };
+              glEnable(GL_SCISSOR_TEST);
+              for (int i = 0; i < 2400; i++) {
+                  handle_events(dpy);
+                  if (i % 120 == 0) print_event_summary(i);
+                  int c = (i / 60) % 4;
+                  glScissor(0, 0, 1280, 720);
+                  if (flash_frames > 0) { glClearColor(1.0f, 1.0f, 1.0f, 1.0f); flash_frames--; }
+                  else glClearColor(col[c][0], col[c][1], col[c][2], 1.0f);
+                  glClear(GL_COLOR_BUFFER_BIT);
+                  glScissor((i * 6) % 1100, 300, 160, 160);   /* moving black square */
+                  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                  glClear(GL_COLOR_BUFFER_BIT);
+                  if (i % 60 == 0) {
+                      unsigned char px[4] = {0, 0, 0, 0};
+                      glReadPixels(10, 10, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, px);
+                      fprintf(stderr, "GLXTEST: frame %d: window should be %s; GPU readback of pixel(10,10) = %u %u %u %u\n",
+                              i, colname[c], px[0], px[1], px[2], px[3]);
+                  }
+                  if (i == 0) STEP("first glXSwapBuffers");
+                  glXSwapBuffers(dpy, win);
+                  if (i == 0) STEP("first swap returned");
+                  usleep(16000);
+              }
+              print_event_summary(2400);
+              STEP("DONE (2400 frames); exiting with _exit(0), teardown skipped on purpose");
+              _exit(0);   /* normal glXDestroyContext/XCloseDisplay teardown crashed with SIGSYS (exit 159) in earlier runs */
+          }
+          CEOF
+      - name: Build
+        run: |
+          gcc -O1 -o out/glxtest src/glxtest.c -lX11 -lGL -lpthread
+          readelf -d out/glxtest | grep NEEDED
+          objdump -T out/glxtest | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -n1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: glxtest
+          path: out/glxtest
+          if-no-files-found: error
