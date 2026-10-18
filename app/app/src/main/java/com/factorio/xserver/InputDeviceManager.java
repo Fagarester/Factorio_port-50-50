@@ -31,7 +31,7 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
 
     @Override
     public void onMapWindow(Window window) {
-        updatePointWindow();
+        updatePointWindowAndNotify();
     }
 
     @Override
@@ -107,13 +107,16 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
         PointerWindowEvent.Detail detailA = PointerWindowEvent.Detail.NONLINEAR;
         PointerWindowEvent.Detail detailB = PointerWindowEvent.Detail.NONLINEAR;
 
+        // X11 protocol: pointer moves from A to its descendant B -> Leave(A, Inferior), Enter(B, Ancestor);
+        // from A to its ancestor B -> Leave(A, Ancestor), Enter(B, Inferior). It was reversed, and SDL ignores
+        // EnterNotify with detail=Inferior, so the game never got the mouse focus.
         if (windowA.isAncestorOf(windowB)) {
-            detailA = PointerWindowEvent.Detail.ANCESTOR;
-            detailB = PointerWindowEvent.Detail.INFERIOR;
+            detailA = PointerWindowEvent.Detail.INFERIOR;
+            detailB = PointerWindowEvent.Detail.ANCESTOR;
         }
         else if (windowB.isAncestorOf(windowA)) {
-            detailB = PointerWindowEvent.Detail.ANCESTOR;
-            detailA = PointerWindowEvent.Detail.INFERIOR;
+            detailA = PointerWindowEvent.Detail.ANCESTOR;
+            detailB = PointerWindowEvent.Detail.INFERIOR;
         }
 
         Bitmask keyButMask = getKeyButMask();
@@ -144,9 +147,40 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
 
     private int inputLogCount = 0;
     private int inputOkCount = 0;
+    private int keyOkCount = 0;
 
     private void inputDbg(String message) {
-        if (inputLogCount++ < 120) xServer.debugPrint("INPUT: " + message);
+        if (inputLogCount++ < 400) xServer.debugPrint("INPUT: " + message);
+    }
+
+    private int motionSent = 0;
+    private int motionDropped = 0;
+    private boolean maskLogged = false;
+
+    private static String listens(Window w) {
+        if (w == null) return "null";
+        StringBuilder sb = new StringBuilder();
+        int[] ids = {Event.KEY_PRESS, Event.KEY_RELEASE, Event.BUTTON_PRESS, Event.BUTTON_RELEASE, Event.ENTER_WINDOW, Event.LEAVE_WINDOW,
+            Event.POINTER_MOTION, Event.BUTTON_MOTION, Event.FOCUS_CHANGE, Event.STRUCTURE_NOTIFY, Event.EXPOSURE, Event.PROPERTY_CHANGE};
+        String[] names = {"KeyPress", "KeyRelease", "ButtonPress", "ButtonRelease", "Enter", "Leave", "PointerMotion", "ButtonMotion", "FocusChange", "StructureNotify", "Exposure", "PropertyChange"};
+        for (int i = 0; i < ids.length; i++) if (w.hasEventListenerFor(ids[i])) sb.append(names[i]).append(' ');
+        return sb.toString().trim();
+    }
+
+    /** Recomputes the window under the pointer and, like a real X server, sends Leave/EnterNotify when it changed.
+     *  (SDL sets its mouse focus from EnterNotify; this server used to send them only for pointer grabs.) */
+    private void updatePointWindowAndNotify() {
+        Window previous = pointWindow;
+        updatePointWindow();
+        if (previous != null && previous != pointWindow) {
+            try {
+                inputDbg("pointer window changed: " + describe(previous) + " -> " + describe(pointWindow) + " (listens: " + listens(pointWindow) + ")");
+                sendEnterLeaveNotify(previous, pointWindow, PointerWindowEvent.Mode.NORMAL);
+            }
+            catch (Throwable t) {
+                inputDbg("Enter/Leave failed: " + t);
+            }
+        }
     }
 
     private static String describe(Window w) {
@@ -170,7 +204,13 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
 
             if (grabWindow == null) inputDbg("button " + button + " dropped: no window under the pointer (" + describe(pointWindow) + ") or its parents listens for ButtonPress");
             else if (!grabWindow.attributes.isEnabled()) inputDbg("button " + button + " dropped: window is disabled (" + describe(grabWindow) + ")");
-            else if (inputOkCount++ < 8) inputDbg("button " + button + " delivered to " + describe(grabWindow));
+            else if (inputOkCount++ < 20) {
+                inputDbg("button " + button + " delivered to " + describe(grabWindow) + " (listens: " + listens(grabWindow) + ")");
+                if (!maskLogged) {
+                    maskLogged = true;
+                    inputDbg("focus window: " + describe(xServer.windowManager.getFocusedWindow()) + " (listens: " + listens(xServer.windowManager.getFocusedWindow()) + ")");
+                }
+            }
 
             if (grabWindow != null && grabWindow.attributes.isEnabled()) {
                 Bitmask eventMask = createPointerEventMask();
@@ -231,10 +271,18 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
 
     @Override
     public void onPointerMove(short x, short y) {
-        updatePointWindow();
+        updatePointWindowAndNotify();
         Bitmask eventMask = createPointerEventMask();
         Window grabWindow = xServer.grabManager.getWindow();
         Window window = grabWindow == null || xServer.grabManager.isOwnerEvents() ? pointWindow.getAncestorWithEventMask(eventMask) : null;
+
+        if (grabWindow == null && window == null) {
+            if (motionDropped++ < 10) inputDbg("motion dropped: nobody listens for PointerMotion under the pointer (" + describe(pointWindow) + ", listens: " + listens(pointWindow) + ")");
+        }
+        else {
+            motionSent++;
+            if (motionSent <= 10 || motionSent % 200 == 0) inputDbg("motion #" + motionSent + " sent to " + describe(window != null ? window : grabWindow) + " (dropped so far: " + motionDropped + ")");
+        }
 
         if (grabWindow != null || window != null) {
             Window eventWindow = window != null ? window : grabWindow;
@@ -270,7 +318,7 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
         }
 
         if (!eventWindow.attributes.isEnabled()) { inputDbg("key " + (keycode & 0xff) + " dropped: window is disabled (" + describe(eventWindow) + ")"); return; }
-        if (inputOkCount++ < 8) inputDbg("key " + (keycode & 0xff) + " delivered to " + describe(eventWindow));
+        if (keyOkCount++ < 20) inputDbg("key " + (keycode & 0xff) + " delivered to " + describe(eventWindow));
 
         Bitmask keyButMask = getKeyButMask();
         short x = xServer.pointer.getX();

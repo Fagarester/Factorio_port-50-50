@@ -110,21 +110,14 @@
     <string name="color_adjustment">Color Adjustment</string>
     <string name="reset">Reset</string>
     <string name="enable_crt_shader">Enable CRT Shader</string>
-    <string name="install_component">Install Component</string>
     <string name="capture_pointer_on_external_mouse">Capture pointer on external mouse</string>
-    <string name="there_are_no_items_to_download">There are no items to download</string>
     <string name="enable_direct_rendering">Enable direct rendering</string>
-    <string name="vulkan_version">Vulkan Version</string>
-    <string name="exposed_extensions">Exposed Extensions</string>
     <string name="multiselection_combobox_display_text">%d of %d items</string>
     <string name="note">Note</string>
     <string name="move_mouse_when_pressed">Move Mouse when pressed</string>
     <string name="auto">Auto</string>
     <string name="language">Language</string>
-    <string name="image_cache_size">Image Cache Size</string>
     <string name="pip_mode">PiP Mode</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Resource Memory Type</string>
     <string name="zero_no_limit">0 (No limit)</string>
     <string name="custom">Custom</string>
     <string name="light">Light</string>
@@ -144,18 +137,14 @@
     <string name="package_name_too_long">The package name is too long: the maximum is %1$d characters.</string>
     <string name="start_game">Start game</string>
     <string name="driver_installed_as_turnip">Turnip build %1$s installed</string>
-    <string name="driver_installed_as_vortek">Driver installed: %1$s</string>
     <string name="driver_install_failed">Could not install the driver</string>
-    <string name="download_from_repository">Download from repository</string>
-    <string name="install_from_file">Install from file</string>
-    <string name="driver_other_gpu_warning">This driver is made for %1$s, your GPU is %2$s. It may not work.</string>
-    <string name="driver_needs_newer_android">This driver needs Android API %1$d or newer, the system driver will be used.</string>
-    <string name="driver_selected_automatically">selected automatically</string>
     <string name="detected_gpu">Detected GPU</string>
-    <string name="install_driver_from_file">Install driver from file</string>
     <string name="show_controls_with_gamepad">Show on-screen controls when a gamepad is connected</string>
     <string name="game_exited_early">The game stopped before its window opened</string>
     <string name="game_exited_early_message">Exit code: %1$d. Most often the graphics driver is the cause: choose another one in Settings → Graphics driver.\n\nLast lines of the game log:</string>
     <string name="driver_installed_as_zink">Zink build %1$s installed</string>
     <string name="driver_pick_in_its_list">choose it in its own list</string>
+    <string name="choose_resolution">Choose game resolution (can be changed later in settings)</string>
+    <string name="choose_resolution_waiting">Files are ready. Choose the game resolution to continue</string>
+    <string name="resolution_native">Native</string>
 </resources>

@@ -114,15 +114,6 @@
                         android:textSize="12sp"
                         android:alpha="0.7" />
 
-                    <Button
-                        style="@style/ButtonNeutral"
-                        android:id="@+id/BTInstallDriver"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:minWidth="160dp"
-                        android:text="@string/install_driver_from_file" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

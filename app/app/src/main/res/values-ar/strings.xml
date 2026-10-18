@@ -109,21 +109,14 @@
     <string name="color_adjustment">ضبط الألوان</string>
     <string name="reset">إعادة ضبط</string>
     <string name="enable_crt_shader">تفعيل تظليل CRT</string>
-    <string name="install_component">تثبيت المكوّن</string>
     <string name="capture_pointer_on_external_mouse">التقاط المؤشر عند استخدام ماوس خارجي</string>
-    <string name="there_are_no_items_to_download">لا توجد عناصر للتنزيل</string>
     <string name="enable_direct_rendering">تفعيل العرض المباشر</string>
-    <string name="vulkan_version">إصدار Vulkan</string>
-    <string name="exposed_extensions">الامتدادات المكشوفة</string>
     <string name="multiselection_combobox_display_text">%d من %d عنصر</string>
     <string name="note">ملاحظة</string>
     <string name="move_mouse_when_pressed">تحريك الماوس عند الضغط</string>
     <string name="auto">تلقائي</string>
     <string name="language">اللغة</string>
-    <string name="image_cache_size">حجم ذاكرة تخزين الصور المؤقتة</string>
     <string name="pip_mode">وضع PiP</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">نوع ذاكرة الموارد</string>
     <string name="zero_no_limit">0 (بدون حد)</string>
     <string name="custom">مخصص</string>
     <string name="light">فاتح</string>

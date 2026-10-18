@@ -109,21 +109,14 @@
     <string name="color_adjustment">Түс түзету</string>
     <string name="reset">Қалпына келтіру</string>
     <string name="enable_crt_shader">CRT шейдерін қосу</string>
-    <string name="install_component">Компонентті орнату</string>
     <string name="capture_pointer_on_external_mouse">Сыртқы тышқан кезінде меңзерді ұстап алу</string>
-    <string name="there_are_no_items_to_download">Жүктелетін элементтер жоқ</string>
     <string name="enable_direct_rendering">Тікелей рендерлеуді қосу</string>
-    <string name="vulkan_version">Vulkan нұсқасы</string>
-    <string name="exposed_extensions">Қолжетімді кеңейтімдер</string>
     <string name="multiselection_combobox_display_text">%d элементтің %d-і</string>
     <string name="note">Нота</string>
     <string name="move_mouse_when_pressed">Басқанда тышқанды жылжыту</string>
     <string name="auto">Авто</string>
     <string name="language">Тіл</string>
-    <string name="image_cache_size">Кескін кэшінің өлшемі</string>
     <string name="pip_mode">PiP режимі</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Ресурс жадының түрі</string>
     <string name="zero_no_limit">0 (шектеусіз)</string>
     <string name="custom">Өзгертілген</string>
     <string name="light">Ашық</string>

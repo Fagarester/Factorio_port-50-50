@@ -374,13 +374,20 @@ public abstract class WindowRequests {
 
         windowManager.setFocus(newFocus, focusRevertTo);
 
-        if (oldFocus != newFocus) {
-            if (oldFocus != null && oldFocus != windowManager.rootWindow) {
-                oldFocus.sendEvent(Event.FOCUS_CHANGE, new FocusOut(oldFocus, FocusIn.DETAIL_NONLINEAR));
+        // DesktopHelper sets the focus silently when a window is mapped, so by the time the game (SDL) asks for the focus
+        // oldFocus == newFocus and no FocusIn was ever sent: SDL then believes its window has no focus and ignores the keyboard,
+        // the mouse buttons and the gamepad. Compare with the window that was actually told about the focus instead.
+        Window announced = windowManager.getFocusEventWindow();
+        client.xServer.debugPrint("FOCUS: SetInputFocus window=" + (newFocus != null ? newFocus.id : 0) + " focused-before=" + (oldFocus != null ? oldFocus.id : 0)
+            + " last-FocusIn=" + (announced != null ? announced.id : 0) + (announced != newFocus ? " -> sending FocusIn" : " -> already announced"));
+        if (announced != newFocus) {
+            if (announced != null && announced != windowManager.rootWindow) {
+                announced.sendEvent(Event.FOCUS_CHANGE, new FocusOut(announced, FocusIn.DETAIL_NONLINEAR));
             }
             if (newFocus != null && newFocus != windowManager.rootWindow) {
                 newFocus.sendEvent(Event.FOCUS_CHANGE, new FocusIn(newFocus, FocusIn.DETAIL_NONLINEAR));
             }
+            windowManager.setFocusEventWindow(newFocus != windowManager.rootWindow ? newFocus : null);
         }
     }
 

@@ -109,21 +109,14 @@
     <string name="color_adjustment">रंग समायोजन</string>
     <string name="reset">रीसेट करें</string>
     <string name="enable_crt_shader">CRT शेडर सक्षम करें</string>
-    <string name="install_component">घटक इंस्टॉल करें</string>
     <string name="capture_pointer_on_external_mouse">बाहरी माउस पर पॉइंटर कैप्चर करें</string>
-    <string name="there_are_no_items_to_download">डाउनलोड के लिए कोई आइटम नहीं है</string>
     <string name="enable_direct_rendering">प्रत्यक्ष रेंडरिंग सक्षम करें</string>
-    <string name="vulkan_version">Vulkan संस्करण</string>
-    <string name="exposed_extensions">उजागर एक्सटेंशन</string>
     <string name="multiselection_combobox_display_text">%d में से %d आइटम</string>
     <string name="note">नोट</string>
     <string name="move_mouse_when_pressed">दबाने पर माउस हिलाएँ</string>
     <string name="auto">स्वचालित</string>
     <string name="language">भाषा</string>
-    <string name="image_cache_size">इमेज कैश का आकार</string>
     <string name="pip_mode">PiP मोड</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">संसाधन मेमोरी प्रकार</string>
     <string name="zero_no_limit">0 (कोई सीमा नहीं)</string>
     <string name="custom">कस्टम</string>
     <string name="light">हल्का</string>

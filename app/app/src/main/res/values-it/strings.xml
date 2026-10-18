@@ -109,21 +109,14 @@
     <string name="color_adjustment">Regolazione colore</string>
     <string name="reset">Reimposta</string>
     <string name="enable_crt_shader">Abilita shader CRT</string>
-    <string name="install_component">Installa componente</string>
     <string name="capture_pointer_on_external_mouse">Acquisisci puntatore con mouse esterno</string>
-    <string name="there_are_no_items_to_download">Nessun elemento da scaricare</string>
     <string name="enable_direct_rendering">Abilita rendering diretto</string>
-    <string name="vulkan_version">Versione Vulkan</string>
-    <string name="exposed_extensions">Estensioni esposte</string>
     <string name="multiselection_combobox_display_text">%d di %d elementi</string>
     <string name="note">Nota</string>
     <string name="move_mouse_when_pressed">Muovi il mouse alla pressione</string>
     <string name="auto">Automatico</string>
     <string name="language">Lingua</string>
-    <string name="image_cache_size">Dimensione cache immagini</string>
     <string name="pip_mode">Modalità PiP</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Tipo memoria risorse</string>
     <string name="zero_no_limit">0 (Nessun limite)</string>
     <string name="custom">Personalizzato</string>
     <string name="light">Chiaro</string>

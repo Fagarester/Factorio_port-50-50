@@ -4,6 +4,8 @@ import android.os.Process;
 
 
 import com.factorio.container.Container;
+import com.factorio.container.GraphicsDrivers;
+import com.factorio.core.BundledOpenGL;
 import com.factorio.core.Callback;
 import com.factorio.core.EnvVars;
 import com.factorio.core.FileUtils;
@@ -175,30 +177,32 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         // Libraries a driver package brought along (see build-turnip.yml): searched LAST, so rootfs libraries always win
         File driverDepsDir = new File(rootFS.getLibDir(), "turnip-deps");
         if (driverDepsDir.isDirectory()) libPath += ":"+driverDepsDir.getPath();
-        String mesaSrc = envVars.get("NATIVE_MESA_SRC");
-        if (mesaSrc != null && !mesaSrc.isEmpty()) {
-            File mesaSrcDir = new File(mesaSrc);
-            File mesaDir = new File(rootDir, "/opt/mesa-kgsl");
-            File mesaMark = new File(mesaDir, ".copy_done");
-            // copied again whenever the source folder changed (a rebuilt Mesa put into the same folder used to be ignored)
-            String signature = mesaSrcDir.isDirectory() ? folderSignature(mesaSrcDir) : "";
-            String copiedSignature = mesaMark.exists() ? FileUtils.readString(mesaMark) : null;
-            if (mesaSrcDir.isDirectory() && (copiedSignature == null || !copiedSignature.equals(signature))) {
-                FileUtils.delete(mesaDir);
-                if (FileUtils.copy(mesaSrcDir, mesaDir)) FileUtils.writeString(mesaMark, signature);
+        Container selectedContainer = ((com.factorio.XServerDisplayActivity)environment.getContext()).getContainer();
+        boolean nativeGL = GraphicsDrivers.OPENGL.equals(
+                GraphicsDrivers.parseIdentifiers(selectedContainer.getGraphicsDriver())[1]);
+        // Legacy overrides must never make the selected Zink backend load Freedreno.
+        envVars.remove("LIBGL_DRIVERS_PATH");
+        envVars.remove("MESA_LOADER_DRIVER_OVERRIDE");
+        envVars.remove("__GLX_VENDOR_LIBRARY_NAME");
+        if (nativeGL) {
+            File mesaDir;
+            try {
+                mesaDir = BundledOpenGL.prepare(environment.getContext(), rootDir);
+            } catch (java.io.IOException e) {
+                android.util.Log.e("Factorio", "Cannot prepare bundled OpenGL", e);
+                return -1;
             }
-            if (mesaMark.exists()) {
-                libPath = mesaDir+"/lib:"+libPath;
-                envVars.put("LD_LIBRARY_PATH", libPath);
-                if (!envVars.has("LIBGL_DRIVERS_PATH")) envVars.put("LIBGL_DRIVERS_PATH", mesaDir+"/dri");
-                if (!envVars.has("MESA_LOADER_DRIVER_OVERRIDE")) envVars.put("MESA_LOADER_DRIVER_OVERRIDE", "kgsl");
-                if (!envVars.has("__GLX_VENDOR_LIBRARY_NAME")) envVars.put("__GLX_VENDOR_LIBRARY_NAME", "mesa");
-                // Zink/Vortek specific settings from the graphics driver setup must not leak into the Freedreno path
-                envVars.remove("GALLIUM_DRIVER");
-                envVars.remove("ZINK_CONTEXT_THREADED");
-                envVars.remove("MESA_GL_VERSION_OVERRIDE");
-            }
+            libPath = mesaDir+"/lib:"+libPath;
+            envVars.put("LIBGL_DRIVERS_PATH", mesaDir+"/dri");
+            envVars.put("MESA_LOADER_DRIVER_OVERRIDE", "kgsl");
+            envVars.put("__GLX_VENDOR_LIBRARY_NAME", "mesa");
+            envVars.remove("GALLIUM_DRIVER");
+            envVars.remove("ZINK_CONTEXT_THREADED");
+            envVars.remove("ZINK_DESCRIPTORS");
+            envVars.remove("ZINK_DEBUG");
+            envVars.remove("MESA_GL_VERSION_OVERRIDE");
         }
+        envVars.put("LD_LIBRARY_PATH", libPath);
 
         // Factorio does not know that it runs through the glibc loader:
         //  - /proc/self/exe points to the loader, so it detects a wrong binaries path (rootfs/usr) and the updater fails

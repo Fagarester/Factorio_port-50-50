@@ -27,6 +27,9 @@ public class WindowManager extends XResourceManager {
     private final SparseArray<Window> windows = new SparseArray<>();
     public final DrawableManager drawableManager;
     private Window focusedWindow;
+    // Window that last got a FocusIn event. The focus itself can be changed silently (DesktopHelper does it when a window is
+    // mapped), so SetInputFocus must compare with this window, not with focusedWindow, or the client never learns it has the focus.
+    private Window focusEventWindow;
     private FocusRevertTo focusRevertTo = FocusRevertTo.NONE;
     private final ArrayList<OnWindowModificationListener> onWindowModificationListeners = new ArrayList<>();
 
@@ -103,6 +106,7 @@ public class WindowManager extends XResourceManager {
         if (window.isInputOutput()) drawableManager.removeDrawable(window.getContent().id);
         triggerOnFreeResourceListener(window);
         if (window == focusedWindow) revertFocus();
+        if (window == focusEventWindow) focusEventWindow = null;
         parent.removeChild(window);
     }
 
@@ -134,6 +138,14 @@ public class WindowManager extends XResourceManager {
     public void mapSubWindows(Window window) {
         for (Window child : window.getChildren()) mapSubWindows(child);
         mapWindow(window);
+    }
+
+    public Window getFocusEventWindow() {
+        return focusEventWindow;
+    }
+
+    public void setFocusEventWindow(Window window) {
+        this.focusEventWindow = window;
     }
 
     public Window getFocusedWindow() {

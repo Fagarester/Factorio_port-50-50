@@ -11,6 +11,9 @@ import dalvik.annotation.optimization.CriticalNative;
 public class XOutputStream {
     private final ReentrantLock lock = new ReentrantLock();
     private final long nativePtr;
+    private WireTrace wireTrace;
+
+    public void setWireTrace(WireTrace trace) { wireTrace = trace; }
 
     static {
         System.loadLibrary("winlator");
@@ -90,7 +93,16 @@ public class XOutputStream {
         @Override
         public void close() throws IOException {
             try {
-                if (!sendData(nativePtr)) throw new IOException("Failed to send data.");
+                WireTrace trace = wireTrace;
+                boolean tracing = trace != null && trace.isEnabled();
+                int expected = tracing ? length(nativePtr) : 0;
+                byte[] header = tracing && expected > 0 ? peekData(nativePtr, 48) : null;
+                boolean sent = sendData(nativePtr);
+                if (header != null) {
+                    long status = lastWriteStatus(nativePtr);
+                    trace.sent(header, expected, (int)(status >> 32), (int)status);
+                }
+                if (!sent) throw new IOException("Failed to send data.");
             }
             finally {
                 lock.unlock();
@@ -127,6 +139,9 @@ public class XOutputStream {
     private static native void writeByteBuffer(long nativePtr, ByteBuffer data, int offset, int length);
 
     private static native boolean sendData(long nativePtr);
+
+    private static native byte[] peekData(long nativePtr, int maxBytes);
+    private static native long lastWriteStatus(long nativePtr);
 
     private static native void destroy(long nativePtr);
 

@@ -109,21 +109,14 @@
     <string name="color_adjustment">Coigeartú datha</string>
     <string name="reset">Athshocraigh</string>
     <string name="enable_crt_shader">Cumasaigh scáthán CRT</string>
-    <string name="install_component">Suiteáil comhpháirt</string>
     <string name="capture_pointer_on_external_mouse">Gabh pointeoir ar luchóg sheachtrach</string>
-    <string name="there_are_no_items_to_download">Níl aon mhír le híoslódáil</string>
     <string name="enable_direct_rendering">Cumasaigh rindreáil dhíreach</string>
-    <string name="vulkan_version">Leagan Vulkan</string>
-    <string name="exposed_extensions">Síntí nochtaithe</string>
     <string name="multiselection_combobox_display_text">%d de %d mír</string>
     <string name="note">Nóta</string>
     <string name="move_mouse_when_pressed">Bog luchóg nuair a bhrúitear</string>
     <string name="auto">Uathoibríoch</string>
     <string name="language">Teanga</string>
-    <string name="image_cache_size">Méid taisce íomhánna</string>
     <string name="pip_mode">Mód PiP</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Cineál cuimhne acmhainní</string>
     <string name="zero_no_limit">0 (Gan teorainn)</string>
     <string name="custom">Saincheaptha</string>
     <string name="light">Éadrom</string>

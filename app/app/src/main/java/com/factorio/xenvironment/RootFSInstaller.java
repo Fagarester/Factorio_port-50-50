@@ -13,6 +13,7 @@ import com.factorio.container.GraphicsDrivers;
 import com.factorio.core.AppUtils;
 import com.factorio.core.DownloadProgressDialog;
 import com.factorio.core.FileUtils;
+import com.factorio.core.ScreenResolution;
 import com.factorio.core.TarCompressorUtils;
 
 import org.json.JSONException;
@@ -34,13 +35,43 @@ public abstract class RootFSInstaller {
         }
     }
 
+    // True on the very first start, before the default container exists: the user picks 720p / 1080p / native.
+    private static boolean needsFirstRunResolution(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return !preferences.getBoolean("default_container_created", false) && new ContainerManager(context).getContainers().isEmpty();
+    }
+
     public static void install(final MainActivity activity) {
         AppUtils.keepScreenOn(activity);
         RootFS rootFS = RootFS.find(activity);
         final File rootDir = rootFS.getRootDir();
+        final boolean askResolution = needsFirstRunResolution(activity);
 
         final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
         dialog.show(R.string.installing_system_files);
+
+        // UI-thread state: the copy runs in the background while the user picks the resolution.
+        final int[] choice = {-1};
+        final boolean[] extracted = {false};
+        final Runnable finish = () -> {
+            dialog.hideResolutionPicker();
+            dialog.close();
+            createDefaultContainerIfNeeded(activity);
+        };
+
+        if (askResolution) {
+            String[] labels = {
+                "720p\n" + ScreenResolution.forMode(activity, ScreenResolution.MODE_720P),
+                "1080p\n" + ScreenResolution.forMode(activity, ScreenResolution.MODE_1080P),
+                activity.getString(R.string.resolution_native) + "\n" + ScreenResolution.forMode(activity, ScreenResolution.MODE_NATIVE)
+            };
+            dialog.showResolutionPicker(labels, (mode) -> {
+                choice[0] = mode;
+                PreferenceManager.getDefaultSharedPreferences(activity).edit().putInt(ScreenResolution.PREF_FIRST_RUN_MODE, mode).apply();
+                if (extracted[0]) finish.run();
+            });
+        }
+
         Executors.newSingleThreadExecutor().execute(() -> {
             clearRootDir(rootDir);
             final long contentLength = TarCompressorUtils.getContentLength(TarCompressorUtils.Type.ZSTD, activity, FILENAME, rootDir);
@@ -58,14 +89,17 @@ public abstract class RootFSInstaller {
             if (success) {
                 rootFS.createRFSVersionFile(LATEST_VERSION);
                 resetContainerRFSVersions(activity);
-                activity.runOnUiThread(() -> createDefaultContainerIfNeeded(activity));
+                activity.runOnUiThread(() -> {
+                    extracted[0] = true;
+                    if (!askResolution || choice[0] >= 0) finish.run();
+                    else dialog.setResolutionHint(R.string.choose_resolution_waiting); // wait for the tap
+                });
             }
             else {
                 AppUtils.showToast(activity, R.string.unable_to_install_system_files);
                 activity.runOnUiThread(activity::hideStartupCover);
+                dialog.closeOnUiThread();
             }
-
-            dialog.closeOnUiThread();
         });
     }
 
@@ -94,7 +128,8 @@ public abstract class RootFSInstaller {
         try {
             JSONObject data = new JSONObject();
             data.put("name", "Factorio");
-            data.put("screenSize", Container.DEFAULT_SCREEN_SIZE);
+            int resolutionMode = preferences.getInt(ScreenResolution.PREF_FIRST_RUN_MODE, ScreenResolution.MODE_720P);
+            data.put("screenSize", ScreenResolution.forMode(activity, resolutionMode)); // follows the real screen aspect ratio
             data.put("envVars", Container.DEFAULT_ENV_VARS);
             data.put("graphicsDriver", GraphicsDrivers.getDefaultDriver(activity));
             manager.createContainerAsync(data, (container) -> {

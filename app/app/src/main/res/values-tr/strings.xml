@@ -109,21 +109,14 @@
     <string name="color_adjustment">Renk Ayarı</string>
     <string name="reset">Sıfırla</string>
     <string name="enable_crt_shader">CRT Gölgelendiricisini Etkinleştir</string>
-    <string name="install_component">Bileşen Yükle</string>
     <string name="capture_pointer_on_external_mouse">Harici Farede İşaretçiyi Yakala</string>
-    <string name="there_are_no_items_to_download">İndirilecek öğe yok</string>
     <string name="enable_direct_rendering">Doğrudan Oluşturmayı Etkinleştir</string>
-    <string name="vulkan_version">Vulkan Sürümü</string>
-    <string name="exposed_extensions">Kullanılabilir Uzantılar</string>
     <string name="multiselection_combobox_display_text">%d / %d öğe</string>
     <string name="note">Nota</string>
     <string name="move_mouse_when_pressed">Basıldığında Fareyi Taşı</string>
     <string name="auto">Otomatik</string>
     <string name="language">Dil</string>
-    <string name="image_cache_size">Görüntü Önbellek Boyutu</string>
     <string name="pip_mode">PiP Modu</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Kaynak Bellek Türü</string>
     <string name="zero_no_limit">0 (Sınır yok)</string>
     <string name="custom">Özel</string>
     <string name="light">Açık</string>

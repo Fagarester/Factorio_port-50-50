@@ -109,21 +109,14 @@
     <string name="color_adjustment">색상 조정</string>
     <string name="reset">초기화</string>
     <string name="enable_crt_shader">CRT 셰이더 활성화</string>
-    <string name="install_component">컴포넌트 설치</string>
     <string name="capture_pointer_on_external_mouse">외부 마우스에서 포인터 캡처</string>
-    <string name="there_are_no_items_to_download">다운로드할 항목이 없습니다</string>
     <string name="enable_direct_rendering">직접 렌더링 활성화</string>
-    <string name="vulkan_version">Vulkan 버전</string>
-    <string name="exposed_extensions">노출된 확장 기능</string>
     <string name="multiselection_combobox_display_text">%d / %d 항목</string>
     <string name="note">노트</string>
     <string name="move_mouse_when_pressed">누를 때 마우스 이동</string>
     <string name="auto">자동</string>
     <string name="language">언어</string>
-    <string name="image_cache_size">이미지 캐시 크기</string>
     <string name="pip_mode">PiP 모드</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">리소스 메모리 유형</string>
     <string name="zero_no_limit">0 (제한 없음)</string>
     <string name="custom">사용자 정의</string>
     <string name="light">라이트</string>

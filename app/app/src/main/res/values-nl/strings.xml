@@ -109,21 +109,14 @@
     <string name="color_adjustment">Kleurcorrectie</string>
     <string name="reset">Herstellen</string>
     <string name="enable_crt_shader">CRT-shader inschakelen</string>
-    <string name="install_component">Component installeren</string>
     <string name="capture_pointer_on_external_mouse">Aanwijzer vastleggen op externe muis</string>
-    <string name="there_are_no_items_to_download">Er zijn geen items om te downloaden</string>
     <string name="enable_direct_rendering">Directe weergave inschakelen</string>
-    <string name="vulkan_version">Vulkan-versie</string>
-    <string name="exposed_extensions">Beschikbare extensies</string>
     <string name="multiselection_combobox_display_text">%d van %d items</string>
     <string name="note">Noot</string>
     <string name="move_mouse_when_pressed">Muis bewegen bij indrukken</string>
     <string name="auto">Automatisch</string>
     <string name="language">Taal</string>
-    <string name="image_cache_size">Afbeeldingscachegrootte</string>
     <string name="pip_mode">PiP-modus</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Type brongeheugen</string>
     <string name="zero_no_limit">0 (Geen limiet)</string>
     <string name="custom">Aangepast</string>
     <string name="light">Licht</string>

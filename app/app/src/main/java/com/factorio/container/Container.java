@@ -1,6 +1,7 @@
 package com.factorio.container;
 
 import com.factorio.core.FileUtils;
+import com.factorio.core.EnvVars;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -178,6 +179,14 @@ public class Container {
                     setAudioDriver(data.getString(key));
                     break;
             }
+        }
+        if (!"1".equals(getExtra("nativeMesaSelectionV34"))) {
+            String src = new EnvVars(envVars).get("NATIVE_MESA_SRC");
+            if (src != null && !src.isEmpty()) {
+                String[] drivers = GraphicsDrivers.parseIdentifiers(graphicsDriver);
+                graphicsDriver = drivers[0]+","+GraphicsDrivers.OPENGL;
+            }
+            putExtra("nativeMesaSelectionV34", "1");
         }
     }
 }

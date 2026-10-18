@@ -6,7 +6,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wno-unused-function -Wimplicit-function
 
 include_directories(include)
 include_directories(../winlator/include)
-include_directories(../vortekrenderer/include)
 
 add_library(gladiorenderer SHARED
             src/main.c

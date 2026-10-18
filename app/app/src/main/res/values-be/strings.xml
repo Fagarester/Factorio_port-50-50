@@ -109,21 +109,14 @@
     <string name="color_adjustment">Каляровая карэкцыя</string>
     <string name="reset">Скід</string>
     <string name="enable_crt_shader">Уключыць CRT-шэйдар</string>
-    <string name="install_component">Усталяваць кампанент</string>
     <string name="capture_pointer_on_external_mouse">Захопліваць паказальнік пры знешняй мышы</string>
-    <string name="there_are_no_items_to_download">Няма элементаў для спампоўкі</string>
     <string name="enable_direct_rendering">Уключыць прамую рэндэрызацыю</string>
-    <string name="vulkan_version">Версія Vulkan</string>
-    <string name="exposed_extensions">Даступныя пашырэнні</string>
     <string name="multiselection_combobox_display_text">%d з %d элементаў</string>
     <string name="note">Нота</string>
     <string name="move_mouse_when_pressed">Перамяшчаць мыш пры націску</string>
     <string name="auto">Аўта</string>
     <string name="language">Мова</string>
-    <string name="image_cache_size">Памер кэша малюнкаў</string>
     <string name="pip_mode">Рэжым PiP</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Тып памяці рэсурсаў</string>
     <string name="zero_no_limit">0 (без абмежаванняў)</string>
     <string name="custom">Карыстальніцкі</string>
     <string name="light">Светлая</string>

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <jni.h>
 #include <unistd.h>
+#include <errno.h>
+#include <stdint.h>
 
 #include "winlator.h"
 #include "socket_utils.h"
@@ -9,6 +11,8 @@
 typedef struct XOutputStream {
     int fd;
     int ancillaryFd;
+    int lastWriteBytes;
+    int lastWriteErrno;
     struct {
         void* data;
         int capacity;
@@ -43,6 +47,8 @@ static void XOutputStream_destroy(XOutputStream* outputStream) {
 }
 
 static jboolean XOutputStream_send(XOutputStream* outputStream) {
+    outputStream->lastWriteBytes = 0;
+    outputStream->lastWriteErrno = 0;
     if (outputStream->buffer.position == 0) return JNI_TRUE;
     outputStream->buffer.limit = outputStream->buffer.position;
     outputStream->buffer.position = 0;
@@ -54,6 +60,8 @@ static jboolean XOutputStream_send(XOutputStream* outputStream) {
     }
     else bytesSent = write(outputStream->fd, outputStream->buffer.data, outputStream->buffer.limit);
 
+    outputStream->lastWriteBytes = bytesSent;
+    outputStream->lastWriteErrno = bytesSent < 0 ? errno : 0;
     outputStream->buffer.limit = outputStream->buffer.capacity;
     return bytesSent >= 0 ? JNI_TRUE : JNI_FALSE;
 }
@@ -133,6 +141,25 @@ Java_com_factorio_xconnector_XOutputStream_writeByteBuffer(JNIEnv *env, jclass o
 JNIEXPORT jboolean JNICALL
 Java_com_factorio_xconnector_XOutputStream_sendData(JNIEnv *env, jclass obj, jlong nativePtr) {
     return XOutputStream_send((XOutputStream*)nativePtr);
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_factorio_xconnector_XOutputStream_peekData(JNIEnv *env, jclass obj, jlong nativePtr, jint maxBytes) {
+    XOutputStream* s = (XOutputStream*)nativePtr;
+    int count = maxBytes < 0 ? 0 : MIN(MIN(maxBytes, 64), s->buffer.position);
+    // Replies may carry clipboard/property data after their 32-byte header.
+    // Only Present XGE needs more than 32 bytes for its fixed fields.
+    int type = s->buffer.position ? (*(unsigned char*)s->buffer.data & 127) : 0;
+    count = MIN(count, type == 35 ? 40 : 32);
+    jbyteArray data = (*env)->NewByteArray(env, count);
+    if (data && count) (*env)->SetByteArrayRegion(env, data, 0, count, s->buffer.data);
+    return data;
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_factorio_xconnector_XOutputStream_lastWriteStatus(JNIEnv *env, jclass obj, jlong nativePtr) {
+    XOutputStream* s = (XOutputStream*)nativePtr;
+    return (jlong)(((uint64_t)(uint32_t)s->lastWriteBytes << 32) | (uint32_t)s->lastWriteErrno);
 }
 
 JNIEXPORT void JNICALL

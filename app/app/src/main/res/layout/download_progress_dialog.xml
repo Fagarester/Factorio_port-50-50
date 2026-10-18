@@ -56,6 +56,53 @@
             android:textColor="#80FFFFFF" />
     </LinearLayout>
 
+    <!-- First start only: choose the container resolution (720p / 1080p / native) -->
+    <LinearLayout
+        android:id="@+id/LLResolutionPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="72dp"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/TVResolutionTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:textSize="14sp"
+            android:textColor="#CCFFFFFF"
+            android:text="@string/choose_resolution" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/BTRes720"
+                style="@style/ButtonNeutral"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp" />
+
+            <Button
+                android:id="@+id/BTRes1080"
+                style="@style/ButtonNeutral"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp" />
+
+            <Button
+                android:id="@+id/BTResNative"
+                style="@style/ButtonNeutral"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Cancel button (shown only for cancelable downloads) -->
     <LinearLayout
         android:id="@+id/LLBottomBar"

@@ -28,6 +28,15 @@ import java.io.IOException;
 public class GLXExtension extends Extension {
     public static final byte MAJOR_VERSION = 1;
     public static final byte MINOR_VERSION = 4;
+    // Mesa registers __GLX_NUMBER_EVENTS (17) Xlib converters starting here.
+    // Returning the inherited zero replaces core input event converters 2..10.
+    // MIT-SHM uses 64; reserve GLX 72..88, before RANDR's base 89.
+    public static final byte FIRST_EVENT_ID = 72;
+
+    @Override
+    public byte getFirstEventId() {
+        return FIRST_EVENT_ID;
+    }
     private static final byte DEFAULT_FBCONFIG_ID = 1;
     private static boolean buildBannerPrinted = false;
     private final SparseArray<SparseLongArray> clientGLXContexts = new SparseArray<>();
@@ -365,7 +374,7 @@ public class GLXExtension extends Extension {
         if (!buildBannerPrinted) {
             buildBannerPrinted = true;
             // Lets any log show which server build produced it (APK must contain all of these fixes).
-            xServer.debugPrint("BUILD v29: ext-unread-skip, glx-createctx-noreply, glx-attribs-noreply, glx-isdirect, dri3-size-fix, dmabuf-sync, present-blank-guard, input-diagnostics, focus-fallback");
+            xServer.debugPrint("BUILD v33: GLX event base=72 (range 72..88); optional wire trace via X11_WIRE_TRACE=1");
         }
         xServer.debugPrint("GLX handleRequest: opcode=" + opcode);
         switch (opcode) {

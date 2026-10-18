@@ -44,6 +44,10 @@ public class XServer {
     private WinHandler winHandler;
     private final EnumMap<Lockable, ReentrantLock> locks = new EnumMap<>(Lockable.class);
     private boolean relativeMouseMovement = false;
+    private volatile boolean wireTraceEnabled;
+
+    public void setWireTraceEnabled(boolean enabled) { wireTraceEnabled = enabled; }
+    public boolean isWireTraceEnabled() { return wireTraceEnabled; }
 
     public XServer(XServerDisplayActivity activity, ScreenInfo screenInfo) {
         this.activity = activity;

@@ -7,6 +7,7 @@ import com.factorio.core.Callback;
 import com.factorio.xconnector.ConnectedClient;
 import com.factorio.xconnector.XInputStream;
 import com.factorio.xconnector.XOutputStream;
+import com.factorio.xconnector.WireTrace;
 import com.factorio.xserver.events.Event;
 
 import java.io.IOException;
@@ -23,6 +24,15 @@ public class XClient extends ConnectedClient implements XResourceManager.OnResou
     private final ArrayMap<Window, EventListener> eventListeners = new ArrayMap<>();
     private final ArrayList<XResource> resources = new ArrayList<>();
     private final ArrayList<Callback<XClient>> onDestroyListeners = new ArrayList<>();
+    private int wireRequestCount;
+
+    public void traceRequest(int opcode, int minor, int bytes) {
+        if (!xServer.isWireTraceEnabled()) return;
+        int n = ++wireRequestCount;
+        if (n <= 64 || n % 512 == 0)
+            xServer.debugPrint("WIRE-RX fd="+fd+" base=0x"+Integer.toHexString(resourceIDBase)
+                +" seq="+(sequenceNumber & 65535)+" opcode="+opcode+" data="+minor+" body-bytes="+bytes);
+    }
 
     public XClient(long nativePtr, int fd, XServer xServer) {
         super(nativePtr, fd);
@@ -70,6 +80,12 @@ public class XClient extends ConnectedClient implements XResourceManager.OnResou
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
+        if (authenticated && outputStream != null) {
+            outputStream.setWireTrace(new WireTrace(fd, resourceIDBase, new WireTrace.Sink() {
+                public boolean isEnabled() { return xServer.isWireTraceEnabled(); }
+                public void log(String line) { xServer.debugPrint(line); }
+            }));
+        }
     }
 
     public void freeResources() {

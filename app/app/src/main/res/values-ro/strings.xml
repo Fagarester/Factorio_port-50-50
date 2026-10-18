@@ -109,21 +109,14 @@
     <string name="color_adjustment">Ajustare culoare</string>
     <string name="reset">Resetează</string>
     <string name="enable_crt_shader">Activează shader CRT</string>
-    <string name="install_component">Instalează componenta</string>
     <string name="capture_pointer_on_external_mouse">Capturează pointerul pe mouse extern</string>
-    <string name="there_are_no_items_to_download">Nu există elemente de descărcat</string>
     <string name="enable_direct_rendering">Activează randarea directă</string>
-    <string name="vulkan_version">Versiunea Vulkan</string>
-    <string name="exposed_extensions">Extensii expuse</string>
     <string name="multiselection_combobox_display_text">%d din %d elemente</string>
     <string name="note">Notă</string>
     <string name="move_mouse_when_pressed">Mișcă mouse-ul la apăsare</string>
     <string name="auto">Automat</string>
     <string name="language">Limbă</string>
-    <string name="image_cache_size">Dimensiunea cache-ului de imagini</string>
     <string name="pip_mode">Mod PiP</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">Tip de memorie pentru resurse</string>
     <string name="zero_no_limit">0 (Fără limită)</string>
     <string name="custom">Personalizat</string>
     <string name="light">Deschis</string>

@@ -109,21 +109,14 @@
     <string name="color_adjustment">色調整</string>
     <string name="reset">リセット</string>
     <string name="enable_crt_shader">CRTシェーダーを有効にする</string>
-    <string name="install_component">コンポーネントをインストール</string>
     <string name="capture_pointer_on_external_mouse">外部マウスでポインターをキャプチャ</string>
-    <string name="there_are_no_items_to_download">ダウンロードするアイテムがありません</string>
     <string name="enable_direct_rendering">ダイレクトレンダリングを有効にする</string>
-    <string name="vulkan_version">Vulkanバージョン</string>
-    <string name="exposed_extensions">公開拡張機能</string>
     <string name="multiselection_combobox_display_text">%d / %d 個のアイテム</string>
     <string name="note">ノート</string>
     <string name="move_mouse_when_pressed">押したときにマウスを移動</string>
     <string name="auto">自動</string>
     <string name="language">言語</string>
-    <string name="image_cache_size">画像キャッシュサイズ</string>
     <string name="pip_mode">PiPモード</string>
-    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
-    <string name="resource_memory_type">リソースメモリタイプ</string>
     <string name="zero_no_limit">0（制限なし）</string>
     <string name="custom">カスタム</string>
     <string name="light">ライト</string>

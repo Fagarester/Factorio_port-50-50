@@ -7,16 +7,14 @@ import com.factorio.core.KeyValueSet;
 
 public abstract class GraphicsDrivers {
     public static final String TURNIP = "turnip";
-    public static final String VORTEK = "vortek";
     public static final String ZINK = "zink";
     public static final String OPENGL = "opengl";
-    public static final String DEFAULT_VULKAN_DRIVER = VORTEK;
-    public static final String DEFAULT_OPENGL_DRIVER = ZINK;
+    public static final String DEFAULT_VULKAN_DRIVER = TURNIP;
+    public static final String DEFAULT_OPENGL_DRIVER = OPENGL;
 
     public static String getName(String identifier) {
         switch (identifier) {
             case TURNIP: return "Turnip";
-            case VORTEK: return "Vortek";
             case ZINK: return "Zink";
             case OPENGL: return "OpenGL";
             default: return "None";
@@ -24,19 +22,19 @@ public abstract class GraphicsDrivers {
     }
 
     public static boolean isVulkanDriver(String identifier) {
-        return identifier != null && (identifier.equals(TURNIP) || identifier.equals(VORTEK));
+        return identifier != null && identifier.equals(TURNIP);
     }
 
     public static boolean isOpenGLDriver(String identifier) {
-        return identifier != null && (identifier.equals(ZINK));
+        return identifier != null && (identifier.equals(ZINK) || identifier.equals(OPENGL));
     }
 
     public static String[] getItems(String apiName) {
         if (apiName.equalsIgnoreCase("VULKAN")) {
-            return new String[]{getName(TURNIP), getName(VORTEK)};
+            return new String[]{getName(TURNIP)};
         }
         else if (apiName.equalsIgnoreCase("OPENGL")) {
-            return new String[]{getName(ZINK)}; // VirGL and Gladio were removed; "OpenGL" (native kgsl) does not work on stock Mesa
+            return new String[]{getName(OPENGL), getName(ZINK)};
         }
         else return new String[0];
     }
@@ -57,8 +55,9 @@ public abstract class GraphicsDrivers {
             else identifiers = new String[]{DEFAULT_VULKAN_DRIVER, DEFAULT_OPENGL_DRIVER};
         }
 
-        // containers created earlier may still have a removed OpenGL driver saved (opengl, virgl, gladio) -> use Zink instead
-        if (identifiers.length > 1 && !ZINK.equals(identifiers[1])) identifiers[1] = DEFAULT_OPENGL_DRIVER;
+        // Normalize removed driver identifiers (old settings with "vortek" become Turnip).
+        if (!isVulkanDriver(identifiers[0])) identifiers[0] = DEFAULT_VULKAN_DRIVER;
+        if (identifiers.length > 1 && !isOpenGLDriver(identifiers[1])) identifiers[1] = DEFAULT_OPENGL_DRIVER;
         return identifiers;
     }
 
@@ -82,6 +81,6 @@ public abstract class GraphicsDrivers {
     }
 
     public static String getDefaultDriver(Context context) {
-        return GPUHelper.isAdreno(context) ? GraphicsDrivers.TURNIP+","+GraphicsDrivers.DEFAULT_OPENGL_DRIVER : GraphicsDrivers.VORTEK+","+GraphicsDrivers.DEFAULT_OPENGL_DRIVER;
+        return TURNIP+","+(GPUHelper.isAdreno(context) ? DEFAULT_OPENGL_DRIVER : ZINK);
     }
 }

@@ -42,7 +42,6 @@ import com.factorio.contentdialog.TurnipConfigDialog;
 import com.factorio.core.AppUtils;
 import com.factorio.core.DefaultVersion;
 import com.factorio.core.EnvVars;
-import com.factorio.core.DriverPackages;
 import com.factorio.core.DriverReport;
 import com.factorio.core.FileUtils;
 import com.factorio.core.GeneralComponents;
@@ -71,7 +70,6 @@ import com.factorio.xenvironment.components.GuestProgramLauncherComponent;
 import com.factorio.xenvironment.components.NetworkInfoUpdateComponent;
 import com.factorio.xenvironment.components.PulseAudioComponent;
 import com.factorio.xenvironment.components.SysVSharedMemoryComponent;
-import com.factorio.xenvironment.components.VortekRendererComponent;
 import com.factorio.xenvironment.components.XServerComponent;
 import com.factorio.xserver.ScreenInfo;
 import com.factorio.xserver.Window;
@@ -368,12 +366,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 String[] deps = new File(libDir, "turnip-deps").list();
                 sb.append("  turnip-deps: ").append(deps != null ? java.util.Arrays.toString(deps) : "none").append("\n");
             }
-            else {
-                sb.append("VULKAN: Vortek, adrenotools driver '").append(graphicsDriverConfig[0].get("adrenotoolsDriver", DriverPackages.SYSTEM)).append("' -> ");
-                String path = GeneralComponents.getDefinitivePath(GeneralComponents.Type.ADRENOTOOLS_DRIVER, this, graphicsDriverConfig[0].get("adrenotoolsDriver", DriverPackages.SYSTEM));
-                sb.append(path != null ? path : "system driver").append("\n");
-                if (path != null) sb.append(DriverReport.describe(new File(path))).append("\n");
-            }
 
             if (graphicsDriver[1].equals(GraphicsDrivers.ZINK)) {
                 String version = graphicsDriverConfig[1].get("version", DefaultVersion.ZINK);
@@ -390,11 +382,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             // direct OpenGL (NATIVE_MESA_SRC): without this section the report only described Zink while the game ran on something else
             EnvVars containerVars = new EnvVars(container.getEnvVars());
             String mesaSrc = containerVars.get("NATIVE_MESA_SRC");
-            if (mesaSrc != null && !mesaSrc.isEmpty()) {
-                sb.append("\nNATIVE OPENGL (NATIVE_MESA_SRC='").append(mesaSrc).append("') - overrides Zink\n");
-                File src = new File(mesaSrc);
+            if (GraphicsDrivers.OPENGL.equals(graphicsDriver[1])) {
+                sb.append("\nNATIVE OPENGL: bundled Freedreno KGSL r7\n");
+                File src = new File(rootDir, "opt/mesa-kgsl-r7");
                 sb.append("  source folder: ").append(src.isDirectory() ? "found" : "NOT FOUND / not readable").append("\n");
-                File copy = new File(rootDir, "opt/mesa-kgsl");
+                File copy = new File(rootDir, "opt/mesa-kgsl-r7");
                 sb.append("  copy in rootfs: ").append(copy.isDirectory() ? "yes" : "NO").append("\n");
                 sb.append("  env: MESA_LOADER_DRIVER_OVERRIDE=").append(containerVars.has("MESA_LOADER_DRIVER_OVERRIDE") ? containerVars.get("MESA_LOADER_DRIVER_OVERRIDE") : "(default: kgsl)")
                   .append("  LIBGL_DRIVERS_PATH=").append(containerVars.has("LIBGL_DRIVERS_PATH") ? containerVars.get("LIBGL_DRIVERS_PATH") : "(default: "+copy+"/dri)").append("\n");
@@ -534,6 +526,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             envVars.put("NATIVE_PRELOAD", libDir.getPath()+"/selkies_input_interposer.so:"+libDir.getPath()+"/libudev.so.1");
             envVars.put("SELKIES_JS_SOCKET_PATH", socketDir.getPath());
             envVars.put("SELKIES_REAL_LIBUDEV", "none");
+            envVars.put("JS_LOG", "1"); // interposer prints every gamepad open/read to the game log
 
             winHandler.gamepadHandler.startBridge(socketDir);
         }
@@ -552,6 +545,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         GuestProgramLauncherComponent guestProgramLauncherComponent = new GuestProgramLauncherComponent();
 
         envVars.putAll(container.getEnvVars());
+        xServer.setWireTraceEnabled("1".equals(envVars.get("X11_WIRE_TRACE")));
 
         environment = new XEnvironment(this, rootFS);
         environment.addComponent(new SysVSharedMemoryComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.SYSVSHM_SERVER_PATH)));
@@ -576,12 +570,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
             else envVars.put("PULSE_LATENCY_MSEC", AudioDriverConfigDialog.DEFAULT_LATENCY_MILLIS);
             environment.addComponent(pulseAudioComponent);
-        }
-
-        if (graphicsDriver[0].equals(GraphicsDrivers.VORTEK)) {
-            VortekRendererComponent.Options options = VortekRendererComponent.Options.fromKeyValueSet(this, graphicsDriverConfig[0]);
-            VortekRendererComponent vortekRendererComponent = new VortekRendererComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.VORTEK_SERVER_PATH), options);
-            environment.addComponent(vortekRendererComponent);
         }
 
         guestProgramLauncherComponent.setEnvVars(envVars);
@@ -829,7 +817,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         if (changed) {
             FileUtils.delete(new File(libDir, "libvulkan_freedreno.so"));
-            FileUtils.delete(new File(libDir, "libvulkan_vortek.so"));
+            FileUtils.delete(new File(libDir, "turnip-deps")); // libraries that come with a Turnip build: never keep the ones of the previous build
             File[] oldGL = libDir.listFiles((dir, name) -> name.startsWith("libGL.so")); // any libGL version of a previous Zink
             if (oldGL != null) for (File file : oldGL) FileUtils.delete(file);
 
@@ -850,15 +838,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 GeneralComponents.extractFile(GeneralComponents.Type.TURNIP, this, version, DefaultVersion.TURNIP);
             }
         }
-        else if (graphicsDriver[0].equals(GraphicsDrivers.VORTEK) && (changed || MainActivity.DEBUG_MODE)) {
-            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/vortek-" + DefaultVersion.VORTEK + ".tzst", rootDir);
-        }
 
         switch (graphicsDriver[1]) {
             case GraphicsDrivers.ZINK:
                 envVars.put("GALLIUM_DRIVER", "zink");
                 envVars.put("ZINK_CONTEXT_THREADED", "1");
-                if (graphicsDriver[0].equals(GraphicsDrivers.VORTEK)) envVars.put("MESA_GL_VERSION_OVERRIDE", "3.3");
 
                 if (changed) GeneralComponents.extractFile(GeneralComponents.Type.ZINK, this, zinkVersion, DefaultVersion.ZINK);
                 break;
