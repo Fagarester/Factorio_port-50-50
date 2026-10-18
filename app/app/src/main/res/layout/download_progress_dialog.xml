@@ -19,6 +19,7 @@
     <com.factorio.widget.AssemblerLoaderView
         android:layout_width="150dp"
         android:layout_height="163dp"
+        android:layout_marginBottom="48dp"
         android:layout_gravity="center" />
 
     <!-- Kept (hidden) because DownloadProgressDialog.java still updates it -->
@@ -30,12 +31,12 @@
         app:trackThickness="10dp"
         app:indicatorSize="64dp" />
 
-    <!-- Dim caption + percent under the animation -->
+    <!-- Caption + percent at the top of the screen -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="32dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="28dp"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
@@ -44,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="#80FFFFFF"
+            android:textColor="#CCFFFFFF"
             android:text="@string/downloading_file" />
 
         <TextView
@@ -53,16 +54,16 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:textSize="14sp"
-            android:textColor="#80FFFFFF" />
+            android:textColor="#FFFF8F00" />
     </LinearLayout>
 
-    <!-- First start only: choose the container resolution (720p / 1080p / native) -->
+    <!-- First start only: choose the container resolution (720p / 1080p / native), at the bottom -->
     <LinearLayout
         android:id="@+id/LLResolutionPicker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="72dp"
+        android:layout_marginBottom="16dp"
         android:orientation="vertical"
         android:gravity="center_horizontal"
         android:visibility="gone">
@@ -71,9 +72,10 @@
             android:id="@+id/TVResolutionTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:textSize="14sp"
-            android:textColor="#CCFFFFFF"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:textSize="15sp"
+            android:textColor="#FFFFFFFF"
             android:text="@string/choose_resolution" />
 
         <LinearLayout
@@ -83,23 +85,41 @@
 
             <Button
                 android:id="@+id/BTRes720"
-                style="@style/ButtonNeutral"
+                style="@style/ButtonAccent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="104dp"
+                android:minHeight="52dp"
+                android:lines="2"
+                android:textSize="14sp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
                 android:layout_marginRight="8dp" />
 
             <Button
                 android:id="@+id/BTRes1080"
-                style="@style/ButtonNeutral"
+                style="@style/ButtonAccent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="104dp"
+                android:minHeight="52dp"
+                android:lines="2"
+                android:textSize="14sp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
                 android:layout_marginRight="8dp" />
 
             <Button
                 android:id="@+id/BTResNative"
-                style="@style/ButtonNeutral"
+                style="@style/ButtonAccent"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:minWidth="104dp"
+                android:minHeight="52dp"
+                android:lines="2"
+                android:textSize="14sp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp" />
         </LinearLayout>
     </LinearLayout>
 

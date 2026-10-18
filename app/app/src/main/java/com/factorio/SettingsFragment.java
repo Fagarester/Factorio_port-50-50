@@ -30,6 +30,7 @@ import com.factorio.contentdialog.ContentDialog;
 import com.factorio.core.AppUtils;
 import com.factorio.core.EnvVars;
 import com.factorio.core.LocaleHelper;
+import com.factorio.core.ScreenResolution;
 import com.factorio.core.StringUtils;
 import com.factorio.widget.ColorPickerView;
 import com.factorio.widget.EnvVarsView;
@@ -84,6 +85,7 @@ public class SettingsFragment extends Fragment {
         final EnvVarsView envVarsView = view.findViewById(R.id.EnvVarsView);
         if (container != null) {
             loadScreenSizeSpinner(view, container.getScreenSize());
+            setupResolutionButtons(view, context);
             graphicsDriverPicker = new GraphicsDriverPicker(view.findViewById(R.id.LLGraphicsDriver), container.getGraphicsDriver(), container.getGraphicsDriverConfig());
             ((TextView)view.findViewById(R.id.TVDetectedGpu)).setText(GraphicsDriverPicker.getDetectedGpuText(context));
             AppUtils.setSpinnerSelectionFromIdentifier(sAudioDriver, container.getAudioDriver());
@@ -186,6 +188,21 @@ public class SettingsFragment extends Fragment {
         });
 
         return view;
+    }
+
+    /** 720p / 1080p / native: puts the computed size into the custom width x height fields. */
+    private static void setupResolutionButtons(final View view, final Context context) {
+        final int[] ids = {R.id.BTSetRes720, R.id.BTSetRes1080, R.id.BTSetResNative};
+        for (int i = 0; i < ids.length; i++) {
+            final int mode = i;
+            view.findViewById(ids[i]).setOnClickListener((v) -> {
+                String[] size = ScreenResolution.forMode(context, mode).split("x");
+                ((Spinner)view.findViewById(R.id.SScreenSize)).setSelection(0); // "Custom"
+                view.findViewById(R.id.LLCustomScreenSize).setVisibility(View.VISIBLE);
+                ((EditText)view.findViewById(R.id.ETScreenWidth)).setText(size[0]);
+                ((EditText)view.findViewById(R.id.ETScreenHeight)).setText(size[1]);
+            });
+        }
     }
 
     private static String getScreenSize(View view) {
