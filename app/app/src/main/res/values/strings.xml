@@ -147,4 +147,11 @@
     <string name="choose_resolution">Choose game resolution (can be changed later in settings)</string>
     <string name="choose_resolution_waiting">Files are ready. Choose the game resolution to continue</string>
     <string name="resolution_native">Native</string>
+    <string name="choose_compression">Texture compression while copying the game (one time)</string>
+    <string name="choose_compression_waiting">Files are ready. Choose the texture compression to continue</string>
+    <string name="compression_original">Original</string>
+    <string name="compression_original_hint">no compression</string>
+    <string name="compression_low">Low</string>
+    <string name="compression_high">High</string>
+    <string name="copying_game">Copying the game files…</string>
 </resources>

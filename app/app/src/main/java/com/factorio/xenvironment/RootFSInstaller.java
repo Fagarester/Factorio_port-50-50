@@ -13,6 +13,7 @@ import com.factorio.container.GraphicsDrivers;
 import com.factorio.core.AppUtils;
 import com.factorio.core.DownloadProgressDialog;
 import com.factorio.core.FileUtils;
+import com.factorio.core.GameCompression;
 import com.factorio.core.ScreenResolution;
 import com.factorio.core.TarCompressorUtils;
 
@@ -50,25 +51,37 @@ public abstract class RootFSInstaller {
         final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
         dialog.show(R.string.installing_system_files);
 
-        // UI-thread state: the copy runs in the background while the user picks the resolution.
-        final int[] choice = {-1};
+        // UI-thread state: the copy runs in the background while the user picks the resolution, then the game compression.
+        final int[] resolutionChoice = {-1};
+        final int[] compressionChoice = {-1};
         final boolean[] extracted = {false};
         final Runnable finish = () -> {
-            dialog.hideResolutionPicker();
+            dialog.hideChoice();
             dialog.close();
             createDefaultContainerIfNeeded(activity);
         };
 
         if (askResolution) {
+            final String[] compressionLabels = {
+                activity.getString(R.string.compression_original) + "\n" + activity.getString(R.string.compression_original_hint),
+                activity.getString(R.string.compression_low) + "\nx5",
+                activity.getString(R.string.compression_high) + "\nx10"
+            };
+            final Runnable askCompression = () -> dialog.showChoice(R.string.choose_compression, compressionLabels, (mode) -> {
+                compressionChoice[0] = mode;
+                PreferenceManager.getDefaultSharedPreferences(activity).edit().putInt(GameCompression.PREF_KEY, mode).apply();
+                if (extracted[0]) finish.run();
+            });
+
             String[] labels = {
                 "720p\n" + ScreenResolution.forMode(activity, ScreenResolution.MODE_720P),
                 "1080p\n" + ScreenResolution.forMode(activity, ScreenResolution.MODE_1080P),
                 activity.getString(R.string.resolution_native) + "\n" + ScreenResolution.forMode(activity, ScreenResolution.MODE_NATIVE)
             };
-            dialog.showResolutionPicker(labels, (mode) -> {
-                choice[0] = mode;
+            dialog.showChoice(R.string.choose_resolution, labels, (mode) -> {
+                resolutionChoice[0] = mode;
                 PreferenceManager.getDefaultSharedPreferences(activity).edit().putInt(ScreenResolution.PREF_FIRST_RUN_MODE, mode).apply();
-                if (extracted[0]) finish.run();
+                askCompression.run(); // step 2
             });
         }
 
@@ -91,8 +104,8 @@ public abstract class RootFSInstaller {
                 resetContainerRFSVersions(activity);
                 activity.runOnUiThread(() -> {
                     extracted[0] = true;
-                    if (!askResolution || choice[0] >= 0) finish.run();
-                    else dialog.setResolutionHint(R.string.choose_resolution_waiting); // wait for the tap
+                    if (!askResolution || compressionChoice[0] >= 0) finish.run();
+                    else dialog.setChoiceHint(resolutionChoice[0] >= 0 ? R.string.choose_compression_waiting : R.string.choose_resolution_waiting); // wait for the taps
                 });
             }
             else {

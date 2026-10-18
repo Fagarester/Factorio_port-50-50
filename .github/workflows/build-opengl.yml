@@ -1,0 +1,206 @@
+name: Build OpenGL (Freedreno KGSL, native, no Zink)
+
+# Output is a folder for the app's NATIVE_MESA_SRC (lib/ + dri/), it does NOT touch rootfs:
+# the app copies it to rootfs/opt/mesa-kgsl and puts it first in LD_LIBRARY_PATH.
+# Mesa: glx=dri, dri3=disabled (so libGL goes straight to drisw = XPutImage, works on any X server),
+#       freedreno gallium with KGSL kernel backend (/dev/kgsl-3d0), Adreno 8xx supported since Mesa 26.0.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mesa_ref:
+        description: 'Mesa tag (mesa-26.2.0, mesa-26.1.5 ...)'
+        required: true
+        default: 'mesa-26.2.0'
+      force:
+        description: 'Собирать, даже если проверка не нашла KGSL в gallium-части Freedreno (почти наверняка бесполезно)'
+        required: false
+        type: boolean
+        default: false
+      runner:
+        description: 'ARM runner'
+        required: true
+        type: choice
+        default: 'ubuntu-24.04-arm'
+        options:
+          - ubuntu-24.04-arm
+          - ubuntu-22.04-arm
+
+env:
+  PFX: /data/data/@@@@@@@@@@@@@@@@@@@@@@@@@/usr
+
+jobs:
+  build:
+    name: opengl-kgsl
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 90
+    env:
+      MESA_REF: ${{ inputs.mesa_ref }}
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git pkg-config bison flex zstd zip patch \
+            python3 python3-venv python3-pip \
+            libdrm-dev libexpat1-dev zlib1g-dev \
+            libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev \
+            libxdamage-dev libxxf86vm-dev libxrandr-dev libxshmfence-dev \
+            libxcb1-dev libxcb-glx0-dev libxcb-dri2-0-dev libxcb-dri3-dev \
+            libxcb-present-dev libxcb-randr0-dev libxcb-shm0-dev \
+            libxcb-sync-dev libxcb-xfixes0-dev
+
+      - name: Install meson and python modules (venv)
+        run: |
+          python3 -m venv "$HOME/venv"
+          "$HOME/venv/bin/pip" install --upgrade pip
+          "$HOME/venv/bin/pip" install meson ninja mako pyyaml packaging pycparser ply
+          echo "$HOME/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Clone Mesa
+        run: |
+          git ls-remote --exit-code --heads --tags \
+            https://gitlab.freedesktop.org/mesa/mesa.git "$MESA_REF" \
+            || { echo "::error::Ref '$MESA_REF' not found"; exit 1; }
+          git clone --depth 1 --branch "$MESA_REF" \
+            https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
+
+      - name: Recon - does gallium Freedreno have a KGSL backend in this Mesa?
+        working-directory: mesa-src
+        run: |
+          echo "Mesa $(cat VERSION)  commit $(git rev-parse --short HEAD)"
+          echo "===== meson options mentioning kgsl/freedreno-kmds ====="
+          F=$(ls meson.options meson_options.txt 2>/dev/null | head -n1)
+          grep -n -i -B1 -A6 "kgsl\|freedreno-kmds" "$F" || true
+
+          echo "===== backends of the shared freedreno kernel layer (src/freedreno/drm) ====="
+          ls src/freedreno/drm 2>/dev/null || echo "(no such dir)"
+
+          echo "===== files that mention kgsl OUTSIDE the Vulkan driver ====="
+          grep -rIl -i "kgsl" src --include=*.c --include=*.cc --include=*.cpp --include=*.h --include=*.build --include=*.py 2>/dev/null \
+            | grep -v "^src/freedreno/vulkan/" | head -60 | tee /tmp/kgsl-files.txt || true
+
+          echo "===== screen creation names known to the sw/dri loaders ====="
+          grep -rn -i "kgsl" src/loader src/gallium/frontends/dri src/gallium/auxiliary/target-helpers \
+            src/gallium/auxiliary/pipe-loader src/gallium/targets 2>/dev/null | head -40 || true
+
+          # verdict: is there any KGSL code that the GALLIUM driver (not Turnip) can use?
+          if grep -rIqi "kgsl" src/freedreno/drm src/gallium/drivers/freedreno src/gallium/winsys 2>/dev/null \
+             || [ -n "$(grep -rIl -i "kgsl" src/gallium src/loader 2>/dev/null | head -n1)" ]; then
+            echo "VERDICT: KGSL code exists on the gallium side - the build makes sense."
+          else
+            echo "VERDICT: NO KGSL backend for gallium Freedreno in this Mesa."
+            echo "         KGSL is implemented only inside Turnip (src/freedreno/vulkan). Gallium Freedreno talks to the GPU only"
+            echo "         through DRM (msm), which Android does not expose to apps. 'freedreno-kmds=kgsl' does not change that."
+            if [ "${{ inputs.force }}" != "true" ]; then
+              echo "::error::Native OpenGL on KGSL is not available in $MESA_REF: nothing to build (see VERDICT above). Use Zink on Turnip, or port a KGSL backend to gallium Freedreno."
+              exit 1
+            fi
+            echo "::warning::force=true: building anyway"
+          fi
+
+      - name: Configure
+        working-directory: mesa-src
+        run: |
+          F=$(ls meson.options meson_options.txt 2>/dev/null | head -n1)
+          python3 - "$F" > /tmp/opts.txt <<'PY'
+          import re, sys
+          print("\n".join(re.findall(r"option\(\s*['\"]([^'\"]+)['\"]", open(sys.argv[1]).read())))
+          PY
+          ARGS=()
+          add() {
+            if grep -qx -- "$1" /tmp/opts.txt; then ARGS+=("-D$1=$2")
+            else echo "::notice::option '$1' not in this Mesa, skipped"; fi
+          }
+          add platforms x11
+          add gallium-drivers freedreno
+          add freedreno-kmds kgsl
+          add vulkan-drivers ""
+          add dri-drivers ""
+          add llvm disabled
+          add gallium-va disabled
+          add lmsensors disabled
+          add libunwind disabled
+          add valgrind disabled
+          add egl disabled
+          add gbm disabled
+          add gles1 disabled
+          add gles2 disabled
+          add glx dri
+          add dri3 disabled
+          echo "Options: ${ARGS[*]}"
+          meson setup build --buildtype=release -Dstrip=true \
+            -Dprefix="$PFX" -Dlibdir=lib "${ARGS[@]}" \
+            || { tail -60 build/meson-logs/meson-log.txt; exit 1; }
+
+      - name: Build
+        working-directory: mesa-src
+        run: ninja -C build -j"$(nproc)"
+
+      - name: Install to stage
+        run: |
+          rm -rf stage
+          DESTDIR="$PWD/stage" ninja -C mesa-src/build install
+          ROOT="stage${PFX%/usr}"; LIB="$ROOT/usr/lib"
+          rm -rf "$ROOT/usr/include" "$LIB/pkgconfig" "$ROOT/usr/share"
+          echo "===== installed files ====="
+          find "$ROOT" \( -type f -o -type l \) | sort
+          ls "$LIB/dri" 2>/dev/null | head -30 || true
+
+      - name: Bundle X libs the driver needs and rootfs may lack
+        run: |
+          ROOT="stage${PFX%/usr}"; DST="$ROOT/usr/lib"
+          NEED=$(for f in $(find "$ROOT" -type f -name '*.so*'); do
+                   readelf -d "$f" | sed -n 's/.*Shared library: \[\(.*\)\]/\1/p'
+                 done | sort -u)
+          echo "NEEDED:"; echo "$NEED"
+          for n in $NEED; do
+            case "$n" in
+              libxcb-*|libX11-xcb*|libxshmfence*|libXxf86vm*|libXdamage*|libXfixes*|libXrandr*|libXrender*) ;;
+              *) continue ;;
+            esac
+            [ -e "$DST/$n" ] && continue
+            src=$(ldconfig -p | awk -v n="$n" '$1==n{print $NF; exit}')
+            if [ -n "$src" ]; then cp -L "$src" "$DST/$n"; echo "bundled $n"
+            else echo "::warning::$n not found on runner"; fi
+          done
+
+      - name: Package for NATIVE_MESA_SRC
+        run: |
+          VER="${MESA_REF#mesa-}-r${GITHUB_RUN_NUMBER}"
+          ROOT="stage${PFX%/usr}"
+          mkdir -p out
+          rm -rf native && mkdir -p native
+          cp -aL "$ROOT/usr/lib" native/lib
+          [ -d "$ROOT/usr/lib/dri" ] && cp -aL "$ROOT/usr/lib/dri" native/dri || true
+          (cd native && zip -qr "../out/mesa-kgsl-${VER}.zip" .)
+          # APK asset format (graphics_driver/opengl-kgsl-r7.tzst): only lib/* (without lib/dri) and dri/kgsl_dri.so
+          rm -rf pkg && mkdir -p pkg/dri
+          cp -a native/lib pkg/lib && rm -rf pkg/lib/dri
+          cp native/dri/kgsl_dri.so pkg/dri/
+          tar -C pkg -cf - lib dri | zstd -19 -o "out/opengl-kgsl-${VER}.tzst"
+          find native -maxdepth 2 | sort | tee out/contents.txt
+          {
+            echo "### Unzip to /storage/emulated/0/Download/mesa-kgsl-${VER} and set NATIVE_MESA_SRC to that folder"
+            echo "NATIVE_MESA_SRC = /storage/emulated/0/Download/mesa-kgsl-${VER}"
+            echo "## libGL NEEDED / GLIBC"
+            L=$(readlink -f "$ROOT/usr/lib/libGL.so.1")
+            readelf -d "$L" | grep NEEDED
+            objdump -T "$L" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -n1
+          } | tee out/deps.txt "$GITHUB_STEP_SUMMARY"
+          ls -lh out
+
+      - name: Check that freedreno/kgsl is really inside
+        run: |
+          ROOT="stage${PFX%/usr}"
+          for f in $(find "$ROOT" -type f -name '*.so*' -size +1M); do
+            echo "--- $f"; strings "$f" | grep -c -i "kgsl-3d0\|freedreno" || true
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: opengl-kgsl
+          path: out/*
+          if-no-files-found: error

@@ -139,4 +139,11 @@
     <string name="choose_resolution">Выберите разрешение игры (потом можно сменить в настройках)</string>
     <string name="choose_resolution_waiting">Файлы готовы. Выберите разрешение игры, чтобы продолжить</string>
     <string name="resolution_native">Нативное</string>
+    <string name="choose_compression">Сжатие текстур при копировании игры (один раз)</string>
+    <string name="choose_compression_waiting">Файлы готовы. Выберите сжатие текстур, чтобы продолжить</string>
+    <string name="compression_original">Оригинал</string>
+    <string name="compression_original_hint">без сжатия</string>
+    <string name="compression_low">Низкое</string>
+    <string name="compression_high">Высокое</string>
+    <string name="copying_game">Копирование файлов игры…</string>
 </resources>

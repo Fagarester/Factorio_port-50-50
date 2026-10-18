@@ -72,17 +72,20 @@ public class DownloadProgressDialog {
     }
 
     /**
-     * Shows three choices (720p / 1080p / native) above the progress text.
-     * The labels are already filled with the real resolutions; onPick gets the index 0..2.
+     * Shows three choices (buttons) above the bottom edge: a title and three labels.
+     * Used on the first start for the resolution (720p / 1080p / native) and then for the game compression.
+     * onPick gets the index 0..2.
      */
-    public void showResolutionPicker(String[] labels, IntConsumer onPick) {
+    public void showChoice(int titleResId, String[] labels, IntConsumer onPick) {
         if (dialog == null) return;
+        ((TextView)dialog.findViewById(R.id.TVResolutionTitle)).setText(titleResId);
         final int[] buttonIds = {R.id.BTRes720, R.id.BTRes1080, R.id.BTResNative};
         final Button[] buttons = new Button[buttonIds.length];
         for (int i = 0; i < buttonIds.length; i++) {
             final int index = i;
             buttons[i] = dialog.findViewById(buttonIds[i]);
             buttons[i].setText(labels[i]);
+            buttons[i].setAlpha(1.0f);
             buttons[i].setOnClickListener((v) -> {
                 for (int j = 0; j < buttons.length; j++) buttons[j].setAlpha(j == index ? 1.0f : 0.45f);
                 onPick.accept(index);
@@ -91,12 +94,12 @@ public class DownloadProgressDialog {
         dialog.findViewById(R.id.LLResolutionPicker).setVisibility(View.VISIBLE);
     }
 
-    public void setResolutionHint(int textResId) {
+    public void setChoiceHint(int textResId) {
         if (dialog == null) return;
         ((TextView)dialog.findViewById(R.id.TVResolutionTitle)).setText(textResId);
     }
 
-    public void hideResolutionPicker() {
+    public void hideChoice() {
         if (dialog != null) dialog.findViewById(R.id.LLResolutionPicker).setVisibility(View.GONE);
     }
 

@@ -3,12 +3,18 @@ package com.factorio.xenvironment.components;
 import android.os.Process;
 
 
+import androidx.preference.PreferenceManager;
+
+import com.factorio.R;
 import com.factorio.container.Container;
 import com.factorio.container.GraphicsDrivers;
 import com.factorio.core.BundledOpenGL;
 import com.factorio.core.Callback;
+import com.factorio.core.DownloadProgressDialog;
 import com.factorio.core.EnvVars;
 import com.factorio.core.FileUtils;
+import com.factorio.core.GameCompression;
+import com.factorio.core.GameCopier;
 import com.factorio.core.LocaleHelper;
 import com.factorio.core.ProcessHelper;
 import com.factorio.widget.LogView;
@@ -98,7 +104,15 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             if (srcDir.isDirectory() && !doneMark.exists()) {
                 // copy was never finished (or first run): start clean, then mark as done
                 FileUtils.delete(dstDir);
-                if (FileUtils.copy(srcDir, dstDir)) {
+
+                // One-time copy with a progress screen; the texture compression level was chosen on the first start.
+                final android.app.Activity activity = (android.app.Activity)environment.getContext();
+                int compression = PreferenceManager.getDefaultSharedPreferences(activity).getInt(GameCompression.PREF_KEY, GameCompression.ORIGINAL);
+                final DownloadProgressDialog copyDialog = new DownloadProgressDialog(activity);
+                activity.runOnUiThread(() -> copyDialog.show(R.string.copying_game));
+                boolean copied = GameCopier.copy(srcDir, dstDir, compression, (percent) -> activity.runOnUiThread(() -> copyDialog.setProgress(percent)));
+                copyDialog.closeOnUiThread();
+                if (copied) {
                     try { doneMark.createNewFile(); } catch (Exception e) {}
                 }
             }
