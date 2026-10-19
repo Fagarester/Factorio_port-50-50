@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Díchumasaigh ionchur luchóige</string>
     <string name="move_cursor_to_touchpoint">Bog cúrsóir chuig pointe teagmhála</string>
     <string name="sync_every_frame">Sioncronú gach fráma</string>
-    <string name="reinstall_system_files">Athshuiteáil comhaid córais</string>
-    <string name="do_you_want_to_reinstall_system_files">An bhfuil tú ag iarraidh comhaid córais a athshuiteáil?</string>
     <string name="mouse">Luchóg</string>
     <string name="cursor_size">Méid cúrsóra</string>
     <string name="color">Dath</string>

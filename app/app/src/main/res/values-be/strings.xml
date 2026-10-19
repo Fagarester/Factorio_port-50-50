@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Адключыць увод мышы</string>
     <string name="move_cursor_to_touchpoint">Перамясціць курсор у пункт дотыку</string>
     <string name="sync_every_frame">Сінхранізаваць кожны кадр</string>
-    <string name="reinstall_system_files">Пераўсталяваць сістэмныя файлы</string>
-    <string name="do_you_want_to_reinstall_system_files">Пераўсталяваць сістэмныя файлы?</string>
     <string name="mouse">Мыш</string>
     <string name="cursor_size">Памер курсора</string>
     <string name="color">Колер</string>

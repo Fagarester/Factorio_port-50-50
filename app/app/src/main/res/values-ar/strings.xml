@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">تعطيل إدخال الماوس</string>
     <string name="move_cursor_to_touchpoint">نقل المؤشر إلى نقطة اللمس</string>
     <string name="sync_every_frame">مزامنة كل إطار</string>
-    <string name="reinstall_system_files">إعادة تثبيت ملفات النظام</string>
-    <string name="do_you_want_to_reinstall_system_files">هل تريد إعادة تثبيت ملفات النظام؟</string>
     <string name="mouse">الماوس</string>
     <string name="cursor_size">حجم المؤشر</string>
     <string name="color">اللون</string>

@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">마우스 입력 비활성화</string>
     <string name="move_cursor_to_touchpoint">터치 포인트로 커서 이동</string>
     <string name="sync_every_frame">매 프레임 동기화</string>
-    <string name="reinstall_system_files">시스템 파일 재설치</string>
-    <string name="do_you_want_to_reinstall_system_files">시스템 파일을 재설치하시겠습니까?</string>
     <string name="mouse">마우스</string>
     <string name="cursor_size">커서 크기</string>
     <string name="color">색상</string>

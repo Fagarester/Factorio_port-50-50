@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Mauseingabe deaktivieren</string>
     <string name="move_cursor_to_touchpoint">Cursor zum Berührungspunkt bewegen</string>
     <string name="sync_every_frame">Jeden Frame synchronisieren</string>
-    <string name="reinstall_system_files">Systemdateien neu installieren</string>
-    <string name="do_you_want_to_reinstall_system_files">Möchten Sie die Systemdateien neu installieren?</string>
     <string name="mouse">Maus</string>
     <string name="cursor_size">Cursorgröße</string>
     <string name="color">Farbe</string>

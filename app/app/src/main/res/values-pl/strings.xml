@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Wyłącz wejście myszy</string>
     <string name="move_cursor_to_touchpoint">Przesuń kursor do punktu dotyku</string>
     <string name="sync_every_frame">Synchronizuj każdą klatkę</string>
-    <string name="reinstall_system_files">Zainstaluj ponownie pliki systemowe</string>
-    <string name="do_you_want_to_reinstall_system_files">Czy chcesz ponownie zainstalować pliki systemowe?</string>
     <string name="mouse">Mysz</string>
     <string name="cursor_size">Rozmiar kursora</string>
     <string name="color">Kolor</string>

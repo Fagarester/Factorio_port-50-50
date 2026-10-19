@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Muisinvoer uitschakelen</string>
     <string name="move_cursor_to_touchpoint">Cursor naar aanraakpunt verplaatsen</string>
     <string name="sync_every_frame">Elk frame synchroniseren</string>
-    <string name="reinstall_system_files">Systeembestanden opnieuw installeren</string>
-    <string name="do_you_want_to_reinstall_system_files">Wilt u de systeembestanden opnieuw installeren?</string>
     <string name="mouse">Muis</string>
     <string name="cursor_size">Cursorgrootte</string>
     <string name="color">Kleur</string>

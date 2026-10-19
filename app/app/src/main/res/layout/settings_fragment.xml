@@ -385,20 +385,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:visibility="gone"/>
-                    <View style="@style/FieldSeparator"/>
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_horizontal">
-                        <Button
-                            style="@style/ButtonNeutral"
-                            android:id="@+id/BTReinstallSystemFiles"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:text="@string/reinstall_system_files"/>
-                    </LinearLayout>
                 </LinearLayout>
                 <TextView
                     style="@style/FieldSetLabel"

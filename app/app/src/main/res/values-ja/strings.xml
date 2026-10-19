@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">マウス入力を無効にする</string>
     <string name="move_cursor_to_touchpoint">タッチポイントにカーソルを移動</string>
     <string name="sync_every_frame">毎フレーム同期</string>
-    <string name="reinstall_system_files">システムファイルを再インストール</string>
-    <string name="do_you_want_to_reinstall_system_files">システムファイルを再インストールしますか？</string>
     <string name="mouse">マウス</string>
     <string name="cursor_size">カーソルサイズ</string>
     <string name="color">色</string>

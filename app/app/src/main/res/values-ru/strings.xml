@@ -91,8 +91,6 @@
     <string name="disable_mouse_input">Отключить ввод с помощью мыши</string>
     <string name="move_cursor_to_touchpoint">Переместите курсор в точку касания</string>
     <string name="sync_every_frame">Синхронизируйте каждый кадр</string>
-    <string name="reinstall_system_files">Переустановить системные файлы</string>
-    <string name="do_you_want_to_reinstall_system_files">Хотите переустановить системные файлы?</string>
     <string name="mouse">мыши</string>
     <string name="cursor_size">Размер курсора</string>
     <string name="color">Цвет</string>

@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Desativar Entrada do Mouse</string>
     <string name="move_cursor_to_touchpoint">Mover o cursor para o ponto de toque</string>
     <string name="sync_every_frame">Sincronizar cada quadro</string>
-    <string name="reinstall_system_files">Reinstalar Arquivos do Sistema</string>
-    <string name="do_you_want_to_reinstall_system_files">Você deseja reinstalar os arquivos do sistema?</string>
     <string name="mouse">Mouse</string>
     <string name="cursor_size">Tamanho do Cursor</string>
     <string name="color">Cor</string>

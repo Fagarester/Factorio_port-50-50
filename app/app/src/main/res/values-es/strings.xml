@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Desactivar entrada del ratón</string>
     <string name="move_cursor_to_touchpoint">Mover cursor al punto de toque</string>
     <string name="sync_every_frame">Sincronizar cada fotograma</string>
-    <string name="reinstall_system_files">Reinstalar archivos del sistema</string>
-    <string name="do_you_want_to_reinstall_system_files">¿Deseas reinstalar los archivos del sistema?</string>
     <string name="mouse">Ratón</string>
     <string name="cursor_size">Tamaño del cursor</string>
     <string name="color">Color</string>

@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">माउस इनपुट अक्षम करें</string>
     <string name="move_cursor_to_touchpoint">कर्सर को टच पॉइंट पर ले जाएँ</string>
     <string name="sync_every_frame">हर फ्रेम सिंक करें</string>
-    <string name="reinstall_system_files">सिस्टम फ़ाइलें पुनः इंस्टॉल करें</string>
-    <string name="do_you_want_to_reinstall_system_files">क्या आप सिस्टम फ़ाइलें पुनः इंस्टॉल करना चाहते हैं?</string>
     <string name="mouse">माउस</string>
     <string name="cursor_size">कर्सर का आकार</string>
     <string name="color">रंग</string>

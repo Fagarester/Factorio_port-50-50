@@ -36,7 +36,6 @@ import com.factorio.widget.ColorPickerView;
 import com.factorio.widget.EnvVarsView;
 import com.factorio.widget.LogView;
 import com.factorio.widget.SeekBar;
-import com.factorio.xenvironment.RootFSInstaller;
 
 public class SettingsFragment extends Fragment {
     public static final byte APP_THEME_LIGHT = 0;
@@ -132,10 +131,6 @@ public class SettingsFragment extends Fragment {
         final Spinner sLanguage = view.findViewById(R.id.SLanguage);
         sLanguage.setSelection(LocaleHelper.getLocaleIndex(context));
         final int oldLCIndex = sLanguage.getSelectedItemPosition();
-
-        view.findViewById(R.id.BTReinstallSystemFiles).setOnClickListener((v) -> {
-            ContentDialog.confirm(context, R.string.do_you_want_to_reinstall_system_files, () -> RootFSInstaller.install((MainActivity)getActivity()));
-        });
 
         view.findViewById(R.id.BTConfirm).setOnClickListener((v) -> {
             if (container != null) {

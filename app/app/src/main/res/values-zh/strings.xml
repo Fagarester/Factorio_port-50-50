@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">禁用鼠标输入</string>
     <string name="move_cursor_to_touchpoint">将光标移至触摸点</string>
     <string name="sync_every_frame">每帧同步</string>
-    <string name="reinstall_system_files">重新安装系统文件</string>
-    <string name="do_you_want_to_reinstall_system_files">是否重新安装系统文件？</string>
     <string name="mouse">鼠标</string>
     <string name="cursor_size">光标大小</string>
     <string name="color">颜色</string>

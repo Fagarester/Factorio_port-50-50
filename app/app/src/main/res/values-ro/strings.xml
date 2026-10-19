@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Dezactivează intrarea mouse-ului</string>
     <string name="move_cursor_to_touchpoint">Mută cursorul la punctul de atingere</string>
     <string name="sync_every_frame">Sincronizează la fiecare cadru</string>
-    <string name="reinstall_system_files">Reinstalează fișierele de sistem</string>
-    <string name="do_you_want_to_reinstall_system_files">Doriți să reinstalați fișierele de sistem?</string>
     <string name="mouse">Mouse</string>
     <string name="cursor_size">Dimensiunea cursorului</string>
     <string name="color">Culoare</string>

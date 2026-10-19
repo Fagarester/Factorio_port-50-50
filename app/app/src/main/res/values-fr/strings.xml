@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Désactiver la saisie souris</string>
     <string name="move_cursor_to_touchpoint">Déplacer le curseur vers le point de contact</string>
     <string name="sync_every_frame">Synchroniser chaque image</string>
-    <string name="reinstall_system_files">Réinstaller les fichiers système</string>
-    <string name="do_you_want_to_reinstall_system_files">Voulez-vous réinstaller les fichiers système ?</string>
     <string name="mouse">Souris</string>
     <string name="cursor_size">Taille du curseur</string>
     <string name="color">Couleur</string>

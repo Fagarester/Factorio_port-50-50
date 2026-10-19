@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Тышқан енгізуін өшіру</string>
     <string name="move_cursor_to_touchpoint">Курсорды жанасу нүктесіне жылжыту</string>
     <string name="sync_every_frame">Әр кадрды синхрондау</string>
-    <string name="reinstall_system_files">Жүйелік файлдарды қайта орнату</string>
-    <string name="do_you_want_to_reinstall_system_files">Жүйелік файлдарды қайта орнату керек пе?</string>
     <string name="mouse">Тышқан</string>
     <string name="cursor_size">Курсор өлшемі</string>
     <string name="color">Түс</string>

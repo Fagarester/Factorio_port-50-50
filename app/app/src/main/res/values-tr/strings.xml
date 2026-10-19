@@ -90,8 +90,6 @@
     <string name="disable_mouse_input">Fare Girişini Devre Dışı Bırak</string>
     <string name="move_cursor_to_touchpoint">İmleci Dokunma Noktasına Taşı</string>
     <string name="sync_every_frame">Her Karede Eşitle</string>
-    <string name="reinstall_system_files">Sistem Dosyalarını Yeniden Yükle</string>
-    <string name="do_you_want_to_reinstall_system_files">Sistem dosyalarını yeniden yüklemek istiyor musunuz?</string>
     <string name="mouse">Fare</string>
     <string name="cursor_size">İmleç Boyutu</string>
     <string name="color">Renk</string>
