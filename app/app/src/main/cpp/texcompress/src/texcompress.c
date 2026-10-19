@@ -230,9 +230,18 @@ static void box_eval(Box *b, const Ent *e) {
     }
 }
 
+static const float KW[4] = {1.0f, 1.4f, 0.7f, 1.0f};
+
+/* weighted distance between a pixel color `a` and a palette color `b`; color errors count less on faint pixels */
+static inline float color_dist(const float *a, const float *b) {
+    float dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2], da = a[3] - b[3];
+    float aw = 0.25f + 0.75f * (a[3] * (1.0f / 255.0f));
+    return aw * (KW[0] * dr * dr + KW[1] * dg * dg + KW[2] * db * db) + KW[3] * da * da;
+}
+
 /* Builds a palette of at most `ncolors` entries (index 0 is transparent when `reserve_transparent`).
  * `lookup` (BIN_COUNT bytes) gets the palette index of every used bin. Returns the palette size. */
-static int build_palette(Ent *e, int nent, int ncolors, int reserve_transparent, uint8_t pal[256][4], uint8_t *lookup) {
+static int build_palette(Ent *e, int nent, int ncolors, int reserve_transparent, int kmeans_iters, uint8_t pal[256][4], uint8_t *lookup) {
     int base = reserve_transparent ? 1 : 0;
     if (reserve_transparent) { pal[0][0] = pal[0][1] = pal[0][2] = pal[0][3] = 0; }
     int maxbox = ncolors - base;
@@ -268,20 +277,56 @@ static int build_palette(Ent *e, int nent, int ncolors, int reserve_transparent,
         nbox++;
     }
 
+    float cent[256][4];
     for (int i = 0; i < nbox; i++) {
         double s[4] = {0, 0, 0, 0}; double total = 0;
         for (int j = boxes[i].lo; j < boxes[i].hi; j++) {
             for (int k = 0; k < 4; k++) s[k] += (double)e[j].c[k] * e[j].cnt;
             total += e[j].cnt;
         }
-        for (int k = 0; k < 4; k++) {
-            double v = total > 0 ? s[k] / total : 0;
-            pal[base + i][k] = (uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : (int)(v + 0.5)));
-        }
-        if (pal[base + i][3] == 0) pal[base + i][3] = 1; /* index 0 is the only fully transparent entry */
+        for (int k = 0; k < 4; k++) cent[i][k] = (float)(total > 0 ? s[k] / total : 0);
         for (int j = boxes[i].lo; j < boxes[i].hi; j++) lookup[e[j].key] = (uint8_t)(base + i);
     }
     free(boxes);
+
+    /* k-means (Lloyd) refinement: move every color to the middle of the pixels that are closest to it */
+    if (kmeans_iters > 0 && nbox > 1) {
+        for (int it = 0; it < kmeans_iters; it++) {
+            double sum[256][4]; double tot[256];
+            memset(sum, 0, sizeof(sum)); memset(tot, 0, sizeof(tot));
+            for (int j = 0; j < nent; j++) {
+                int bi = 0; float bd = 3.0e38f;
+                for (int i = 0; i < nbox; i++) {
+                    float d = color_dist(e[j].c, cent[i]);
+                    if (d < bd) { bd = d; bi = i; }
+                }
+                lookup[e[j].key] = (uint8_t)(base + bi);
+                for (int k = 0; k < 4; k++) sum[bi][k] += (double)e[j].c[k] * e[j].cnt;
+                tot[bi] += e[j].cnt;
+            }
+            for (int i = 0; i < nbox; i++) {
+                if (tot[i] <= 0) continue;
+                for (int k = 0; k < 4; k++) cent[i][k] = (float)(sum[i][k] / tot[i]);
+            }
+        }
+        /* final assignment with the final colors */
+        for (int j = 0; j < nent; j++) {
+            int bi = 0; float bd = 3.0e38f;
+            for (int i = 0; i < nbox; i++) {
+                float d = color_dist(e[j].c, cent[i]);
+                if (d < bd) { bd = d; bi = i; }
+            }
+            lookup[e[j].key] = (uint8_t)(base + bi);
+        }
+    }
+
+    for (int i = 0; i < nbox; i++) {
+        for (int k = 0; k < 4; k++) {
+            float v = cent[i][k];
+            pal[base + i][k] = (uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : (int)(v + 0.5f)));
+        }
+        if (pal[base + i][3] == 0) pal[base + i][3] = 1; /* index 0 is the only fully transparent entry */
+    }
     return base + nbox;
 }
 
@@ -361,21 +406,78 @@ static int encode_indexed(const uint8_t *idx, uint32_t w, uint32_t h, uint8_t pa
     return rc;
 }
 
+/* nearest palette entry of an arbitrary color (index 0 is skipped when it is the transparent entry) */
+static int nearest_color(const float *c, uint8_t pal[256][4], int npal, int first) {
+    int bi = first; float bd = 3.0e38f;
+    for (int i = first; i < npal; i++) {
+        float p[4] = {(float)pal[i][0], (float)pal[i][1], (float)pal[i][2], (float)pal[i][3]};
+        float d = color_dist(c, p);
+        if (d < bd) { bd = d; bi = i; }
+    }
+    return bi;
+}
+
+/* Floyd-Steinberg error diffusion of the RGB error; `strength` 0..1 */
+static int dither_pixels(const uint8_t *rgba, uint32_t w, uint32_t h, uint8_t pal[256][4], int npal, int has_transparent, float strength, uint8_t *idx) {
+    int first = has_transparent ? 1 : 0;
+    if (first >= npal) first = 0;
+    uint16_t *cache = (uint16_t *)malloc(BIN_COUNT * sizeof(uint16_t));
+    float *err = (float *)calloc((size_t)(w + 2) * 3 * 2, sizeof(float));
+    if (!cache || !err) { free(cache); free(err); return -1; }
+    memset(cache, 0xFF, BIN_COUNT * sizeof(uint16_t));
+    float *cur = err, *next = err + (size_t)(w + 2) * 3;
+
+    for (uint32_t y = 0; y < h; y++) {
+        memset(next, 0, (size_t)(w + 2) * 3 * sizeof(float));
+        for (uint32_t x = 0; x < w; x++) {
+            const uint8_t *p = rgba + ((size_t)y * w + x) * 4;
+            size_t o = (size_t)(x + 1) * 3;
+            if (p[3] == 0) { idx[(size_t)y * w + x] = 0; continue; }
+            float c[4];
+            for (int k = 0; k < 3; k++) {
+                float v = (float)p[k] + cur[o + k];
+                c[k] = v < 0 ? 0 : (v > 255 ? 255 : v);
+            }
+            c[3] = (float)p[3];
+            uint8_t q[4] = {(uint8_t)(c[0] + 0.5f), (uint8_t)(c[1] + 0.5f), (uint8_t)(c[2] + 0.5f), p[3]};
+            uint32_t key = bin_key(q);
+            int n = cache[key];
+            if (n == 0xFFFF) { n = nearest_color(c, pal, npal, first); cache[key] = (uint16_t)n; }
+            idx[(size_t)y * w + x] = (uint8_t)n;
+            float e[3];
+            for (int k = 0; k < 3; k++) e[k] = (c[k] - (float)pal[n][k]) * strength;
+            for (int k = 0; k < 3; k++) {
+                cur[o + 3 + k] += e[k] * (7.0f / 16.0f);
+                next[o - 3 + k] += e[k] * (3.0f / 16.0f);
+                next[o + k] += e[k] * (5.0f / 16.0f);
+                next[o + 3 + k] += e[k] * (1.0f / 16.0f);
+            }
+        }
+        float *tmp = cur; cur = next; next = tmp;
+    }
+    free(cache); free(err);
+    return 0;
+}
+
 /* One full attempt with `ncolors` colors. */
 static int make_candidate(const uint8_t *rgba, uint32_t w, uint32_t h, Ent *ents, int nent, int has_transparent,
-                          int ncolors, int level, Buf *out) {
+                          int ncolors, int kmeans_iters, int dither, int level, Buf *out) {
     uint8_t pal[256][4];
     uint8_t *lookup = (uint8_t *)calloc(BIN_COUNT, 1);
     if (!lookup) return -1;
-    int npal = build_palette(ents, nent, ncolors, has_transparent, pal, lookup);
+    int npal = build_palette(ents, nent, ncolors, has_transparent, kmeans_iters, pal, lookup);
     if (npal < 1) { free(lookup); return -1; }
 
     size_t npx = (size_t)w * h;
     uint8_t *idx = (uint8_t *)malloc(npx);
     if (!idx) { free(lookup); return -1; }
-    for (size_t i = 0; i < npx; i++) {
-        const uint8_t *p = rgba + i * 4;
-        idx[i] = p[3] == 0 ? 0 : lookup[bin_key(p)];
+    if (dither > 0 && npal > 1) {
+        if (dither_pixels(rgba, w, h, pal, npal, has_transparent, (float)dither / 100.0f, idx) != 0) { free(lookup); free(idx); return -1; }
+    } else {
+        for (size_t i = 0; i < npx; i++) {
+            const uint8_t *p = rgba + i * 4;
+            idx[i] = p[3] == 0 ? 0 : lookup[bin_key(p)];
+        }
     }
     free(lookup);
     int rc = encode_indexed(idx, w, h, pal, npal, level, out);
@@ -383,23 +485,26 @@ static int make_candidate(const uint8_t *rgba, uint32_t w, uint32_t h, Ent *ents
     return rc;
 }
 
-int tex_png_shrink(const char *src, const char *dst, int ratio, int min_colors) {
-    if (ratio < 2) ratio = 2;
-    if (min_colors < 4) min_colors = 4;
-    if (min_colors > 256) min_colors = 256;
+int tex_png_shrink_opts(const char *src, const char *dst, const TexOptions *opts) {
+    int ratio = opts->ratio < 2 ? 2 : opts->ratio;
+    int min_colors = opts->min_colors < 4 ? 4 : (opts->min_colors > 256 ? 256 : opts->min_colors);
+    int kmeans = opts->kmeans_iters < 0 ? 0 : (opts->kmeans_iters > 8 ? 8 : opts->kmeans_iters);
+    int dither = opts->dither < 0 ? 0 : (opts->dither > 100 ? 100 : opts->dither);
 
     size_t flen = 0;
     uint8_t *file = read_file(src, &flen);
     if (!file) return -1;
-    if (flen < MIN_FILE_SIZE) { free(file); return 1; }
+    if (flen < MIN_FILE_SIZE) { free(file); return TEX_SKIP_SMALL; }
 
     uint32_t w, h;
     uint8_t *rgba = decode_png(file, flen, &w, &h);
     free(file);
-    if (!rgba) return 1;
+    if (!rgba) return TEX_SKIP_FORMAT;
 
-    int result = 1;
+    int result = TEX_SKIP_FORMAT;
     Ent *ents = NULL;
+    Buf cand[5]; memset(cand, 0, sizeof(cand));
+    Buf refined; memset(&refined, 0, sizeof(refined));
     uint32_t *cnt = (uint32_t *)calloc(BIN_COUNT, sizeof(uint32_t));
     double *sum = (double *)calloc((size_t)BIN_COUNT * 4, sizeof(double));
     if (!cnt || !sum) { result = -1; goto done; }
@@ -431,34 +536,65 @@ int tex_png_shrink(const char *src, const char *dst, int ratio, int min_colors) 
     int sizes[5], ns = 0;
     for (int s = 256; s >= min_colors && ns < 5; s /= 2) sizes[ns++] = s;
     if (ns == 0) sizes[ns++] = min_colors;
-    Buf cand[5]; memset(cand, 0, sizeof(cand));
     int done_flag[5] = {0, 0, 0, 0, 0};
     int best_ok = -1, lo = 0, hi = ns - 1;
     int level = 6;
+    /* the search uses plain median cut (fast); the chosen size is refined afterwards */
     while (lo <= hi) {
         int mid = (lo + hi) / 2;
-        if (make_candidate(rgba, w, h, ents, nent, has_transparent, sizes[mid], level, &cand[mid]) != 0) { result = -1; goto cleanup; }
+        if (make_candidate(rgba, w, h, ents, nent, has_transparent, sizes[mid], 0, 0, level, &cand[mid]) != 0) { result = -1; goto done; }
         done_flag[mid] = 1;
         if (cand[mid].n * (size_t)ratio <= flen) { best_ok = mid; hi = mid - 1; } else lo = mid + 1;
     }
     int pick = best_ok;
     if (pick < 0) {
         pick = ns - 1;
-        if (!done_flag[pick] && make_candidate(rgba, w, h, ents, nent, has_transparent, sizes[pick], level, &cand[pick]) != 0) { result = -1; goto cleanup; }
+        if (!done_flag[pick] && make_candidate(rgba, w, h, ents, nent, has_transparent, sizes[pick], 0, 0, level, &cand[pick]) != 0) { result = -1; goto done; }
     }
+
+    Buf *best = &cand[pick];
+    if (kmeans > 0 || dither > 0) {
+        /* Refined (and dithered) palettes are better at the same size, so first try bigger palettes while the
+         * wanted ratio still holds; if even the chosen size breaks the ratio (dithering makes files bigger)
+         * go down, never below min_colors. */
+        int p2 = pick, have = 0;
+        while (p2 >= 0 && p2 < ns) {
+            Buf tmp; memset(&tmp, 0, sizeof(tmp));
+            if (make_candidate(rgba, w, h, ents, nent, has_transparent, sizes[p2], kmeans, dither, level, &tmp) != 0) { free(tmp.d); result = -1; goto done; }
+            int meets = tmp.n * (size_t)ratio <= flen;
+            if (meets) {
+                free(refined.d); refined = tmp; have = 1;
+                if (p2 == 0) break;
+                p2--;                       /* try a bigger palette */
+            } else if (!have && p2 < ns - 1) {
+                free(tmp.d);
+                p2++;                       /* chosen size is too big: go down */
+            } else {
+                if (!have) { refined = tmp; have = 1; } else free(tmp.d); /* floor reached or bigger palette breaks the ratio */
+                break;
+            }
+        }
+        if (have) best = &refined;
+    }
+
     /* not worth the quality loss: keep the original when the gain is below ~1.67x */
-    if (cand[pick].n * 5 > flen * 3) { result = 1; goto cleanup; }
+    if (best->n * 5 > flen * 3) { result = TEX_SKIP_GAIN; goto done; }
     {
         FILE *f = fopen(dst, "wb");
-        if (!f) { result = -1; goto cleanup; }
-        size_t wr = fwrite(cand[pick].d, 1, cand[pick].n, f);
+        if (!f) { result = -1; goto done; }
+        size_t wr = fwrite(best->d, 1, best->n, f);
         int cl = fclose(f);
-        if (wr != cand[pick].n || cl != 0) { remove(dst); result = -1; goto cleanup; }
-        result = 0;
+        if (wr != best->n || cl != 0) { remove(dst); result = -1; goto done; }
+        result = TEX_OK;
     }
-cleanup:
-    for (int i = 0; i < 5; i++) free(cand[i].d);
 done:
+    for (int i = 0; i < 5; i++) free(cand[i].d);
+    free(refined.d);
     free(cnt); free(sum); free(ents); free(rgba);
     return result;
+}
+
+int tex_png_shrink(const char *src, const char *dst, int ratio, int min_colors) {
+    TexOptions o = {ratio, min_colors, 2, 0};
+    return tex_png_shrink_opts(src, dst, &o);
 }

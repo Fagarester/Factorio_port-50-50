@@ -8,6 +8,7 @@ import androidx.preference.PreferenceManager;
 import com.factorio.R;
 import com.factorio.container.Container;
 import com.factorio.container.GraphicsDrivers;
+import com.factorio.core.AppUtils;
 import com.factorio.core.BundledOpenGL;
 import com.factorio.core.Callback;
 import com.factorio.core.DownloadProgressDialog;
@@ -110,8 +111,20 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 int compression = PreferenceManager.getDefaultSharedPreferences(activity).getInt(GameCompression.PREF_KEY, GameCompression.ORIGINAL);
                 final DownloadProgressDialog copyDialog = new DownloadProgressDialog(activity);
                 activity.runOnUiThread(() -> copyDialog.show(R.string.copying_game));
-                boolean copied = GameCopier.copy(srcDir, dstDir, compression, (percent) -> activity.runOnUiThread(() -> copyDialog.setProgress(percent)));
+                GameCopier.Result copyResult = GameCopier.copy(srcDir, dstDir, compression, (percent) -> activity.runOnUiThread(() -> copyDialog.setProgress(percent)));
+                boolean copied = copyResult.ok;
                 copyDialog.closeOnUiThread();
+
+                // report with the reasons why some textures were kept as they are, next to the other logs
+                File reportDir = LogView.getLogFile().getParentFile();
+                if (reportDir != null && reportDir.isDirectory() && reportDir.canWrite()) {
+                    FileUtils.writeString(new File(reportDir, "compression-report.txt"), copyResult.report);
+                }
+                if (compression != GameCompression.ORIGINAL) {
+                    final String summary = activity.getString(R.string.compression_done, copyResult.pngShrunk, copyResult.pngTotal,
+                        (int)(copyResult.inBytes >> 20), (int)(copyResult.outBytes >> 20));
+                    activity.runOnUiThread(() -> AppUtils.showToast(activity, summary));
+                }
                 if (copied) {
                     try { doneMark.createNewFile(); } catch (Exception e) {}
                 }

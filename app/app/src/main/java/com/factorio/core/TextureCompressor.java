@@ -23,8 +23,17 @@ public final class TextureCompressor {
         return loaded;
     }
 
+    public static final int OK = 0;            // the smaller file was written to dst
+    public static final int SKIP_FORMAT = 1;   // not an 8-bit non-interlaced PNG (or too big): copy the original
+    public static final int SKIP_SMALL = 2;    // tiny file: copy the original
+    public static final int SKIP_GAIN = 3;     // gain would be below ~1.67x: copy the original
+    // less than 0: error, nothing written
+
     /**
-     * @return 0 the smaller file was written to dst; 1 nothing written (copy the original); less than 0 error
+     * @param ratio     wanted original size / new size
+     * @param minColors the palette is never smaller than this
+     * @param kmeans    palette refinement passes (0 = off)
+     * @param dither    0..100, error diffusion strength (0 = off)
      */
-    public static native int shrinkPng(String src, String dst, int ratio, int minColors);
+    public static native int shrinkPng(String src, String dst, int ratio, int minColors, int kmeans, int dither);
 }

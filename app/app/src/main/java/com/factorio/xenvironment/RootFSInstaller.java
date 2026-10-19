@@ -64,8 +64,8 @@ public abstract class RootFSInstaller {
         if (askResolution) {
             // order on screen: High, Low, Original (button index 0..2 -> GameCompression.HIGH..ORIGINAL)
             final String[] compressionLabels = {
-                activity.getString(R.string.compression_high) + "\nx10",
-                activity.getString(R.string.compression_low) + "\nx5",
+                activity.getString(R.string.compression_high) + "\nx5",
+                activity.getString(R.string.compression_low) + "\nx2",
                 activity.getString(R.string.compression_original) + "\n" + activity.getString(R.string.compression_original_hint)
             };
             final Runnable askCompression = () -> dialog.showChoice(R.string.choose_compression, compressionLabels, (index) -> {

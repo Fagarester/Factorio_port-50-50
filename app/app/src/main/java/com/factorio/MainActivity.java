@@ -193,6 +193,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.menu_item_input_controls:
                 showFragment(new InputControlsFragment(selectedProfileId));
                 break;
+            case R.id.menu_item_files:
+                showFragment(new FileManagerFragment());
+                break;
             case R.id.menu_item_settings:
                 showFragment(new SettingsFragment());
                 break;
