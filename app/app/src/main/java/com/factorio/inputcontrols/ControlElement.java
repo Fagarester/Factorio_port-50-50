@@ -44,7 +44,7 @@ public class ControlElement {
     public static final int FLAG_DRAWER_AUTOCLOSE = 1<<6;
     public static final long RADIAL_HYBRID_TAP_MILLISECONDS = 250;
     public enum Type {
-        BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, MIDI_KEY, RADIAL_MENU, SCROLL_WHEEL, SIDE_DRAWER;
+        BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, RADIAL_MENU, SCROLL_WHEEL, SIDE_DRAWER;
 
         public static String[] names() {
             Type[] types = values();
@@ -127,7 +127,7 @@ public class ControlElement {
     private int radialParts = 1;
     private int radialPartMask = 1;
     private byte[] radialPartCounts = {3};
-    private byte radialRotation = 0;
+    private float radialRotation = 0;
     private float radialDistance = 1.0f;
     private long radialDownTime;
     private boolean radialOpenedOnTouch;
@@ -167,10 +167,6 @@ public class ControlElement {
                 break;
             case RANGE_BUTTON:
                 scroller = new RangeScroller(inputControlsView, this);
-                break;
-            case MIDI_KEY:
-                shape = Shape.SQUARE;
-                text = "C1";
                 break;
             case RADIAL_MENU:
                 radialParts = 1;
@@ -418,7 +414,6 @@ public class ControlElement {
 
         switch (type) {
             case BUTTON:
-            case MIDI_KEY:
                 switch (shape) {
                     case RECT:
                     case ROUND_RECT:
@@ -561,8 +556,7 @@ public class ControlElement {
         Rect boundingBox = getBoundingBox();
 
         switch (type) {
-            case BUTTON:
-            case MIDI_KEY: {
+            case BUTTON: {
                 if (propertyFlags.isSet(FLAG_PRESSED)) paint.setStyle(Paint.Style.FILL);
 
                 float cx = boundingBox.centerX();
@@ -906,7 +900,7 @@ public class ControlElement {
         for (int part = 0; part < radialParts; part++) {
             int count = radialPartCounts[part];
             if ((radialPartMask & (1 << part)) != 0) {
-                float partStart = (radialParts == 1 ? 0 : -partSweep * 0.5f + part * partSweep) + radialRotation * 90.0f;
+                float partStart = (radialParts == 1 ? 0 : -partSweep * 0.5f + part * partSweep) + radialRotation;
                 float sweep = partSweep / count;
                 for (int j = 0; j < count; j++) list.add(new float[]{partStart + j * sweep, sweep, offset + j});
             }
@@ -988,7 +982,8 @@ public class ControlElement {
         return (radialPartMask & (1 << part)) != 0;
     }
 
-    public byte getRadialRotation() {
+    /** Rotation of the whole radial layout in degrees (0..359), clockwise. */
+    public float getRadialRotation() {
         return radialRotation;
     }
 
@@ -1009,8 +1004,8 @@ public class ControlElement {
         propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
     }
 
-    public void setRadialRotation(int rotation) {
-        this.radialRotation = (byte)(((rotation % 4) + 4) % 4);
+    public void setRadialRotation(float degrees) {
+        this.radialRotation = ((degrees % 360) + 360) % 360;
         propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
     }
 
@@ -1128,7 +1123,7 @@ public class ControlElement {
                 JSONArray countsJSONArray = new JSONArray();
                 for (byte count : radialPartCounts) countsJSONArray.put((int)count);
                 elementJSONObject.put("radialPartCounts", countsJSONArray);
-                elementJSONObject.put("radialRotation", radialRotation);
+                elementJSONObject.put("radialAngle", radialRotation);
                 elementJSONObject.put("radialDistance", radialDistance);
             }
             else if (type == Type.SIDE_DRAWER) {
@@ -1177,9 +1172,6 @@ public class ControlElement {
                 propertyFlags.set(FLAG_PRESSED);
                 inputControlsView.invalidate();
                 return true;
-            }
-            else if (type == Type.MIDI_KEY) {
-                return true; // MIDI is not supported anymore: the element is inert (type kept for old profiles)
             }
             else if (type == Type.SCROLL_WHEEL) {
                 scrollWheel.handleTouchDown(x, y);
@@ -1371,9 +1363,6 @@ public class ControlElement {
 
                 propertyFlags.unset(FLAG_PRESSED);
                 inputControlsView.invalidate();
-            }
-            else if (type == Type.MIDI_KEY) {
-                // inert, see handleTouchDown
             }
             else if (type == Type.SCROLL_WHEEL) {
                 scrollWheel.handleTouchUp();

@@ -35,6 +35,8 @@ public class SideDrawer {
 
     public static final byte SIDE_LEFT = 0;
     public static final byte SIDE_RIGHT = 1;
+    public static final byte SIDE_TOP = 2;
+    public static final byte SIDE_BOTTOM = 3;
     private static final long OPEN_DURATION = 260;
     private static final long CLOSE_DURATION = 200;
     private static final float CELL_PRESS_MIN_PROGRESS = 0.85f;
@@ -102,11 +104,17 @@ public class SideDrawer {
         cellSize = snap * 5.0f * scale;
 
         // shrink the cells so that the panel always fits on the screen
-        float maxHeight = height - snap * 2;
-        float maxWidth = width * 0.7f;
+        boolean horizontalEdge = isHorizontalEdge();
+        float maxHeight = horizontalEdge ? height * 0.7f : height - snap * 2;
+        float maxWidth = horizontalEdge ? width - snap * 2 : width * 0.7f;
         cellSize = Math.min(cellSize, (maxHeight - padding * 2 - gap * (rows - 1)) / rows);
         cellSize = Math.min(cellSize, (maxWidth - padding * 2 - gap * (columns - 1)) / columns);
         cellSize = Math.max(cellSize, snap * 2);
+    }
+
+    private boolean isHorizontalEdge() {
+        byte side = element.getDrawerSide();
+        return side == SIDE_TOP || side == SIDE_BOTTOM;
     }
 
     /** Recomputes the panel/handle rectangles for the current animation progress. */
@@ -119,23 +127,39 @@ public class SideDrawer {
 
         int panelWidth = (int)(columns * cellSize + (columns - 1) * gap + padding * 2);
         int panelHeight = (int)(rows * cellSize + (rows - 1) * gap + padding * 2);
-        int handleWidth = (int)(snap * 2.4f * scale);
-        int handleHeight = (int)Math.max(snap * 7 * scale, snap * 4);
-
-        int extent = Math.max(panelHeight, handleHeight);
+        int handleThickness = (int)(snap * 2.4f * scale);
+        int handleLength = (int)Math.max(snap * 7 * scale, snap * 4);
         int margin = snap;
-        int cy = Mathf.clamp(element.getY(), extent / 2 + margin, Math.max(extent / 2 + margin, height - extent / 2 - margin));
-
         float p = getProgress();
-        if (element.getDrawerSide() == SIDE_RIGHT) {
-            int panelLeft = (int)(width - panelWidth * p);
-            panelRect.set(panelLeft, cy - panelHeight / 2, panelLeft + panelWidth, cy + panelHeight / 2);
-            handleRect.set(panelLeft - handleWidth, cy - handleHeight / 2, panelLeft, cy + handleHeight / 2);
+
+        if (isHorizontalEdge()) {
+            // the panel hangs from the top edge or rises from the bottom edge, X is the position along the edge
+            int extent = Math.max(panelWidth, handleLength);
+            int cx = Mathf.clamp(element.getX(), extent / 2 + margin, Math.max(extent / 2 + margin, width - extent / 2 - margin));
+            if (element.getDrawerSide() == SIDE_BOTTOM) {
+                int panelTop = (int)(height - panelHeight * p);
+                panelRect.set(cx - panelWidth / 2, panelTop, cx + panelWidth / 2, panelTop + panelHeight);
+                handleRect.set(cx - handleLength / 2, panelTop - handleThickness, cx + handleLength / 2, panelTop);
+            }
+            else {
+                int panelBottom = (int)(panelHeight * p);
+                panelRect.set(cx - panelWidth / 2, panelBottom - panelHeight, cx + panelWidth / 2, panelBottom);
+                handleRect.set(cx - handleLength / 2, panelBottom, cx + handleLength / 2, panelBottom + handleThickness);
+            }
         }
         else {
-            int panelRight = (int)(panelWidth * p);
-            panelRect.set(panelRight - panelWidth, cy - panelHeight / 2, panelRight, cy + panelHeight / 2);
-            handleRect.set(panelRight, cy - handleHeight / 2, panelRight + handleWidth, cy + handleHeight / 2);
+            int extent = Math.max(panelHeight, handleLength);
+            int cy = Mathf.clamp(element.getY(), extent / 2 + margin, Math.max(extent / 2 + margin, height - extent / 2 - margin));
+            if (element.getDrawerSide() == SIDE_RIGHT) {
+                int panelLeft = (int)(width - panelWidth * p);
+                panelRect.set(panelLeft, cy - panelHeight / 2, panelLeft + panelWidth, cy + panelHeight / 2);
+                handleRect.set(panelLeft - handleThickness, cy - handleLength / 2, panelLeft, cy + handleLength / 2);
+            }
+            else {
+                int panelRight = (int)(panelWidth * p);
+                panelRect.set(panelRight - panelWidth, cy - panelHeight / 2, panelRight, cy + panelHeight / 2);
+                handleRect.set(panelRight, cy - handleLength / 2, panelRight + handleThickness, cy + handleLength / 2);
+            }
         }
 
         boundingBox.set(handleRect);
@@ -307,7 +331,6 @@ public class SideDrawer {
         float strokeWidth = snap * 0.25f;
         float cornerRadius = snap * 1.0f * scale;
         float p = getProgress();
-        boolean right = element.getDrawerSide() == SIDE_RIGHT;
 
         int backgroundColor = withAlpha(Color.argb(255, 12, 12, 12), Math.min(1.0f, view.getOverlayOpacity() * element.getOpacity() * 1.6f));
         int baseColor = element.isSelected() ? element.getHighlightColor() : lightColor;
@@ -368,11 +391,23 @@ public class SideDrawer {
         float cx = handleRect.centerX();
         float cy = handleRect.centerY();
         float arm = snap * 0.7f * scale;
-        float direction = (right ? -1 : 1) * (p >= 0.5f ? -1 : 1);   // +1 = chevron points right
+        float dirX = 0, dirY = 0;
+        switch (element.getDrawerSide()) {
+            case SIDE_RIGHT: dirX = -1; break;
+            case SIDE_TOP: dirY = 1; break;
+            case SIDE_BOTTOM: dirY = -1; break;
+            default: dirX = 1; break;
+        }
+        if (p >= 0.5f) {
+            dirX = -dirX;
+            dirY = -dirY;
+        }
+        float perpX = -dirY;
+        float perpY = dirX;
         Path chevron = new Path();
-        chevron.moveTo(cx - direction * arm * 0.5f, cy - arm);
-        chevron.lineTo(cx + direction * arm * 0.5f, cy);
-        chevron.lineTo(cx - direction * arm * 0.5f, cy + arm);
+        chevron.moveTo(cx - dirX * arm * 0.5f + perpX * arm, cy - dirY * arm * 0.5f + perpY * arm);
+        chevron.lineTo(cx + dirX * arm * 0.5f, cy + dirY * arm * 0.5f);
+        chevron.lineTo(cx - dirX * arm * 0.5f - perpX * arm, cy - dirY * arm * 0.5f - perpY * arm);
         paint.setColor(lightColor);
         paint.setStrokeWidth(strokeWidth * 1.2f);
         paint.setStrokeCap(Paint.Cap.ROUND);

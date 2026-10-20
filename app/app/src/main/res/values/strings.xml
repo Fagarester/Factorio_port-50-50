@@ -206,4 +206,6 @@
     <string name="radial_rotation">Rotation</string>
     <string name="radial_distance">Distance of buttons from the center</string>
     <string name="radial_part">Part %1$d of %2$d</string>
+    <string name="top">Top</string>
+    <string name="bottom">Bottom</string>
 </resources>

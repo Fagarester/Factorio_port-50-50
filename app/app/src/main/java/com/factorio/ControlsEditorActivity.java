@@ -148,7 +148,6 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             view.findViewById(R.id.CBMouseMoveMode).setVisibility(View.GONE);
             view.findViewById(R.id.LLCustomTextIcon).setVisibility(View.GONE);
             view.findViewById(R.id.LLRangeOptions).setVisibility(View.GONE);
-            view.findViewById(R.id.LLMIDIKeyOptions).setVisibility(View.GONE);
             view.findViewById(R.id.LLRadialMenuOptions).setVisibility(View.GONE);
             view.findViewById(R.id.LLOrientation).setVisibility(View.GONE);
             view.findViewById(R.id.LLScrollOptions).setVisibility(View.GONE);
@@ -173,9 +172,6 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                 case SIDE_DRAWER:
                     ((NumberPicker)view.findViewById(R.id.NPDrawerCount)).setValue(element.getBindingCount());
                     view.findViewById(R.id.LLDrawerOptions).setVisibility(View.VISIBLE);
-                    break;
-                case MIDI_KEY:
-                    view.findViewById(R.id.LLMIDIKeyOptions).setVisibility(View.VISIBLE);
                     break;
                 case RADIAL_MENU:
                     if (radialRefresh[0] != null) radialRefresh[0].run();
@@ -258,11 +254,13 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             radialRefresh[0].run();
             inputControlsView.invalidate();
         });
-        loadIndexSpinner(view.findViewById(R.id.SRadialRotation), new String[]{"0°", "90°", "180°", "270°"}, element.getRadialRotation(), (index) -> {
-            element.setRadialRotation(index);
+        SeekBar sbRadialRotation = view.findViewById(R.id.SBRadialRotation);
+        sbRadialRotation.setOnValueChangeListener((seekBar, value) -> {
+            element.setRadialRotation(value);
             profile.save();
             inputControlsView.invalidate();
         });
+        sbRadialRotation.setValue(element.getRadialRotation());
         SeekBar sbRadialDistance = view.findViewById(R.id.SBRadialDistance);
         sbRadialDistance.setOnValueChangeListener((seekBar, value) -> {
             element.setRadialDistance(value / 100.0f);
@@ -271,10 +269,8 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         });
         sbRadialDistance.setValue(element.getRadialDistance() * 100);
 
-        RadioGroup rgDrawerSide = view.findViewById(R.id.RGDrawerSide);
-        rgDrawerSide.check(element.getDrawerSide() == SideDrawer.SIDE_RIGHT ? R.id.RBDrawerRight : R.id.RBDrawerLeft);
-        rgDrawerSide.setOnCheckedChangeListener((group, checkedId) -> {
-            element.setDrawerSide(checkedId == R.id.RBDrawerRight ? SideDrawer.SIDE_RIGHT : SideDrawer.SIDE_LEFT);
+        loadIndexSpinner(view.findViewById(R.id.SDrawerSide), new String[]{getString(R.string.left), getString(R.string.right), getString(R.string.top), getString(R.string.bottom)}, element.getDrawerSide(), (index) -> {
+            element.setDrawerSide((byte)index);
             profile.save();
             inputControlsView.invalidate();
         });

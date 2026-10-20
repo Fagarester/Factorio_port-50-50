@@ -124,24 +124,10 @@
                 android:layout_height="wrap_content"
                 android:text="@string/drawer_side" />
 
-            <RadioGroup
-                android:id="@+id/RGDrawerSide"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <RadioButton
-                    android:id="@+id/RBDrawerLeft"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/left" />
-
-                <RadioButton
-                    android:id="@+id/RBDrawerRight"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/right" />
-            </RadioGroup>
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SDrawerSide"
+                android:layout_width="match_parent" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -214,23 +200,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/LLMIDIKeyOptions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/note" />
-
-            <Spinner
-                style="@style/ComboBox"
-                android:id="@+id/SNote"
-                android:layout_width="match_parent" />
-        </LinearLayout>
-
-        <LinearLayout
             android:id="@+id/LLRadialMenuOptions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -288,10 +257,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/radial_rotation" />
 
-            <Spinner
-                style="@style/ComboBox"
-                android:id="@+id/SRadialRotation"
-                android:layout_width="match_parent" />
+            <com.factorio.widget.SeekBar
+                android:id="@+id/SBRadialRotation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="°"
+                app:step="5"
+                app:minValue="0"
+                app:maxValue="355" />
 
             <TextView
                 android:layout_width="wrap_content"

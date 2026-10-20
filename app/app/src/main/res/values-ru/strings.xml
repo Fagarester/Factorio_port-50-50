@@ -198,4 +198,6 @@
     <string name="radial_rotation">Поворот</string>
     <string name="radial_distance">Дистанция кнопок от центра</string>
     <string name="radial_part">Часть %1$d из %2$d</string>
+    <string name="top">Сверху</string>
+    <string name="bottom">Снизу</string>
 </resources>

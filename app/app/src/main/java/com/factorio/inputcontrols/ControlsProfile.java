@@ -224,6 +224,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
             JSONArray elementsJSONArray = profileJSONObject.getJSONArray("elements");
             for (int i = 0; i < elementsJSONArray.length(); i++) {
                 JSONObject elementJSONObject = elementsJSONArray.getJSONObject(i);
+                if ("MIDI_KEY".equals(elementJSONObject.optString("type"))) continue;   // the MIDI key element was removed
 
                 ControlElement element = null;
                 if (inputControlsView != null) {
@@ -259,7 +260,8 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
                         element.setRadialLayout(elementJSONObject.getInt("radialParts"), elementJSONObject.optInt("radialPartMask", 255), counts);
                     }
                     else element.setRadialLayout(1, 1, new byte[]{(byte)Math.max(1, bindingsJSONArray.length())});
-                    if (elementJSONObject.has("radialRotation")) element.setRadialRotation(elementJSONObject.getInt("radialRotation"));
+                    if (elementJSONObject.has("radialAngle")) element.setRadialRotation((float)elementJSONObject.getDouble("radialAngle"));
+                    else if (elementJSONObject.has("radialRotation")) element.setRadialRotation(elementJSONObject.getInt("radialRotation") * 90.0f);   // old 4-step setting
                     if (elementJSONObject.has("radialDistance")) element.setRadialDistance((float)elementJSONObject.getDouble("radialDistance"));
                 }
                 if (element != null && (element.getType() == ControlElement.Type.SIDE_DRAWER || element.getType() == ControlElement.Type.SCROLL_WHEEL)) {
