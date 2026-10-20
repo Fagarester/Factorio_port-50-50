@@ -239,14 +239,73 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/bindings" />
+                android:text="@string/radial_parts" />
 
-            <com.factorio.widget.NumberPicker
-                android:id="@+id/NPBindings"
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialParts"
+                android:layout_width="match_parent" />
+
+            <LinearLayout
+                android:id="@+id/LLRadialSingleCount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:minValue="3"
-                app:maxValue="8" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bindings" />
+
+                <com.factorio.widget.NumberPicker
+                    android:id="@+id/NPBindings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:minValue="1"
+                    app:maxValue="8" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/LLRadialPartsBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/radial_parts_hint" />
+
+                <LinearLayout
+                    android:id="@+id/LLRadialParts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_rotation" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialRotation"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_distance" />
+
+            <com.factorio.widget.SeekBar
+                android:id="@+id/SBRadialDistance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="%"
+                app:step="5"
+                app:minValue="50"
+                app:maxValue="250" />
 
             <TextView
                 android:layout_width="wrap_content"

@@ -140,6 +140,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         final ControlElement element = inputControlsView.getSelectedElement();
         final View view = LayoutInflater.from(this).inflate(R.layout.control_element_settings, null);
 
+        final Runnable[] radialRefresh = {null};
         final Runnable updateLayout = () -> {
             ControlElement.Type type = element.getType();
             view.findViewById(R.id.LLShape).setVisibility(View.GONE);
@@ -177,7 +178,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                     view.findViewById(R.id.LLMIDIKeyOptions).setVisibility(View.VISIBLE);
                     break;
                 case RADIAL_MENU:
-                    ((NumberPicker)view.findViewById(R.id.NPBindings)).setValue(element.getBindingCount());
+                    if (radialRefresh[0] != null) radialRefresh[0].run();
                     view.findViewById(R.id.LLRadialMenuOptions).setVisibility(View.VISIBLE);
                     break;
             }
@@ -208,6 +209,67 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             profile.save();
             inputControlsView.invalidate();
         });
+
+        radialRefresh[0] = () -> {
+            int parts = element.getRadialParts();
+            view.findViewById(R.id.LLRadialSingleCount).setVisibility(parts == 1 ? View.VISIBLE : View.GONE);
+            view.findViewById(R.id.LLRadialPartsBox).setVisibility(parts > 1 ? View.VISIBLE : View.GONE);
+            ((NumberPicker)view.findViewById(R.id.NPBindings)).setValue(element.getRadialPartCount(0));
+
+            LinearLayout list = view.findViewById(R.id.LLRadialParts);
+            list.removeAllViews();
+            if (parts > 1) {
+                for (int i = 0; i < parts; i++) {
+                    final int part = i;
+                    View row = LayoutInflater.from(this).inflate(R.layout.radial_part_row, list, false);
+                    CheckBox cbActive = row.findViewById(R.id.CBPartActive);
+                    cbActive.setText(getString(R.string.radial_part, part + 1, parts));
+                    cbActive.setChecked(element.isRadialPartActive(part));
+                    cbActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                        if (!element.setRadialPartActive(part, isChecked)) {
+                            buttonView.setChecked(true);    // at least one part has to stay active
+                            return;
+                        }
+                        profile.save();
+                        loadBindingSpinners(element, view);
+                        inputControlsView.invalidate();
+                    });
+
+                    NumberPicker npPartCount = row.findViewById(R.id.NPPartCount);
+                    npPartCount.setValue(element.getRadialPartCount(part));
+                    npPartCount.setOnValueChangeListener((numberPicker, value) -> {
+                        element.setRadialPartCount(part, value);
+                        profile.save();
+                        loadBindingSpinners(element, view);
+                        inputControlsView.invalidate();
+                    });
+                    list.addView(row);
+                }
+            }
+            loadBindingSpinners(element, view);
+        };
+
+        final String[] partNames = new String[8];
+        for (int i = 0; i < partNames.length; i++) partNames[i] = "1/" + (i + 1);
+        loadIndexSpinner(view.findViewById(R.id.SRadialParts), partNames, element.getRadialParts() - 1, (index) -> {
+            if (element.getRadialParts() == index + 1) return;
+            element.setRadialParts(index + 1);
+            profile.save();
+            radialRefresh[0].run();
+            inputControlsView.invalidate();
+        });
+        loadIndexSpinner(view.findViewById(R.id.SRadialRotation), new String[]{"0°", "90°", "180°", "270°"}, element.getRadialRotation(), (index) -> {
+            element.setRadialRotation(index);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+        SeekBar sbRadialDistance = view.findViewById(R.id.SBRadialDistance);
+        sbRadialDistance.setOnValueChangeListener((seekBar, value) -> {
+            element.setRadialDistance(value / 100.0f);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+        sbRadialDistance.setValue(element.getRadialDistance() * 100);
 
         RadioGroup rgDrawerSide = view.findViewById(R.id.RGDrawerSide);
         rgDrawerSide.check(element.getDrawerSide() == SideDrawer.SIDE_RIGHT ? R.id.RBDrawerRight : R.id.RBDrawerLeft);
@@ -258,9 +320,9 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         });
 
         NumberPicker npBindings = view.findViewById(R.id.NPBindings);
-        npBindings.setValue(element.getBindingCount());
+        npBindings.setValue(element.getRadialPartCount(0));
         npBindings.setOnValueChangeListener((numberPicker, value) -> {
-            element.setBindingCount(value);
+            element.setRadialPartCount(0, value);
             loadBindingSpinners(element, view);
             profile.save();
             inputControlsView.invalidate();
@@ -379,8 +441,26 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             loadBindingSpinner(element, container, 2, R.string.binding_down);
             loadBindingSpinner(element, container, 3, R.string.binding_left);
         }
-        else if (type == ControlElement.Type.RADIAL_MENU || type == ControlElement.Type.SIDE_DRAWER) {
+        else if (type == ControlElement.Type.SIDE_DRAWER) {
             for (byte i = 0; i < element.getBindingCount(); i++) loadBindingSpinner(element, container, i, 0);
+        }
+        else if (type == ControlElement.Type.RADIAL_MENU) {
+            int parts = element.getRadialParts();
+            int offset = 0;
+            for (int part = 0; part < parts; part++) {
+                int count = element.getRadialPartCount(part);
+                if (element.isRadialPartActive(part)) {
+                    for (int j = 0; j < count; j++) {
+                        loadBindingSpinner(element, container, offset + j, 0);
+                        if (j == 0 && parts > 1) {
+                            View field = container.getChildAt(container.getChildCount() - 1);
+                            field.findViewById(R.id.LLTitleBar).setVisibility(View.VISIBLE);
+                            ((TextView)field.findViewById(R.id.TVTitle)).setText(getString(R.string.radial_part, part + 1, parts));
+                        }
+                    }
+                }
+                offset += count;
+            }
         }
         else if (type == ControlElement.Type.SCROLL_WHEEL) {
             loadBindingSpinner(element, container, 0, R.string.binding_up);
@@ -416,7 +496,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         final Spinner sBinding = view.findViewById(R.id.SBinding);
 
         ControlElement.Type type = element.getType();
-        if (type == ControlElement.Type.BUTTON || type == ControlElement.Type.RADIAL_MENU) {
+        if (type == ControlElement.Type.BUTTON) {
             ImageButton addButton = view.findViewById(R.id.BTAdd);
             addButton.setVisibility(View.VISIBLE);
             addButton.setOnClickListener((v) -> {

@@ -193,4 +193,9 @@
     <string name="drawer_auto_close">Закрывать после нажатия кнопки</string>
     <string name="left">Слева</string>
     <string name="right">Справа</string>
+    <string name="radial_parts">Деление круга (1/N)</string>
+    <string name="radial_parts_hint">Отметь галочками нужные части и задай число кнопок в каждой. Части идут по часовой стрелке от верха (1/2 = верх, низ).</string>
+    <string name="radial_rotation">Поворот</string>
+    <string name="radial_distance">Дистанция кнопок от центра</string>
+    <string name="radial_part">Часть %1$d из %2$d</string>
 </resources>

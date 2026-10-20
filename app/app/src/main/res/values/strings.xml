@@ -201,4 +201,9 @@
     <string name="drawer_auto_close">Close after a button is pressed</string>
     <string name="left">Left</string>
     <string name="right">Right</string>
+    <string name="radial_parts">Circle division (1/N)</string>
+    <string name="radial_parts_hint">Tick the parts to use and set the number of buttons in each. Parts go clockwise from the top (1/2 = top, bottom).</string>
+    <string name="radial_rotation">Rotation</string>
+    <string name="radial_distance">Distance of buttons from the center</string>
+    <string name="radial_part">Part %1$d of %2$d</string>
 </resources>

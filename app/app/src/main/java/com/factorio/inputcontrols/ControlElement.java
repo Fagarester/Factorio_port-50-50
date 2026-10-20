@@ -24,6 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ControlElement {
@@ -123,6 +124,11 @@ public class ControlElement {
     private RadialStyle radialStyle = RadialStyle.PIE;
     private RadialTrigger radialTrigger = RadialTrigger.TAP;
     private int radialHover = -1;
+    private int radialParts = 1;
+    private int radialPartMask = 1;
+    private byte[] radialPartCounts = {3};
+    private byte radialRotation = 0;
+    private float radialDistance = 1.0f;
     private long radialDownTime;
     private boolean radialOpenedOnTouch;
     private boolean radialClosedOnTouch;
@@ -167,6 +173,11 @@ public class ControlElement {
                 text = "C1";
                 break;
             case RADIAL_MENU:
+                radialParts = 1;
+                radialPartMask = 1;
+                radialPartCounts = new byte[]{3};
+                radialRotation = 0;
+                radialDistance = 1.0f;
                 setBindingCount(3);
                 break;
             case SCROLL_WHEEL:
@@ -784,86 +795,67 @@ public class ControlElement {
                 break;
             }
             case RADIAL_MENU: {
-                float startAngle = 0;
                 float cx = boundingBox.centerX();
                 float cy = boundingBox.centerY();
-                float innerRadius = boundingBox.width() * 0.5f + snappingSize * 0.5f;
+                float innerRadius = getRadialInnerRadius();
                 float outerRadius = getRadialOuterRadius();
                 float radius = boundingBox.width() * 0.5f;
                 int oldColor = paint.getColor();
+                float[][] sectors = getRadialSectors();
 
                 if (paths == null) {
-                    Path path0 = new Path();
-                    Path path1 = new Path();
-                    RectF outerOval = new RectF(cx - outerRadius, cy - outerRadius, cx + outerRadius, cy + outerRadius);
-                    RectF innerOval = new RectF(cx - innerRadius, cy - innerRadius, cx + innerRadius, cy + innerRadius);
-                    float outerMargin = (float)Math.toRadians(2);
-                    float innerMargin = outerMargin * (outerRadius / innerRadius);
-
-                    for (int i = 0; i <= bindings.length; i++) {
-                        float t = (float)i / bindings.length;
-                        float endAngle = (float)(t * Math.PI * 2 + Math.PI * 1.5f);
-
-                        if (i > 0) {
-                            path0.moveTo((float)(cx + Math.cos(startAngle + innerMargin) * innerRadius), (float)(cy + Math.sin(startAngle + innerMargin) * innerRadius));
-                            path0.lineTo((float)(cx + Math.cos(startAngle + outerMargin) * outerRadius), (float)(cy + Math.sin(startAngle + outerMargin) * outerRadius));
-                            path0.arcTo(outerOval, (float)Math.toDegrees(startAngle + outerMargin), (float)Math.toDegrees(endAngle - startAngle - outerMargin * 2));
-                            path0.lineTo((float)(cx + Math.cos(endAngle - innerMargin) * innerRadius), (float)(cy + Math.sin(endAngle - innerMargin) * innerRadius));
-                            path0.arcTo(innerOval, (float)Math.toDegrees(endAngle - innerMargin), (float)-Math.toDegrees(endAngle - startAngle - innerMargin * 2));
-
-                            float middleAngle = (startAngle + endAngle) * 0.5f;
-                            float endX = (float)(cx + Math.cos(middleAngle) * radius * 0.5f);
-                            float endY = (float)(cy + Math.sin(middleAngle) * radius * 0.5f);
-                            path1.moveTo(cx, cy);
-                            path1.lineTo(endX, endY);
-                            path1.addCircle(endX, endY, snappingSize * 0.4f, Path.Direction.CW);
-                        }
-
-                        startAngle = endAngle;
+                    // closed state: little spokes that show where the active sectors are
+                    Path spokes = new Path();
+                    for (float[] sector : sectors) {
+                        float middle = (float)Math.toRadians(sector[0] + sector[1] * 0.5f - 90);
+                        float endX = (float)(cx + Math.cos(middle) * radius * 0.5f);
+                        float endY = (float)(cy + Math.sin(middle) * radius * 0.5f);
+                        spokes.moveTo(cx, cy);
+                        spokes.lineTo(endX, endY);
+                        spokes.addCircle(endX, endY, snappingSize * 0.4f, Path.Direction.CW);
                     }
-
-                    paths = new Path[]{path0, path1};
+                    paths = new Path[]{spokes};
                 }
 
                 if (propertyFlags.isSet(FLAG_VISIBLE) && radialStyle == RadialStyle.BUBBLES) {
-                    drawRadialBubbles(canvas, paint, cx, cy, innerRadius, outerRadius);
+                    drawRadialBubbles(canvas, paint, cx, cy, innerRadius, outerRadius, sectors);
                     drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, false);
                 }
                 else if (propertyFlags.isSet(FLAG_VISIBLE)) {
                     float minTextSize = snappingSize * 2 * scale;
-                    int darkColor = getDarkColor();
-                    paint.setStrokeCap(Paint.Cap.SQUARE);
-                    canvas.drawPath(paths[0], paint);
-                    paint.setStrokeCap(Paint.Cap.BUTT);
-                    drawRadialHover(canvas, paint, cx, cy, innerRadius, outerRadius, oldColor);
-
-                    paint.setStyle(Paint.Style.FILL);
-                    paint.setTextAlign(Paint.Align.CENTER);
                     float touchAreaRadius = (outerRadius - innerRadius) * 0.5f * 1.25f;
+                    float touchAreaCenter = (innerRadius + outerRadius) * 0.5f;
+                    paint.setTextAlign(Paint.Align.CENTER);
 
-                    for (int i = 0, j = 0; i <= bindings.length; i++) {
-                        float t = (float)i / bindings.length;
-                        float endAngle = (float)(t * Math.PI * 2 + Math.PI * 1.5f);
+                    for (float[] sector : sectors) {
+                        int bindingIndex = (int)sector[2];
+                        Path sectorPath = buildRadialSectorPath(cx, cy, innerRadius, outerRadius, sector[0], sector[1]);
 
-                        if (i > 0) {
-                            float middleAngle = (startAngle + endAngle) * 0.5f;
-                            float touchAreaCenter = (innerRadius + outerRadius) * 0.5f;
-                            float touchAreaX = (short)(cx + Math.cos(middleAngle) * touchAreaCenter);
-                            float touchAreaY = (short)(cy + Math.sin(middleAngle) * touchAreaCenter);
-
-                            canvas.save();
-                            canvas.translate(touchAreaX, touchAreaY);
-                            float textAngle = (float)Math.toDegrees(middleAngle + Math.PI * 0.5f) % 360;
-                            if (textAngle > 90 && textAngle <= 270) textAngle += 180;
-                            canvas.rotate(textAngle);
-                            String text = getBindingTextAt(j++);
-                            paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, touchAreaRadius * 2), minTextSize));
-                            paint.setColor(propertyFlags.isSet(FLAG_PRESSED) ? darkColor : lightColor);
-                            canvas.drawText(text, 0, -((paint.descent() + paint.ascent()) * 0.5f), paint);
-                            canvas.restore();
+                        if (bindingIndex == radialHover) {
+                            paint.setStyle(Paint.Style.FILL);
+                            paint.setColor(ColorUtils.setAlphaComponent(oldColor, 90));
+                            canvas.drawPath(sectorPath, paint);
                         }
 
-                        startAngle = endAngle;
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setColor(oldColor);
+                        paint.setStrokeCap(Paint.Cap.SQUARE);
+                        canvas.drawPath(sectorPath, paint);
+                        paint.setStrokeCap(Paint.Cap.BUTT);
+
+                        float middle = (float)Math.toRadians(sector[0] + sector[1] * 0.5f - 90);
+                        canvas.save();
+                        canvas.translate((float)(cx + Math.cos(middle) * touchAreaCenter), (float)(cy + Math.sin(middle) * touchAreaCenter));
+                        float textAngle = (float)Math.toDegrees(middle + Math.PI * 0.5f) % 360;
+                        if (textAngle < 0) textAngle += 360;
+                        if (textAngle > 90 && textAngle <= 270) textAngle += 180;
+                        canvas.rotate(textAngle);
+                        String text = getBindingTextAt(bindingIndex);
+                        paint.setStyle(Paint.Style.FILL);
+                        paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, touchAreaRadius * 2), minTextSize));
+                        paint.setColor(getLightColor());
+                        canvas.drawText(text, 0, -((paint.descent() + paint.ascent()) * 0.5f), paint);
+                        canvas.restore();
                     }
 
                     drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, false);
@@ -871,7 +863,7 @@ public class ControlElement {
                 else {
                     paint.setStyle(Paint.Style.FILL_AND_STROKE);
                     paint.setColor(oldColor);
-                    canvas.drawPath(paths[1], paint);
+                    canvas.drawPath(paths[0], paint);
                 }
 
                 paint.setStyle(Paint.Style.STROKE);
@@ -882,22 +874,48 @@ public class ControlElement {
         }
     }
 
-    public float getRadialOuterRadius() {
-        Rect box = getBoundingBox();
-        int snappingSize = inputControlsView.getSnappingSize();
-        return radialStyle == RadialStyle.BUBBLES ? box.width() * 1.5f : box.width() + snappingSize * scale;
-    }
+    /* ------------------------------------------------------------ radial menu geometry */
 
-    private float getRadialInnerRadius() {
+    private float getRadialBaseInnerRadius() {
         return getBoundingBox().width() * 0.5f + inputControlsView.getSnappingSize() * 0.5f;
     }
 
-    private float getRadialSectorMiddleAngle(int index) {
-        float step = (float)(Math.PI * 2 / bindings.length);
-        return (float)(Math.PI * 1.5f + (index + 0.5f) * step);
+    /** Distance of the buttons from the center of the element (scaled by the "distance" setting). */
+    private float getRadialInnerRadius() {
+        float minimum = getBoundingBox().width() * 0.5f + inputControlsView.getSnappingSize() * 0.25f;
+        return Math.max(minimum, getRadialBaseInnerRadius() * radialDistance);
     }
 
-    /** Returns the sector under the point or -1 (center, outside, ...). Sector 0 starts at 12 o'clock, clockwise. */
+    public float getRadialOuterRadius() {
+        Rect box = getBoundingBox();
+        float baseOuter = radialStyle == RadialStyle.BUBBLES ? box.width() * 1.5f : box.width() + inputControlsView.getSnappingSize() * scale;
+        float thickness = baseOuter - getRadialBaseInnerRadius();
+        return getRadialInnerRadius() + thickness;
+    }
+
+    /**
+     * All active sectors as {startDegrees, sweepDegrees, bindingIndex}. Degrees are measured clockwise from
+     * 12 o'clock. The circle is divided into radialParts equal parts (the first one is centered on the top
+     * edge, e.g. 1/2 = top half + bottom half); every active part holds its own number of buttons.
+     */
+    private float[][] getRadialSectors() {
+        ArrayList<float[]> list = new ArrayList<>();
+        float partSweep = 360.0f / radialParts;
+        int offset = 0;
+
+        for (int part = 0; part < radialParts; part++) {
+            int count = radialPartCounts[part];
+            if ((radialPartMask & (1 << part)) != 0) {
+                float partStart = (radialParts == 1 ? 0 : -partSweep * 0.5f + part * partSweep) + radialRotation * 90.0f;
+                float sweep = partSweep / count;
+                for (int j = 0; j < count; j++) list.add(new float[]{partStart + j * sweep, sweep, offset + j});
+            }
+            offset += count;
+        }
+        return list.toArray(new float[0][]);
+    }
+
+    /** Returns the binding index of the sector under the point or -1 (center, outside, inactive part). */
     private int getRadialSectorAt(float x, float y) {
         Rect box = getBoundingBox();
         float dx = x - box.centerX();
@@ -905,50 +923,48 @@ public class ControlElement {
         float distance = (float)Math.hypot(dx, dy);
         if (distance <= getRadialInnerRadius() || distance > getRadialOuterRadius() + inputControlsView.getSnappingSize()) return -1;
 
-        double angle = Math.atan2(dy, dx) - Math.PI * 1.5f;
-        angle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        int index = (int)(angle / (Math.PI * 2 / bindings.length));
-        return Mathf.clamp(index, 0, bindings.length - 1);
+        float angle = (float)Math.toDegrees(Math.atan2(dy, dx)) + 90.0f;
+        for (float[] sector : getRadialSectors()) {
+            float delta = (((angle - sector[0]) % 360) + 360) % 360;
+            if (delta < sector[1]) return (int)sector[2];
+        }
+        return -1;
     }
 
-    private void drawRadialHover(Canvas canvas, Paint paint, float cx, float cy, float innerRadius, float outerRadius, int oldColor) {
-        if (radialHover < 0 || radialHover >= bindings.length) return;
-        float sweep = 360.0f / bindings.length;
-        float start = 270.0f + radialHover * sweep;
-        float margin = 1.5f;
+    private Path buildRadialSectorPath(float cx, float cy, float innerRadius, float outerRadius, float startDegrees, float sweepDegrees) {
+        float start = startDegrees - 90;
+        float margin = Math.min(2.0f, sweepDegrees * 0.2f);
+        float innerMargin = Math.min(margin * outerRadius / innerRadius, sweepDegrees * 0.3f);
         Path path = new Path();
-        path.arcTo(new RectF(cx - outerRadius, cy - outerRadius, cx + outerRadius, cy + outerRadius), start + margin, sweep - margin * 2);
-        path.arcTo(new RectF(cx - innerRadius, cy - innerRadius, cx + innerRadius, cy + innerRadius), start + sweep - margin, -(sweep - margin * 2));
+        path.arcTo(new RectF(cx - outerRadius, cy - outerRadius, cx + outerRadius, cy + outerRadius), start + margin, sweepDegrees - margin * 2);
+        path.arcTo(new RectF(cx - innerRadius, cy - innerRadius, cx + innerRadius, cy + innerRadius), start + sweepDegrees - innerMargin, -(sweepDegrees - innerMargin * 2));
         path.close();
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(ColorUtils.setAlphaComponent(oldColor, 90));
-        canvas.drawPath(path, paint);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(oldColor);
+        return path;
     }
 
-    private void drawRadialBubbles(Canvas canvas, Paint paint, float cx, float cy, float innerRadius, float outerRadius) {
+    private void drawRadialBubbles(Canvas canvas, Paint paint, float cx, float cy, float innerRadius, float outerRadius, float[][] sectors) {
         int snappingSize = inputControlsView.getSnappingSize();
         int lightColor = getLightColor();
         int darkColor = getDarkColor();
-        int count = bindings.length;
         float ringRadius = (innerRadius + outerRadius) * 0.5f;
-        float bubbleRadius = Math.min((outerRadius - innerRadius) * 0.45f, (float)(ringRadius * Math.sin(Math.PI / count) * 0.88f));
         float strokeWidth = snappingSize * 0.25f;
 
         paint.setTextAlign(Paint.Align.CENTER);
-        for (int i = 0; i < count; i++) {
-            float angle = getRadialSectorMiddleAngle(i);
-            float bx = (float)(cx + Math.cos(angle) * ringRadius);
-            float by = (float)(cy + Math.sin(angle) * ringRadius);
-            boolean hovered = i == radialHover;
+        for (float[] sector : sectors) {
+            int bindingIndex = (int)sector[2];
+            float halfSweep = (float)Math.toRadians(Math.min(sector[1], 180.0f) * 0.5f);
+            float bubbleRadius = Math.min((outerRadius - innerRadius) * 0.45f, (float)(ringRadius * Math.sin(halfSweep) * 0.88f));
+            float middle = (float)Math.toRadians(sector[0] + sector[1] * 0.5f - 90);
+            float bx = (float)(cx + Math.cos(middle) * ringRadius);
+            float by = (float)(cy + Math.sin(middle) * ringRadius);
+            boolean hovered = bindingIndex == radialHover;
 
             paint.setStrokeWidth(strokeWidth);
             paint.setStyle(hovered ? Paint.Style.FILL : Paint.Style.STROKE);
             paint.setColor(lightColor);
             canvas.drawCircle(bx, by, bubbleRadius, paint);
 
-            String text = getBindingTextAt(i);
+            String text = getBindingTextAt(bindingIndex);
             paint.setStyle(Paint.Style.FILL);
             paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, bubbleRadius * 1.5f), snappingSize * 2 * scale));
             paint.setColor(hovered ? darkColor : lightColor);
@@ -956,6 +972,110 @@ public class ControlElement {
         }
         paint.setStyle(Paint.Style.STROKE);
         paint.setColor(lightColor);
+    }
+
+    /* ------------------------------------------------------------ radial menu settings */
+
+    public int getRadialParts() {
+        return radialParts;
+    }
+
+    public int getRadialPartCount(int part) {
+        return part >= 0 && part < radialPartCounts.length ? radialPartCounts[part] : 0;
+    }
+
+    public boolean isRadialPartActive(int part) {
+        return (radialPartMask & (1 << part)) != 0;
+    }
+
+    public byte getRadialRotation() {
+        return radialRotation;
+    }
+
+    public float getRadialDistance() {
+        return radialDistance;
+    }
+
+    public int getRadialPartMask() {
+        return radialPartMask;
+    }
+
+    public byte[] getRadialPartCounts() {
+        return radialPartCounts.clone();
+    }
+
+    public void setRadialDistance(float distance) {
+        this.radialDistance = Mathf.clamp(distance, 0.5f, 2.5f);
+        propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
+    }
+
+    public void setRadialRotation(int rotation) {
+        this.radialRotation = (byte)(((rotation % 4) + 4) % 4);
+        propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
+    }
+
+    /** Enables/disables a part. At least one part always stays active; returns false if the change was refused. */
+    public boolean setRadialPartActive(int part, boolean active) {
+        int mask = active ? (radialPartMask | (1 << part)) : (radialPartMask & ~(1 << part));
+        if (mask == 0) return false;
+        radialPartMask = mask;
+        propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
+        return true;
+    }
+
+    /** Changes the number of buttons of one part, keeping the bindings of all the other parts. */
+    public void setRadialPartCount(int part, int count) {
+        if (part < 0 || part >= radialParts) return;
+        byte[] newCounts = radialPartCounts.clone();
+        newCounts[part] = (byte)Mathf.clamp(count, 1, 8);
+        applyRadialCounts(newCounts);
+    }
+
+    /** Divides the circle into 1..8 parts; all parts become active with 3 buttons each (1 part = classic layout). */
+    public void setRadialParts(int parts) {
+        parts = Mathf.clamp(parts, 1, 8);
+        if (parts == radialParts) return;
+        byte[] newCounts = new byte[parts];
+        Arrays.fill(newCounts, (byte)3);
+        radialParts = parts;
+        radialPartMask = (1 << parts) - 1;
+        radialPartCounts = new byte[parts];
+        bindings = new Binding[0];
+        applyRadialCounts(newCounts);
+    }
+
+    /** Used by the profile loader: sets the complete layout at once. */
+    public void setRadialLayout(int parts, int mask, byte[] counts) {
+        radialParts = Mathf.clamp(parts, 1, 8);
+        radialPartMask = (mask & ((1 << radialParts) - 1)) != 0 ? (mask & ((1 << radialParts) - 1)) : (1 << radialParts) - 1;
+        byte[] fixed = new byte[radialParts];
+        for (int i = 0; i < radialParts; i++) fixed[i] = (byte)Mathf.clamp(i < counts.length ? counts[i] : 3, 1, 8);
+        radialPartCounts = new byte[radialParts];
+        bindings = new Binding[0];
+        applyRadialCounts(fixed);
+    }
+
+    private void applyRadialCounts(byte[] newCounts) {
+        int total = 0;
+        for (byte c : newCounts) total += c;
+
+        Binding[] newBindings = new Binding[total];
+        Arrays.fill(newBindings, Binding.NONE);
+
+        int oldOffset = 0;
+        int newOffset = 0;
+        for (int part = 0; part < newCounts.length; part++) {
+            int oldCount = part < radialPartCounts.length ? radialPartCounts[part] : 0;
+            int keep = Math.min(oldCount, newCounts[part]);
+            for (int j = 0; j < keep && oldOffset + j < bindings.length; j++) newBindings[newOffset + j] = bindings[oldOffset + j];
+            oldOffset += oldCount;
+            newOffset += newCounts[part];
+        }
+
+        radialPartCounts = newCounts;
+        bindings = newBindings;
+        states = new boolean[total];
+        propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
     }
 
     private void drawIcon(Canvas canvas, float cx, float cy, float width, float height, int iconId, boolean automargin) {
@@ -1003,6 +1123,13 @@ public class ControlElement {
             else if (type == Type.RADIAL_MENU) {
                 elementJSONObject.put("radialStyle", radialStyle.name());
                 elementJSONObject.put("radialTrigger", radialTrigger.name());
+                elementJSONObject.put("radialParts", radialParts);
+                elementJSONObject.put("radialPartMask", radialPartMask);
+                JSONArray countsJSONArray = new JSONArray();
+                for (byte count : radialPartCounts) countsJSONArray.put((int)count);
+                elementJSONObject.put("radialPartCounts", countsJSONArray);
+                elementJSONObject.put("radialRotation", radialRotation);
+                elementJSONObject.put("radialDistance", radialDistance);
             }
             else if (type == Type.SIDE_DRAWER) {
                 elementJSONObject.put("drawerSide", drawerSide);

@@ -251,6 +251,17 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
 
                 boolean hasGamepadBinding = true;
                 JSONArray bindingsJSONArray = elementJSONObject.getJSONArray("bindings");
+                if (element != null && element.getType() == ControlElement.Type.RADIAL_MENU) {
+                    if (elementJSONObject.has("radialParts") && elementJSONObject.has("radialPartCounts")) {
+                        JSONArray countsJSONArray = elementJSONObject.getJSONArray("radialPartCounts");
+                        byte[] counts = new byte[countsJSONArray.length()];
+                        for (int k = 0; k < counts.length; k++) counts[k] = (byte)countsJSONArray.getInt(k);
+                        element.setRadialLayout(elementJSONObject.getInt("radialParts"), elementJSONObject.optInt("radialPartMask", 255), counts);
+                    }
+                    else element.setRadialLayout(1, 1, new byte[]{(byte)Math.max(1, bindingsJSONArray.length())});
+                    if (elementJSONObject.has("radialRotation")) element.setRadialRotation(elementJSONObject.getInt("radialRotation"));
+                    if (elementJSONObject.has("radialDistance")) element.setRadialDistance((float)elementJSONObject.getDouble("radialDistance"));
+                }
                 if (element != null && (element.getType() == ControlElement.Type.SIDE_DRAWER || element.getType() == ControlElement.Type.SCROLL_WHEEL)) {
                     element.setBindingCount(Math.max(1, bindingsJSONArray.length()));
                 }
