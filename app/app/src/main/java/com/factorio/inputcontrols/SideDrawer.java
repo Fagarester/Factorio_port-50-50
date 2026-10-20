@@ -89,8 +89,9 @@ public class SideDrawer {
                 rows = 1;
                 break;
             case GRID:
-                columns = Mathf.clamp(element.getGridColumns(), 1, count);
-                rows = (count + columns - 1) / columns;
+                int[] grid = element.getGridSize();
+                columns = grid[0];
+                rows = grid[1];
                 break;
             case VERTICAL:
             default:
@@ -110,6 +111,22 @@ public class SideDrawer {
         cellSize = Math.min(cellSize, (maxHeight - padding * 2 - gap * (rows - 1)) / rows);
         cellSize = Math.min(cellSize, (maxWidth - padding * 2 - gap * (columns - 1)) / columns);
         cellSize = Math.max(cellSize, snap * 2);
+    }
+
+    /** Returns {columns, rows}: either the columns or the rows are fixed, the other value is calculated. */
+    public static int[] computeGrid(int count, int columns, int rows, boolean byRows) {
+        count = Math.max(1, count);
+        int c, r;
+        if (byRows) {
+            r = Mathf.clamp(rows, 1, count);
+            c = (count + r - 1) / r;
+            r = (count + c - 1) / c;
+        }
+        else {
+            c = Mathf.clamp(columns, 1, count);
+            r = (count + c - 1) / c;
+        }
+        return new int[]{c, r};
     }
 
     private boolean isHorizontalEdge() {

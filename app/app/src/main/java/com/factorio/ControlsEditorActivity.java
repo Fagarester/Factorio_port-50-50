@@ -141,6 +141,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         final View view = LayoutInflater.from(this).inflate(R.layout.control_element_settings, null);
 
         final Runnable[] radialRefresh = {null};
+        final Runnable[] drawerGridSync = {null};
         final Runnable updateLayout = () -> {
             ControlElement.Type type = element.getType();
             view.findViewById(R.id.LLShape).setVisibility(View.GONE);
@@ -171,6 +172,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                     break;
                 case SIDE_DRAWER:
                     ((NumberPicker)view.findViewById(R.id.NPDrawerCount)).setValue(element.getBindingCount());
+                    if (drawerGridSync[0] != null) drawerGridSync[0].run();
                     view.findViewById(R.id.LLDrawerOptions).setVisibility(View.VISIBLE);
                     break;
                 case RADIAL_MENU:
@@ -202,6 +204,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         });
         loadIndexSpinner(view.findViewById(R.id.SDrawerLayout), SideDrawer.Layout.names(), element.getDrawerLayout().ordinal(), (index) -> {
             element.setDrawerLayout(SideDrawer.Layout.values()[index]);
+            if (drawerGridSync[0] != null) drawerGridSync[0].run();
             profile.save();
             inputControlsView.invalidate();
         });
@@ -279,18 +282,33 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         npDrawerCount.setValue(element.getBindingCount());
         npDrawerCount.setOnValueChangeListener((numberPicker, value) -> {
             element.setBindingCount(value);
+            drawerGridSync[0].run();
             loadBindingSpinners(element, view);
             profile.save();
             inputControlsView.invalidate();
         });
 
         NumberPicker npDrawerColumns = view.findViewById(R.id.NPDrawerColumns);
-        npDrawerColumns.setValue(element.getGridColumns());
+        NumberPicker npDrawerRows = view.findViewById(R.id.NPDrawerRows);
+        drawerGridSync[0] = () -> {
+            view.findViewById(R.id.LLDrawerGrid).setVisibility(element.getDrawerLayout() == SideDrawer.Layout.GRID ? View.VISIBLE : View.GONE);
+            int[] grid = element.getGridSize();     // the value that was not chosen is calculated from the number of buttons
+            npDrawerColumns.setValue(grid[0]);
+            npDrawerRows.setValue(grid[1]);
+        };
         npDrawerColumns.setOnValueChangeListener((numberPicker, value) -> {
             element.setGridColumns(value);
+            drawerGridSync[0].run();
             profile.save();
             inputControlsView.invalidate();
         });
+        npDrawerRows.setOnValueChangeListener((numberPicker, value) -> {
+            element.setGridRows(value);
+            drawerGridSync[0].run();
+            profile.save();
+            inputControlsView.invalidate();
+        });
+        drawerGridSync[0].run();
 
         CheckBox cbDrawerAutoClose = view.findViewById(R.id.CBDrawerAutoClose);
         cbDrawerAutoClose.setChecked(element.isDrawerAutoClose());

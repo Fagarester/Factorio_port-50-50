@@ -135,6 +135,8 @@ public class ControlElement {
     private byte drawerSide = SideDrawer.SIDE_LEFT;
     private Layout drawerLayout = Layout.VERTICAL;
     private int gridColumns = 3;
+    private int gridRows = 3;
+    private boolean gridByRows = false;
     private SideDrawer drawer;
 
     public ControlElement(InputControlsView inputControlsView) {
@@ -310,8 +312,33 @@ public class ControlElement {
         return gridColumns;
     }
 
+    /** Sets the number of columns of the grid; the rows are then calculated from the number of buttons. */
     public void setGridColumns(int gridColumns) {
         this.gridColumns = Math.max(1, gridColumns);
+        this.gridByRows = false;
+    }
+
+    public int getGridRows() {
+        return gridRows;
+    }
+
+    /** Sets the number of rows of the grid; the columns are then calculated from the number of buttons. */
+    public void setGridRows(int gridRows) {
+        this.gridRows = Math.max(1, gridRows);
+        this.gridByRows = true;
+    }
+
+    public boolean isGridByRows() {
+        return gridByRows;
+    }
+
+    public void setGridByRows(boolean gridByRows) {
+        this.gridByRows = gridByRows;
+    }
+
+    /** Actual {columns, rows} of the drawer grid for the current number of buttons. */
+    public int[] getGridSize() {
+        return SideDrawer.computeGrid(getBindingCount(), gridColumns, gridRows, gridByRows);
     }
 
     public boolean isDrawerAutoClose() {
@@ -1130,6 +1157,8 @@ public class ControlElement {
                 elementJSONObject.put("drawerSide", drawerSide);
                 elementJSONObject.put("drawerLayout", drawerLayout.name());
                 elementJSONObject.put("gridColumns", gridColumns);
+                elementJSONObject.put("gridRows", gridRows);
+                elementJSONObject.put("gridByRows", gridByRows);
                 elementJSONObject.put("drawerAutoClose", isDrawerAutoClose());
             }
 

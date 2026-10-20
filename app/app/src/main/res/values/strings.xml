@@ -208,4 +208,5 @@
     <string name="radial_part">Part %1$d of %2$d</string>
     <string name="top">Top</string>
     <string name="bottom">Bottom</string>
+    <string name="rows">Rows</string>
 </resources>

@@ -151,17 +151,36 @@
                 app:minValue="1"
                 app:maxValue="12" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/columns" />
-
-            <com.factorio.widget.NumberPicker
-                android:id="@+id/NPDrawerColumns"
+            <LinearLayout
+                android:id="@+id/LLDrawerGrid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:minValue="1"
-                app:maxValue="6" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/columns" />
+
+                <com.factorio.widget.NumberPicker
+                    android:id="@+id/NPDrawerColumns"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:minValue="1"
+                    app:maxValue="12" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rows" />
+
+                <com.factorio.widget.NumberPicker
+                    android:id="@+id/NPDrawerRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:minValue="1"
+                    app:maxValue="12" />
+            </LinearLayout>
 
             <CheckBox
                 android:id="@+id/CBDrawerAutoClose"
