@@ -28,6 +28,8 @@ import com.factorio.inputcontrols.Binding;
 import com.factorio.inputcontrols.ControlElement;
 import com.factorio.inputcontrols.ControlsProfile;
 import com.factorio.inputcontrols.InputControlsManager;
+import com.factorio.inputcontrols.ScrollWheel;
+import com.factorio.inputcontrols.SideDrawer;
 import com.factorio.math.Mathf;
 import com.factorio.core.AppUtils;
 import com.factorio.core.FileUtils;
@@ -147,6 +149,9 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             view.findViewById(R.id.LLRangeOptions).setVisibility(View.GONE);
             view.findViewById(R.id.LLMIDIKeyOptions).setVisibility(View.GONE);
             view.findViewById(R.id.LLRadialMenuOptions).setVisibility(View.GONE);
+            view.findViewById(R.id.LLOrientation).setVisibility(View.GONE);
+            view.findViewById(R.id.LLScrollOptions).setVisibility(View.GONE);
+            view.findViewById(R.id.LLDrawerOptions).setVisibility(View.GONE);
 
             switch (type) {
                 case BUTTON:
@@ -157,6 +162,16 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                     break;
                 case RANGE_BUTTON:
                     view.findViewById(R.id.LLRangeOptions).setVisibility(View.VISIBLE);
+                    view.findViewById(R.id.LLOrientation).setVisibility(View.VISIBLE);
+                    break;
+                case SCROLL_WHEEL:
+                    ((RadioGroup)view.findViewById(R.id.RGOrientation)).check(element.getOrientation() == 1 ? R.id.RBVertical : R.id.RBHorizontal);
+                    view.findViewById(R.id.LLScrollOptions).setVisibility(View.VISIBLE);
+                    view.findViewById(R.id.LLOrientation).setVisibility(View.VISIBLE);
+                    break;
+                case SIDE_DRAWER:
+                    ((NumberPicker)view.findViewById(R.id.NPDrawerCount)).setValue(element.getBindingCount());
+                    view.findViewById(R.id.LLDrawerOptions).setVisibility(View.VISIBLE);
                     break;
                 case MIDI_KEY:
                     view.findViewById(R.id.LLMIDIKeyOptions).setVisibility(View.VISIBLE);
@@ -173,6 +188,58 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         loadTypeSpinner(element, view.findViewById(R.id.SType), updateLayout);
         loadShapeSpinner(element, view.findViewById(R.id.SShape));
         loadRangeSpinner(element, view.findViewById(R.id.SRange));
+
+        loadIndexSpinner(view.findViewById(R.id.SScrollStyle), ScrollWheel.Style.names(), element.getScrollStyle().ordinal(), (index) -> {
+            element.setScrollStyle(ScrollWheel.Style.values()[index]);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+        loadIndexSpinner(view.findViewById(R.id.SRadialStyle), ControlElement.RadialStyle.names(), element.getRadialStyle().ordinal(), (index) -> {
+            element.setRadialStyle(ControlElement.RadialStyle.values()[index]);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+        loadIndexSpinner(view.findViewById(R.id.SRadialTrigger), ControlElement.RadialTrigger.names(), element.getRadialTrigger().ordinal(), (index) -> {
+            element.setRadialTrigger(ControlElement.RadialTrigger.values()[index]);
+            profile.save();
+        });
+        loadIndexSpinner(view.findViewById(R.id.SDrawerLayout), SideDrawer.Layout.names(), element.getDrawerLayout().ordinal(), (index) -> {
+            element.setDrawerLayout(SideDrawer.Layout.values()[index]);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+
+        RadioGroup rgDrawerSide = view.findViewById(R.id.RGDrawerSide);
+        rgDrawerSide.check(element.getDrawerSide() == SideDrawer.SIDE_RIGHT ? R.id.RBDrawerRight : R.id.RBDrawerLeft);
+        rgDrawerSide.setOnCheckedChangeListener((group, checkedId) -> {
+            element.setDrawerSide(checkedId == R.id.RBDrawerRight ? SideDrawer.SIDE_RIGHT : SideDrawer.SIDE_LEFT);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+
+        NumberPicker npDrawerCount = view.findViewById(R.id.NPDrawerCount);
+        npDrawerCount.setValue(element.getBindingCount());
+        npDrawerCount.setOnValueChangeListener((numberPicker, value) -> {
+            element.setBindingCount(value);
+            loadBindingSpinners(element, view);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+
+        NumberPicker npDrawerColumns = view.findViewById(R.id.NPDrawerColumns);
+        npDrawerColumns.setValue(element.getGridColumns());
+        npDrawerColumns.setOnValueChangeListener((numberPicker, value) -> {
+            element.setGridColumns(value);
+            profile.save();
+            inputControlsView.invalidate();
+        });
+
+        CheckBox cbDrawerAutoClose = view.findViewById(R.id.CBDrawerAutoClose);
+        cbDrawerAutoClose.setChecked(element.isDrawerAutoClose());
+        cbDrawerAutoClose.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            element.setDrawerAutoClose(isChecked);
+            profile.save();
+        });
 
         RadioGroup rgOrientation = view.findViewById(R.id.RGOrientation);
         rgOrientation.check(element.getOrientation() == 1 ? R.id.RBVertical : R.id.RBHorizontal);
@@ -312,9 +379,27 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             loadBindingSpinner(element, container, 2, R.string.binding_down);
             loadBindingSpinner(element, container, 3, R.string.binding_left);
         }
-        else if (type == ControlElement.Type.RADIAL_MENU) {
+        else if (type == ControlElement.Type.RADIAL_MENU || type == ControlElement.Type.SIDE_DRAWER) {
             for (byte i = 0; i < element.getBindingCount(); i++) loadBindingSpinner(element, container, i, 0);
         }
+        else if (type == ControlElement.Type.SCROLL_WHEEL) {
+            loadBindingSpinner(element, container, 0, R.string.binding_up);
+            loadBindingSpinner(element, container, 1, R.string.binding_down);
+        }
+    }
+
+    private void loadIndexSpinner(Spinner spinner, String[] names, int selected, final java.util.function.IntConsumer onSelected) {
+        spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, names));
+        spinner.setSelection(selected, false);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                onSelected.accept(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
     }
 
     private void loadBindingSpinner(final ControlElement element, final LinearLayout container, final int index, int titleResId) {

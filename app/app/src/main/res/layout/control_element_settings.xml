@@ -66,20 +66,10 @@
             app:maxValue="100" />
 
         <LinearLayout
-            android:id="@+id/LLRangeOptions"
+            android:id="@+id/LLOrientation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/range" />
-
-            <Spinner
-                style="@style/ComboBox"
-                android:id="@+id/SRange"
-                android:layout_width="match_parent" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -104,6 +94,111 @@
                     android:layout_height="wrap_content"
                     android:text="@string/vertical" />
             </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLScrollOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/scroll_style" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SScrollStyle"
+                android:layout_width="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLDrawerOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/drawer_side" />
+
+            <RadioGroup
+                android:id="@+id/RGDrawerSide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/RBDrawerLeft"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/left" />
+
+                <RadioButton
+                    android:id="@+id/RBDrawerRight"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/right" />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/drawer_layout" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SDrawerLayout"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bindings" />
+
+            <com.factorio.widget.NumberPicker
+                android:id="@+id/NPDrawerCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:minValue="1"
+                app:maxValue="12" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/columns" />
+
+            <com.factorio.widget.NumberPicker
+                android:id="@+id/NPDrawerColumns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:minValue="1"
+                app:maxValue="6" />
+
+            <CheckBox
+                android:id="@+id/CBDrawerAutoClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/drawer_auto_close" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLRangeOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/range" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRange"
+                android:layout_width="match_parent" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -151,7 +246,27 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:minValue="3"
-                app:maxValue="6" />
+                app:maxValue="8" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_style" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialStyle"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_trigger" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialTrigger"
+                android:layout_width="match_parent" />
         </LinearLayout>
 
         <LinearLayout

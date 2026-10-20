@@ -240,10 +240,20 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
                     if (elementJSONObject.has("orientation")) element.setOrientation((byte)elementJSONObject.getInt("orientation"));
                     if (elementJSONObject.has("mouseMoveMode")) element.setMouseMoveMode(true);
                     if (elementJSONObject.has("opacity")) element.setOpacity((float)elementJSONObject.getDouble("opacity"));
+                    if (elementJSONObject.has("scrollStyle")) element.setScrollStyle(ScrollWheel.Style.valueOf(elementJSONObject.getString("scrollStyle")));
+                    if (elementJSONObject.has("radialStyle")) element.setRadialStyle(ControlElement.RadialStyle.valueOf(elementJSONObject.getString("radialStyle")));
+                    if (elementJSONObject.has("radialTrigger")) element.setRadialTrigger(ControlElement.RadialTrigger.valueOf(elementJSONObject.getString("radialTrigger")));
+                    if (elementJSONObject.has("drawerSide")) element.setDrawerSide((byte)elementJSONObject.getInt("drawerSide"));
+                    if (elementJSONObject.has("drawerLayout")) element.setDrawerLayout(SideDrawer.Layout.valueOf(elementJSONObject.getString("drawerLayout")));
+                    if (elementJSONObject.has("gridColumns")) element.setGridColumns(elementJSONObject.getInt("gridColumns"));
+                    if (elementJSONObject.has("drawerAutoClose")) element.setDrawerAutoClose(elementJSONObject.getBoolean("drawerAutoClose"));
                 }
 
                 boolean hasGamepadBinding = true;
                 JSONArray bindingsJSONArray = elementJSONObject.getJSONArray("bindings");
+                if (element != null && (element.getType() == ControlElement.Type.SIDE_DRAWER || element.getType() == ControlElement.Type.SCROLL_WHEEL)) {
+                    element.setBindingCount(Math.max(1, bindingsJSONArray.length()));
+                }
                 for (int j = 0; j < bindingsJSONArray.length(); j++) {
                     Binding binding = Binding.fromString(bindingsJSONArray.getString(j));
                     if (element != null) element.setBindingAt(j, Binding.fromString(bindingsJSONArray.getString(j)));

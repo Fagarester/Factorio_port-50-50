@@ -17,6 +17,8 @@ import com.factorio.core.CubicBezierInterpolator;
 import com.factorio.math.Mathf;
 import com.factorio.widget.InputControlsView;
 import com.factorio.widget.TouchpadView;
+import com.factorio.inputcontrols.ScrollWheel.Style;
+import com.factorio.inputcontrols.SideDrawer.Layout;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,8 +40,10 @@ public class ControlElement {
     public static final int FLAG_TOGGLE_SWITCH = 1<<3;
     public static final int FLAG_BOUNDING_BOX_NEEDS_UPDATE = 1<<4;
     public static final int FLAG_MOUSE_MOVE_MODE = 1<<5;
+    public static final int FLAG_DRAWER_AUTOCLOSE = 1<<6;
+    public static final long RADIAL_HYBRID_TAP_MILLISECONDS = 250;
     public enum Type {
-        BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, MIDI_KEY, RADIAL_MENU;
+        BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, MIDI_KEY, RADIAL_MENU, SCROLL_WHEEL, SIDE_DRAWER;
 
         public static String[] names() {
             Type[] types = values();
@@ -73,6 +77,26 @@ public class ControlElement {
             return names;
         }
     }
+    public enum RadialStyle {
+        PIE, BUBBLES;
+
+        public static String[] names() {
+            RadialStyle[] values = values();
+            String[] names = new String[values.length];
+            for (int i = 0; i < values.length; i++) names[i] = values[i].name();
+            return names;
+        }
+    }
+    public enum RadialTrigger {
+        TAP, HOLD, HYBRID;
+
+        public static String[] names() {
+            RadialTrigger[] values = values();
+            String[] names = new String[values.length];
+            for (int i = 0; i < values.length; i++) names[i] = values[i].name();
+            return names;
+        }
+    }
     private final InputControlsView inputControlsView;
     private Type type = Type.BUTTON;
     private Shape shape = Shape.CIRCLE;
@@ -94,6 +118,18 @@ public class ControlElement {
     private CubicBezierInterpolator interpolator;
     private Object touchTime;
     private Path[] paths;
+    private Style scrollStyle = Style.STRIP;
+    private ScrollWheel scrollWheel;
+    private RadialStyle radialStyle = RadialStyle.PIE;
+    private RadialTrigger radialTrigger = RadialTrigger.TAP;
+    private int radialHover = -1;
+    private long radialDownTime;
+    private boolean radialOpenedOnTouch;
+    private boolean radialClosedOnTouch;
+    private byte drawerSide = SideDrawer.SIDE_LEFT;
+    private Layout drawerLayout = Layout.VERTICAL;
+    private int gridColumns = 3;
+    private SideDrawer drawer;
 
     public ControlElement(InputControlsView inputControlsView) {
         this.inputControlsView = inputControlsView;
@@ -103,6 +139,10 @@ public class ControlElement {
         bindings = new Binding[4];
         setBinding(Binding.NONE);
         scroller = null;
+        if (scrollWheel != null) scrollWheel.stopFling();
+        scrollWheel = null;
+        if (drawer != null) drawer.reset();
+        drawer = null;
         text = "";
 
         switch (type) {
@@ -128,6 +168,18 @@ public class ControlElement {
                 break;
             case RADIAL_MENU:
                 setBindingCount(3);
+                break;
+            case SCROLL_WHEEL:
+                bindings = new Binding[]{Binding.MOUSE_SCROLL_UP, Binding.MOUSE_SCROLL_DOWN};
+                states = new boolean[2];
+                orientation = 1;
+                scrollWheel = new ScrollWheel(inputControlsView, this);
+                break;
+            case SIDE_DRAWER:
+                bindings = new Binding[4];
+                Arrays.fill(bindings, Binding.NONE);
+                states = new boolean[4];
+                drawer = new SideDrawer(inputControlsView, this);
                 break;
         }
 
@@ -155,8 +207,10 @@ public class ControlElement {
     }
 
     public void setBindingCount(int bindingCount) {
-        bindings = new Binding[bindingCount];
-        setBinding(Binding.NONE);
+        Binding[] newBindings = new Binding[bindingCount];
+        Arrays.fill(newBindings, Binding.NONE);
+        System.arraycopy(bindings, 0, newBindings, 0, Math.min(bindings.length, bindingCount));
+        bindings = newBindings;
         states = new boolean[bindingCount];
         propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
     }
@@ -201,6 +255,64 @@ public class ControlElement {
 
     public void setMouseMoveMode(boolean mouseMoveMode) {
         propertyFlags.set(FLAG_MOUSE_MOVE_MODE, mouseMoveMode);
+    }
+
+    public Style getScrollStyle() {
+        return scrollStyle;
+    }
+
+    public void setScrollStyle(Style scrollStyle) {
+        this.scrollStyle = scrollStyle;
+        propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
+    }
+
+    public RadialStyle getRadialStyle() {
+        return radialStyle;
+    }
+
+    public void setRadialStyle(RadialStyle radialStyle) {
+        this.radialStyle = radialStyle;
+        propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
+    }
+
+    public RadialTrigger getRadialTrigger() {
+        return radialTrigger;
+    }
+
+    public void setRadialTrigger(RadialTrigger radialTrigger) {
+        this.radialTrigger = radialTrigger;
+    }
+
+    public byte getDrawerSide() {
+        return drawerSide;
+    }
+
+    public void setDrawerSide(byte drawerSide) {
+        this.drawerSide = drawerSide;
+    }
+
+    public Layout getDrawerLayout() {
+        return drawerLayout;
+    }
+
+    public void setDrawerLayout(Layout drawerLayout) {
+        this.drawerLayout = drawerLayout;
+    }
+
+    public int getGridColumns() {
+        return gridColumns;
+    }
+
+    public void setGridColumns(int gridColumns) {
+        this.gridColumns = Math.max(1, gridColumns);
+    }
+
+    public boolean isDrawerAutoClose() {
+        return propertyFlags.isSet(FLAG_DRAWER_AUTOCLOSE);
+    }
+
+    public void setDrawerAutoClose(boolean autoClose) {
+        propertyFlags.set(FLAG_DRAWER_AUTOCLOSE, autoClose);
     }
 
     public Binding getBindingAt(int index) {
@@ -283,6 +395,7 @@ public class ControlElement {
     }
 
     public Rect getBoundingBox() {
+        if (type == Type.SIDE_DRAWER && drawer != null) return drawer.getBoundingBox();
         if (propertyFlags.isSet(FLAG_BOUNDING_BOX_NEEDS_UPDATE)) computeBoundingBox();
         return boundingBox;
     }
@@ -337,6 +450,16 @@ public class ControlElement {
                 halfWidth = snappingSize * 3;
                 halfHeight = snappingSize * 3;
                 break;
+            case SCROLL_WHEEL: {
+                int[] extents = ScrollWheel.getHalfExtents(scrollStyle, orientation == 1, snappingSize);
+                halfWidth = extents[0];
+                halfHeight = extents[1];
+                break;
+            }
+            case SIDE_DRAWER:
+                halfWidth = snappingSize * 3;
+                halfHeight = snappingSize * 3;
+                break;
         }
 
         halfWidth *= scale;
@@ -347,7 +470,7 @@ public class ControlElement {
         return boundingBox;
     }
 
-    private String getBindingTextAt(int index) {
+    String getBindingTextAt(int index) {
         Binding binding = getBindingAt(index);
         String text = binding.toString().replace("NUMPAD ", "NP").replace("BUTTON ", "");
         if (text.length() > 7) {
@@ -622,6 +745,14 @@ public class ControlElement {
                 }
                 break;
             }
+            case SCROLL_WHEEL: {
+                if (scrollWheel != null) scrollWheel.draw(canvas, paint, boundingBox, lightColor, propertyFlags.isSet(FLAG_PRESSED));
+                break;
+            }
+            case SIDE_DRAWER: {
+                if (drawer != null) drawer.draw(canvas);
+                break;
+            }
             case STICK: {
                 int cx = boundingBox.centerX();
                 int cy = boundingBox.centerY();
@@ -657,7 +788,7 @@ public class ControlElement {
                 float cx = boundingBox.centerX();
                 float cy = boundingBox.centerY();
                 float innerRadius = boundingBox.width() * 0.5f + snappingSize * 0.5f;
-                float outerRadius = boundingBox.width() + snappingSize * scale;
+                float outerRadius = getRadialOuterRadius();
                 float radius = boundingBox.width() * 0.5f;
                 int oldColor = paint.getColor();
 
@@ -694,12 +825,17 @@ public class ControlElement {
                     paths = new Path[]{path0, path1};
                 }
 
-                if (propertyFlags.isSet(FLAG_VISIBLE)) {
+                if (propertyFlags.isSet(FLAG_VISIBLE) && radialStyle == RadialStyle.BUBBLES) {
+                    drawRadialBubbles(canvas, paint, cx, cy, innerRadius, outerRadius);
+                    drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, false);
+                }
+                else if (propertyFlags.isSet(FLAG_VISIBLE)) {
                     float minTextSize = snappingSize * 2 * scale;
                     int darkColor = getDarkColor();
                     paint.setStrokeCap(Paint.Cap.SQUARE);
                     canvas.drawPath(paths[0], paint);
                     paint.setStrokeCap(Paint.Cap.BUTT);
+                    drawRadialHover(canvas, paint, cx, cy, innerRadius, outerRadius, oldColor);
 
                     paint.setStyle(Paint.Style.FILL);
                     paint.setTextAlign(Paint.Align.CENTER);
@@ -746,6 +882,82 @@ public class ControlElement {
         }
     }
 
+    public float getRadialOuterRadius() {
+        Rect box = getBoundingBox();
+        int snappingSize = inputControlsView.getSnappingSize();
+        return radialStyle == RadialStyle.BUBBLES ? box.width() * 1.5f : box.width() + snappingSize * scale;
+    }
+
+    private float getRadialInnerRadius() {
+        return getBoundingBox().width() * 0.5f + inputControlsView.getSnappingSize() * 0.5f;
+    }
+
+    private float getRadialSectorMiddleAngle(int index) {
+        float step = (float)(Math.PI * 2 / bindings.length);
+        return (float)(Math.PI * 1.5f + (index + 0.5f) * step);
+    }
+
+    /** Returns the sector under the point or -1 (center, outside, ...). Sector 0 starts at 12 o'clock, clockwise. */
+    private int getRadialSectorAt(float x, float y) {
+        Rect box = getBoundingBox();
+        float dx = x - box.centerX();
+        float dy = y - box.centerY();
+        float distance = (float)Math.hypot(dx, dy);
+        if (distance <= getRadialInnerRadius() || distance > getRadialOuterRadius() + inputControlsView.getSnappingSize()) return -1;
+
+        double angle = Math.atan2(dy, dx) - Math.PI * 1.5f;
+        angle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        int index = (int)(angle / (Math.PI * 2 / bindings.length));
+        return Mathf.clamp(index, 0, bindings.length - 1);
+    }
+
+    private void drawRadialHover(Canvas canvas, Paint paint, float cx, float cy, float innerRadius, float outerRadius, int oldColor) {
+        if (radialHover < 0 || radialHover >= bindings.length) return;
+        float sweep = 360.0f / bindings.length;
+        float start = 270.0f + radialHover * sweep;
+        float margin = 1.5f;
+        Path path = new Path();
+        path.arcTo(new RectF(cx - outerRadius, cy - outerRadius, cx + outerRadius, cy + outerRadius), start + margin, sweep - margin * 2);
+        path.arcTo(new RectF(cx - innerRadius, cy - innerRadius, cx + innerRadius, cy + innerRadius), start + sweep - margin, -(sweep - margin * 2));
+        path.close();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(ColorUtils.setAlphaComponent(oldColor, 90));
+        canvas.drawPath(path, paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(oldColor);
+    }
+
+    private void drawRadialBubbles(Canvas canvas, Paint paint, float cx, float cy, float innerRadius, float outerRadius) {
+        int snappingSize = inputControlsView.getSnappingSize();
+        int lightColor = getLightColor();
+        int darkColor = getDarkColor();
+        int count = bindings.length;
+        float ringRadius = (innerRadius + outerRadius) * 0.5f;
+        float bubbleRadius = Math.min((outerRadius - innerRadius) * 0.45f, (float)(ringRadius * Math.sin(Math.PI / count) * 0.88f));
+        float strokeWidth = snappingSize * 0.25f;
+
+        paint.setTextAlign(Paint.Align.CENTER);
+        for (int i = 0; i < count; i++) {
+            float angle = getRadialSectorMiddleAngle(i);
+            float bx = (float)(cx + Math.cos(angle) * ringRadius);
+            float by = (float)(cy + Math.sin(angle) * ringRadius);
+            boolean hovered = i == radialHover;
+
+            paint.setStrokeWidth(strokeWidth);
+            paint.setStyle(hovered ? Paint.Style.FILL : Paint.Style.STROKE);
+            paint.setColor(lightColor);
+            canvas.drawCircle(bx, by, bubbleRadius, paint);
+
+            String text = getBindingTextAt(i);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, bubbleRadius * 1.5f), snappingSize * 2 * scale));
+            paint.setColor(hovered ? darkColor : lightColor);
+            canvas.drawText(text, bx, by - ((paint.descent() + paint.ascent()) * 0.5f), paint);
+        }
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(lightColor);
+    }
+
     private void drawIcon(Canvas canvas, float cx, float cy, float width, float height, int iconId, boolean automargin) {
         Paint paint = inputControlsView.getPaint();
         Bitmap icon = inputControlsView.getIcon((byte)iconId);
@@ -784,6 +996,21 @@ public class ControlElement {
             }
             if (propertyFlags.isSet(FLAG_MOUSE_MOVE_MODE)) elementJSONObject.put("mouseMoveMode", true);
 
+            if (type == Type.SCROLL_WHEEL) {
+                elementJSONObject.put("scrollStyle", scrollStyle.name());
+                elementJSONObject.put("orientation", orientation);
+            }
+            else if (type == Type.RADIAL_MENU) {
+                elementJSONObject.put("radialStyle", radialStyle.name());
+                elementJSONObject.put("radialTrigger", radialTrigger.name());
+            }
+            else if (type == Type.SIDE_DRAWER) {
+                elementJSONObject.put("drawerSide", drawerSide);
+                elementJSONObject.put("drawerLayout", drawerLayout.name());
+                elementJSONObject.put("gridColumns", gridColumns);
+                elementJSONObject.put("drawerAutoClose", isDrawerAutoClose());
+            }
+
             return elementJSONObject;
         }
         catch (JSONException e) {
@@ -792,8 +1019,9 @@ public class ControlElement {
     }
 
     public boolean containsPoint(float x, float y) {
+        if (type == Type.SIDE_DRAWER && drawer != null) return drawer.containsPoint(x, y);
         if (type == Type.RADIAL_MENU && propertyFlags.isSet(FLAG_VISIBLE)) {
-            float outerRadius = boundingBox.width() + inputControlsView.getSnappingSize() * scale;
+            float outerRadius = getRadialOuterRadius() + (radialStyle == RadialStyle.BUBBLES ? inputControlsView.getSnappingSize() : 0);
             return Mathf.distance(boundingBox.centerX(), boundingBox.centerY(), x, y) < outerRadius;
         }
         else return getBoundingBox().contains((int)(x + 0.5f), (int)(y + 0.5f));
@@ -805,6 +1033,7 @@ public class ControlElement {
     }
 
     public boolean handleTouchDown(int pointerId, float x, float y) {
+        if (type == Type.SIDE_DRAWER) return drawer != null && drawer.handleTouchDown(pointerId, x, y);
         if (currentPointerId == -1 && containsPoint(x, y)) {
             currentPointerId = pointerId;
             if (type == Type.BUTTON) {
@@ -825,13 +1054,31 @@ public class ControlElement {
             else if (type == Type.MIDI_KEY) {
                 return true; // MIDI is not supported anymore: the element is inert (type kept for old profiles)
             }
+            else if (type == Type.SCROLL_WHEEL) {
+                scrollWheel.handleTouchDown(x, y);
+                propertyFlags.set(FLAG_PRESSED);
+                inputControlsView.invalidate();
+                return true;
+            }
             else if (type == Type.RADIAL_MENU) {
-                if (propertyFlags.isSet(FLAG_VISIBLE)) {
-                    if (Mathf.distance(boundingBox.centerX(), boundingBox.centerY(), x, y) < (boundingBox.width() * 0.5f)) {
+                boolean wasOpen = propertyFlags.isSet(FLAG_VISIBLE);
+                boolean inCenter = Mathf.distance(boundingBox.centerX(), boundingBox.centerY(), x, y) < (boundingBox.width() * 0.5f);
+                radialDownTime = System.currentTimeMillis();
+                radialHover = -1;
+                radialOpenedOnTouch = false;
+                radialClosedOnTouch = false;
+
+                if (wasOpen) {
+                    if (inCenter) {
                         propertyFlags.unset(FLAG_VISIBLE);
+                        radialClosedOnTouch = true;
                     }
+                    else if (radialTrigger != RadialTrigger.TAP) radialHover = getRadialSectorAt(x, y);
                 }
-                else propertyFlags.set(FLAG_VISIBLE);
+                else {
+                    propertyFlags.set(FLAG_VISIBLE);
+                    radialOpenedOnTouch = true;
+                }
                 inputControlsView.invalidate();
                 return true;
             }
@@ -847,6 +1094,7 @@ public class ControlElement {
     }
 
     public boolean handleTouchMove(int pointerId, float x, float y) {
+        if (type == Type.SIDE_DRAWER) return drawer != null && drawer.handleTouchMove(pointerId, x, y);
         if (pointerId == currentPointerId && (type == Type.D_PAD || type == Type.STICK || type == Type.TRACKPAD)) {
             float deltaX, deltaY;
             Rect boundingBox = getBoundingBox();
@@ -947,6 +1195,20 @@ public class ControlElement {
 
             return true;
         }
+        else if (pointerId == currentPointerId && type == Type.SCROLL_WHEEL) {
+            scrollWheel.handleTouchMove(x, y);
+            return true;
+        }
+        else if (pointerId == currentPointerId && type == Type.RADIAL_MENU && radialTrigger != RadialTrigger.TAP) {
+            if (propertyFlags.isSet(FLAG_VISIBLE)) {
+                int hover = getRadialSectorAt(x, y);
+                if (hover != radialHover) {
+                    radialHover = hover;
+                    inputControlsView.invalidate();
+                }
+            }
+            return true;
+        }
         else if (pointerId == currentPointerId && type == Type.RANGE_BUTTON) {
             scroller.handleTouchMove(x, y);
             if (scroller.isScrolling()) {
@@ -963,6 +1225,7 @@ public class ControlElement {
     }
 
     public boolean handleTouchUp(int pointerId, float x, float y) {
+        if (type == Type.SIDE_DRAWER) return drawer != null && drawer.handleTouchUp(pointerId, x, y);
         if (pointerId == currentPointerId) {
             if (type == Type.BUTTON) {
                 boolean selected = propertyFlags.isSet(FLAG_SELECTED);
@@ -985,8 +1248,13 @@ public class ControlElement {
             else if (type == Type.MIDI_KEY) {
                 // inert, see handleTouchDown
             }
+            else if (type == Type.SCROLL_WHEEL) {
+                scrollWheel.handleTouchUp();
+                propertyFlags.unset(FLAG_PRESSED);
+                inputControlsView.invalidate();
+            }
             else if (type == Type.RADIAL_MENU) {
-                if (propertyFlags.isSet(FLAG_VISIBLE)) handleRadialMenuClick(x, y);
+                handleRadialMenuUp(x, y);
                 inputControlsView.invalidate();
             }
             else if (type == Type.RANGE_BUTTON || type == Type.D_PAD || type == Type.STICK || type == Type.TRACKPAD) {
@@ -1012,48 +1280,42 @@ public class ControlElement {
         return false;
     }
 
-    private void handleRadialMenuClick(float x, float y) {
-        int snappingSize = inputControlsView.getSnappingSize();
-        float cx = boundingBox.centerX();
-        float cy = boundingBox.centerY();
-        float innerRadius = boundingBox.width() * 0.5f + snappingSize * 0.5f;
-        float outerRadius = boundingBox.width() + snappingSize * scale;
-        float startAngle = 0;
-        Binding clickedBinding = Binding.NONE;
+    private void fireRadialBinding(int index) {
+        if (index < 0 || index >= bindings.length) return;
+        final Binding binding = bindings[index];
+        if (binding == Binding.NONE) return;
+        propertyFlags.unset(FLAG_VISIBLE);
+        inputControlsView.handleInputEvent(binding, true);
+        inputControlsView.postDelayed(() -> inputControlsView.handleInputEvent(binding, false), 30);
+    }
 
-        for (int i = 0, j = 0; i <= bindings.length; i++) {
-            float t = (float)i / bindings.length;
-            float endAngle = (float)(t * Math.PI * 2 + Math.PI * 1.5f);
+    private void handleRadialMenuUp(float x, float y) {
+        if (!propertyFlags.isSet(FLAG_VISIBLE)) {
+            radialHover = -1;
+            return;
+        }
 
-            if (i > 0) {
-                float middleAngle = (startAngle + endAngle) * 0.5f;
-                float touchAreaCenter = (innerRadius + outerRadius) * 0.5f;
-                float touchAreaX = (short)(cx + Math.cos(middleAngle) * touchAreaCenter);
-                float touchAreaY = (short)(cy + Math.sin(middleAngle) * touchAreaCenter);
+        int sector = getRadialSectorAt(x, y);
+        boolean hasBinding = sector >= 0 && bindings[sector] != Binding.NONE;
+        radialHover = -1;
 
-                float lineAx = (float)(cx + Math.cos(startAngle) * touchAreaCenter);
-                float lineAy = (float)(cy + Math.sin(startAngle) * touchAreaCenter);
-                float lineBx = (float)(cx + Math.cos(endAngle) * touchAreaCenter);
-                float lineBy = (float)(cy + Math.sin(endAngle) * touchAreaCenter);
+        if (radialTrigger == RadialTrigger.TAP) {
+            if (hasBinding) fireRadialBinding(sector);
+            return;
+        }
 
-                if (Mathf.distance(touchAreaX, touchAreaY, x, y) <= Mathf.distance(lineAx, lineAy, lineBx, lineBy) * 0.5f &&
-                    Mathf.distance(cx, cy, x, y) > innerRadius &&
-                    Mathf.distance(cx, cy, x, y) <= outerRadius) {
-                    clickedBinding = bindings[j];
-                    break;
-                }
-                j++;
+        if (radialClosedOnTouch) return;
+        if (hasBinding) {
+            fireRadialBinding(sector);
+        }
+        else if (radialTrigger == RadialTrigger.HYBRID) {
+            boolean quickTap = System.currentTimeMillis() - radialDownTime < RADIAL_HYBRID_TAP_MILLISECONDS;
+            // a quick tap (or a tap on the already opened menu) leaves the menu open, a long hold cancels it
+            if (!radialOpenedOnTouch || !quickTap) {
+                if (radialOpenedOnTouch) propertyFlags.unset(FLAG_VISIBLE);
             }
-
-            startAngle = endAngle;
         }
-
-        if (clickedBinding != Binding.NONE) {
-            propertyFlags.unset(FLAG_VISIBLE);
-            final Binding finalBinding = clickedBinding;
-            inputControlsView.handleInputEvent(finalBinding, true);
-            inputControlsView.postDelayed(() -> inputControlsView.handleInputEvent(finalBinding, false), 30);
-        }
+        else propertyFlags.unset(FLAG_VISIBLE);
     }
 
     public int getLightColor() {

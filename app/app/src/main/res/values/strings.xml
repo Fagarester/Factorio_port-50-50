@@ -193,4 +193,12 @@
     <string name="prop_access">Access</string>
     <string name="prop_calculating">calculating…</string>
     <string name="prop_bytes">%1$s (%2$s bytes)</string>
+    <string name="scroll_style">Scroll style</string>
+    <string name="radial_style">Radial style</string>
+    <string name="radial_trigger">Open by (TAP = tap, HOLD = hold and slide, HYBRID = both)</string>
+    <string name="drawer_side">Screen edge</string>
+    <string name="drawer_layout">Buttons layout</string>
+    <string name="drawer_auto_close">Close after a button is pressed</string>
+    <string name="left">Left</string>
+    <string name="right">Right</string>
 </resources>

@@ -185,4 +185,12 @@
     <string name="prop_access">Доступ</string>
     <string name="prop_calculating">подсчёт…</string>
     <string name="prop_bytes">%1$s (%2$s байт)</string>
+    <string name="scroll_style">Вид прокрутки</string>
+    <string name="radial_style">Вид радиального меню</string>
+    <string name="radial_trigger">Вызов (TAP — тап, HOLD — зажать и вести, HYBRID — оба)</string>
+    <string name="drawer_side">Край экрана</string>
+    <string name="drawer_layout">Расположение кнопок</string>
+    <string name="drawer_auto_close">Закрывать после нажатия кнопки</string>
+    <string name="left">Слева</string>
+    <string name="right">Справа</string>
 </resources>

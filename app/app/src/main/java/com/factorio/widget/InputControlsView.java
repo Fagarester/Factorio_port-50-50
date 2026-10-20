@@ -110,7 +110,10 @@ public class InputControlsView extends View {
             if (!profile.isElementsLoaded()) profile.loadElements(this);
             List<ControlElement> elements = profile.getElements();
             if (touchpadView != null && elements.isEmpty()) touchpadView.setPointerButtonRightEnabled(true);
-            if (showTouchscreenControls) for (ControlElement element : elements) element.draw(canvas);
+            if (showTouchscreenControls) {
+                for (ControlElement element : elements) if (element.getType() != ControlElement.Type.SIDE_DRAWER) element.draw(canvas);
+                for (ControlElement element : elements) if (element.getType() == ControlElement.Type.SIDE_DRAWER) element.draw(canvas);
+            }
         }
 
         super.onDraw(canvas);
@@ -379,7 +382,13 @@ public class InputControlsView extends View {
                     float y = event.getY(actionIndex);
 
                     touchpadView.setPointerButtonLeftEnabled(true);
+                    // side drawers are drawn on top, so they get the touch first
                     for (ControlElement element : profile.getElements()) {
+                        if (element.getType() == ControlElement.Type.SIDE_DRAWER && element.handleTouchDown(pointerId, x, y)) handled = true;
+                    }
+                    if (handled) break;
+                    for (ControlElement element : profile.getElements()) {
+                        if (element.getType() == ControlElement.Type.SIDE_DRAWER) continue;
                         if (element.handleTouchDown(pointerId, x, y)) handled = true;
                         if (element.getBindingAt(0) == Binding.MOUSE_LEFT_BUTTON) {
                             touchpadView.setPointerButtonLeftEnabled(false);
@@ -392,10 +401,11 @@ public class InputControlsView extends View {
                     for (byte i = 0, count = (byte)event.getPointerCount(); i < count; i++) {
                         float x = event.getX(i);
                         float y = event.getY(i);
+                        int movePointerId = event.getPointerId(i);
 
                         handled = false;
                         for (ControlElement element : profile.getElements()) {
-                            if (element.handleTouchMove(i, x, y)) handled = true;
+                            if (element.handleTouchMove(movePointerId, x, y)) handled = true;
                         }
                         if (!handled) touchpadView.onTouchEvent(event);
                     }
