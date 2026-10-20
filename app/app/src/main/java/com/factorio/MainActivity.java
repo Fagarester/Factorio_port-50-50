@@ -144,6 +144,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
+        // file manager: the back gesture goes up one folder, it leaves only from a root ("Game" / "Download")
+        if (currentFragment instanceof FileManagerFragment && ((FileManagerFragment)currentFragment).handleBack()) return;
+
         if (currentFragment instanceof SettingsFragment || editInputControls) {
             finish();
             return;

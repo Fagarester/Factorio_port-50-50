@@ -178,4 +178,19 @@
     <string name="files_name_exists">A file with this name already exists</string>
     <string name="files_paste_into_itself">Cannot paste a folder into itself</string>
     <string name="files_operation_failed">The operation failed</string>
+    <string name="files_save">Save</string>
+    <string name="files_properties">Properties</string>
+    <string name="files_discard_confirm">Discard the changes?</string>
+    <string name="prop_name">Name</string>
+    <string name="prop_type">Type</string>
+    <string name="prop_type_folder">Folder</string>
+    <string name="prop_type_file">File</string>
+    <string name="prop_path">Path</string>
+    <string name="prop_size">Size</string>
+    <string name="prop_contains">Contains</string>
+    <string name="prop_contains_value">%1$d files, %2$d folders</string>
+    <string name="prop_modified">Modified</string>
+    <string name="prop_access">Access</string>
+    <string name="prop_calculating">calculating…</string>
+    <string name="prop_bytes">%1$s (%2$s bytes)</string>
 </resources>

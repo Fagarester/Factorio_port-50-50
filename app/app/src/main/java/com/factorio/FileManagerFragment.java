@@ -1,14 +1,17 @@
 package com.factorio;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.Formatter;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -242,6 +245,7 @@ public class FileManagerFragment extends Fragment {
         popup.getMenu().add(0, 3, 2, R.string.files_move);
         popup.getMenu().add(0, 4, 3, R.string.files_rename);
         popup.getMenu().add(0, 5, 4, R.string.files_delete);
+        popup.getMenu().add(0, 6, 5, R.string.files_properties);
         popup.setOnMenuItemClickListener((item) -> {
             switch (item.getItemId()) {
                 case 1: editFile(entry.file); break;
@@ -249,6 +253,7 @@ public class FileManagerFragment extends Fragment {
                 case 3: setClipboard(entry.file, true); break;
                 case 4: rename(entry.file); break;
                 case 5: delete(entry.file); break;
+                case 6: showProperties(entry.file); break;
             }
             return true;
         });
@@ -267,16 +272,122 @@ public class FileManagerFragment extends Fragment {
             AppUtils.showToast(getContext(), R.string.files_too_big_to_edit);
             return;
         }
-        final ContentDialog dialog = new ContentDialog(getContext(), R.layout.file_editor_dialog);
-        dialog.setTitle(file.getName());
+        final Context context = getContext();
+        final Dialog dialog = new Dialog(context, R.style.ContentDialog);
+        dialog.setContentView(R.layout.file_editor_screen);
+        dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        ((TextView)dialog.findViewById(R.id.TVEditorTitle)).setText(file.getName());
         final EditText editor = dialog.findViewById(R.id.ETFileContent);
-        editor.setText(FileUtils.readString(file));
-        dialog.setOnConfirmCallback(() -> {
+        final String original = FileUtils.readString(file);
+        editor.setText(original);
+
+        dialog.findViewById(R.id.BTEditorSave).setOnClickListener((v) -> {
             boolean saved = FileUtils.writeString(file, editor.getText().toString());
-            AppUtils.showToast(getContext(), saved ? R.string.files_saved : R.string.files_save_failed);
-            refresh();
+            AppUtils.showToast(context, saved ? R.string.files_saved : R.string.files_save_failed);
+            if (saved) {
+                dialog.dismiss();
+                refresh();
+            }
+        });
+        final Runnable close = () -> {
+            if (original != null && original.equals(editor.getText().toString())) {
+                dialog.dismiss();
+                return;
+            }
+            ContentDialog confirm = new ContentDialog(context);
+            confirm.setCancelable(false);
+            confirm.setMessage(R.string.files_discard_confirm);
+            confirm.setOnConfirmCallback(dialog::dismiss);
+            confirm.show();
+        };
+        dialog.findViewById(R.id.BTEditorCancel).setOnClickListener((v) -> close.run());
+        dialog.setOnKeyListener((d, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                if (event.getAction() == KeyEvent.ACTION_UP) close.run();
+                return true;
+            }
+            return false;
         });
         dialog.show();
+    }
+
+    // ------------------------------------------------------------------ properties
+
+    private static long[] scan(File directory, java.util.concurrent.atomic.AtomicBoolean cancelled) {
+        long[] result = new long[3]; // files, folders, bytes
+        File[] children = directory.listFiles();
+        if (children == null) return result;
+        for (File child : children) {
+            if (cancelled.get()) break;
+            if (FileUtils.isSymlink(child)) continue;
+            if (child.isDirectory()) {
+                result[1]++;
+                long[] inner = scan(child, cancelled);
+                result[0] += inner[0]; result[1] += inner[1]; result[2] += inner[2];
+            }
+            else {
+                result[0]++;
+                result[2] += child.length();
+            }
+        }
+        return result;
+    }
+
+    private String describePath(File file) {
+        String relative = file.getPath().substring(Math.min(file.getPath().length(), root.getPath().length()));
+        return rootLabel + relative;
+    }
+
+    private void showProperties(final File file) {
+        final Context context = getContext();
+        final boolean directory = file.isDirectory();
+        final String date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(new Date(file.lastModified()));
+        final String access = (file.canRead() ? "r" : "-") + (file.canWrite() ? "w" : "-") + (file.canExecute() ? "x" : "-");
+
+        String type = getString(directory ? R.string.prop_type_folder : R.string.prop_type_file);
+        String name = file.getName();
+        int dot = name.lastIndexOf('.');
+        if (!directory && dot > 0 && dot < name.length() - 1) type += " (." + name.substring(dot + 1).toLowerCase(Locale.ROOT) + ")";
+
+        final StringBuilder head = new StringBuilder();
+        head.append(getString(R.string.prop_name)).append(": ").append(name).append('\n');
+        head.append(getString(R.string.prop_type)).append(": ").append(type).append('\n');
+        head.append(getString(R.string.prop_path)).append(": ").append(describePath(file)).append('\n');
+        final String tail = getString(R.string.prop_modified) + ": " + date + "\n" + getString(R.string.prop_access) + ": " + access;
+
+        final ContentDialog dialog = new ContentDialog(context, R.layout.file_properties_dialog);
+        dialog.setTitle(R.string.files_properties);
+        dialog.findViewById(R.id.BTCancel).setVisibility(View.GONE);
+        final TextView info = dialog.findViewById(R.id.TVProperties);
+
+        if (!directory) {
+            info.setText(head + getString(R.string.prop_size) + ": " + getString(R.string.prop_bytes, Formatter.formatFileSize(context, file.length()), String.valueOf(file.length())) + "\n" + tail);
+            dialog.show();
+            return;
+        }
+
+        info.setText(head + getString(R.string.prop_size) + ": " + getString(R.string.prop_calculating) + "\n" + tail);
+        final java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean();
+        dialog.setOnDismissListener((d) -> cancelled.set(true));
+        dialog.show();
+        final Activity activity = getActivity();
+        new Thread(() -> {
+            final long[] sum = scan(file, cancelled);
+            if (cancelled.get() || activity == null) return;
+            activity.runOnUiThread(() -> info.setText(head
+                + getString(R.string.prop_size) + ": " + getString(R.string.prop_bytes, Formatter.formatFileSize(context, sum[2]), String.valueOf(sum[2])) + "\n"
+                + getString(R.string.prop_contains) + ": " + getString(R.string.prop_contains_value, (int)sum[0], (int)sum[1]) + "\n"
+                + tail));
+        }).start();
+    }
+
+    /** Called by MainActivity for the back gesture: true = handled (went up one folder), false = we are in a root. */
+    public boolean handleBack() {
+        if (root == null || isAtRoot()) return false;
+        goUp();
+        return true;
     }
 
     private void rename(final File file) {

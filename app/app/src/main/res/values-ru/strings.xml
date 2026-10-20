@@ -170,4 +170,19 @@
     <string name="files_name_exists">Файл с таким именем уже есть</string>
     <string name="files_paste_into_itself">Нельзя вставить папку саму в себя</string>
     <string name="files_operation_failed">Не удалось выполнить операцию</string>
+    <string name="files_save">Сохранить</string>
+    <string name="files_properties">Свойства</string>
+    <string name="files_discard_confirm">Отменить изменения?</string>
+    <string name="prop_name">Имя</string>
+    <string name="prop_type">Тип</string>
+    <string name="prop_type_folder">Папка</string>
+    <string name="prop_type_file">Файл</string>
+    <string name="prop_path">Путь</string>
+    <string name="prop_size">Размер</string>
+    <string name="prop_contains">Содержит</string>
+    <string name="prop_contains_value">файлов: %1$d, папок: %2$d</string>
+    <string name="prop_modified">Изменён</string>
+    <string name="prop_access">Доступ</string>
+    <string name="prop_calculating">подсчёт…</string>
+    <string name="prop_bytes">%1$s (%2$s байт)</string>
 </resources>

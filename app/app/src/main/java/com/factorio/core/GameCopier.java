@@ -30,7 +30,7 @@ public final class GameCopier {
     public static final class Result {
         public boolean ok;
         public int files;
-        public int pngTotal, pngShrunk, skipFormat, skipSmall, skipGain, pngErrors;
+        public int pngTotal, pngShrunk, skipFormat, skipSmall, skipGain, skipProtected, pngErrors;
         public long inBytes, outBytes;
         public String report = "";
     }
@@ -102,7 +102,7 @@ public final class GameCopier {
         final AtomicLong doneBytes = new AtomicLong();
         final AtomicLong outBytes = new AtomicLong();
         final AtomicInteger pngTotal = new AtomicInteger(), pngShrunk = new AtomicInteger(), skipFormat = new AtomicInteger();
-        final AtomicInteger skipSmall = new AtomicInteger(), skipGain = new AtomicInteger(), pngErrors = new AtomicInteger();
+        final AtomicInteger skipSmall = new AtomicInteger(), skipGain = new AtomicInteger(), skipProtected = new AtomicInteger(), pngErrors = new AtomicInteger();
         final AtomicInteger lastPercent = new AtomicInteger(-1);
         final AtomicBoolean failed = new AtomicBoolean();
         final ConcurrentLinkedQueue<String> skipped = new ConcurrentLinkedQueue<>();
@@ -120,7 +120,11 @@ public final class GameCopier {
                 boolean written = false;
                 String why = null;
                 if (isPng) pngTotal.incrementAndGet();
-                if (shrink && isPng) {
+                if (shrink && isPng && GameCompression.isProtected(FileUtils.toRelativePath(srcDir.getPath(), src.getPath()))) {
+                    why = "protected (menu / GUI / LUT / icons)";
+                    skipProtected.incrementAndGet();
+                }
+                else if (shrink && isPng) {
                     int rc;
                     try {
                         rc = TextureCompressor.shrinkPng(src.getPath(), dst.getPath(), ratio, minColors, kmeans, dither);
@@ -163,7 +167,7 @@ public final class GameCopier {
 
         result.ok = !failed.get();
         result.pngTotal = pngTotal.get(); result.pngShrunk = pngShrunk.get();
-        result.skipFormat = skipFormat.get(); result.skipSmall = skipSmall.get(); result.skipGain = skipGain.get(); result.pngErrors = pngErrors.get();
+        result.skipFormat = skipFormat.get(); result.skipSmall = skipSmall.get(); result.skipGain = skipGain.get(); result.skipProtected = skipProtected.get(); result.pngErrors = pngErrors.get();
         result.inBytes = sum; result.outBytes = outBytes.get();
 
         StringBuilder sb = new StringBuilder();
@@ -174,7 +178,7 @@ public final class GameCopier {
             sb.append("texture compressor available: ").append(shrink).append('\n');
             sb.append("PNG files: ").append(result.pngTotal).append(", shrunk: ").append(result.pngShrunk)
               .append(", kept as they are: format ").append(result.skipFormat).append(", tiny ").append(result.skipSmall)
-              .append(", small gain ").append(result.skipGain).append(", errors ").append(result.pngErrors).append('\n');
+              .append(", small gain ").append(result.skipGain).append(", protected (menu/GUI/LUT/icons) ").append(result.skipProtected).append(", errors ").append(result.pngErrors).append('\n');
         }
         sb.append("\nCopied unchanged (extension: files, MB):\n");
         List<Map.Entry<String, long[]>> entries = new ArrayList<>(untouched.entrySet());

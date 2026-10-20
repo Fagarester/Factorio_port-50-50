@@ -120,6 +120,9 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 if (reportDir != null && reportDir.isDirectory() && reportDir.canWrite()) {
                     FileUtils.writeString(new File(reportDir, "compression-report.txt"), copyResult.report);
                 }
+                // second copy next to the game folder: visible in the file manager (root "Game")
+                File homeDir = dstDir.getParentFile();
+                if (homeDir != null && homeDir.isDirectory()) FileUtils.writeString(new File(homeDir, "compression-report.txt"), copyResult.report);
                 if (compression != GameCompression.ORIGINAL) {
                     final String summary = activity.getString(R.string.compression_done, copyResult.pngShrunk, copyResult.pngTotal,
                         (int)(copyResult.inBytes >> 20), (int)(copyResult.outBytes >> 20));
