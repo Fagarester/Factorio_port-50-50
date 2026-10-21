@@ -28,6 +28,7 @@ public class ColorPickerView extends View implements View.OnClickListener {
     private int[] palette = {0xff8f00, 0xd32f2f, 0x9575cd, 0x2e7d32, 0x00838f, 0x0277bd, 0x607d8b, 0x000000};
     private int currentColor = 0xffffff;
     private final Bitmap colorFrame;
+    private java.util.function.IntConsumer onColorChangedListener;
 
     public ColorPickerView(Context context) {
         this(context, null);
@@ -91,6 +92,11 @@ public class ColorPickerView extends View implements View.OnClickListener {
         return Color.argb(0, Color.red(argb), Color.green(argb), Color.blue(argb));
     }
 
+    /** Called with 0xRRGGBB when the user picks a color from the palette. */
+    public void setOnColorChangedListener(java.util.function.IntConsumer listener) {
+        this.onColorChangedListener = listener;
+    }
+
     public void setPalette(int... palette) {
         this.palette = palette;
     }
@@ -118,6 +124,7 @@ public class ColorPickerView extends View implements View.OnClickListener {
             imageView.setOnClickListener((v) -> {
                 currentColor = color;
                 invalidate();
+                if (onColorChangedListener != null) onColorChangedListener.accept(color & 0xffffff);
                 if (popupWindow[0] != null) popupWindow[0].dismiss();
             });
             container.addView(imageView);

@@ -380,15 +380,16 @@ public class SideDrawer {
                     }
                 }
 
+                int cellColor = element.isSelected() ? element.getHighlightColor() : element.getOutlineColor();
                 paint.setStyle(pressed ? Paint.Style.FILL : Paint.Style.STROKE);
-                paint.setColor(baseColor);
+                paint.setColor(pressed && !element.isOutlineVisible() ? withAlpha(element.getContentColor(), 0.3f) : cellColor);
                 canvas.drawRoundRect(rectF, cellRadius, cellRadius, paint);
 
                 String text = element.getBindingTextAt(i);
                 if (text != null && !text.isEmpty()) {
                     paint.setStyle(Paint.Style.FILL);
                     paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, cell.width() - strokeWidth * 3), cellSize * 0.42f));
-                    paint.setColor(pressed ? darkColor : lightColor);
+                    paint.setColor(pressed ? element.getPressedContentColor() : element.getContentColor());
                     canvas.drawText(text, cell.centerX(), cell.centerY() - ((paint.descent() + paint.ascent()) * 0.5f), paint);
                 }
             }

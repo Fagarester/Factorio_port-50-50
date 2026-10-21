@@ -27,6 +27,7 @@ import com.factorio.core.LocaleHelper;
 import com.factorio.inputcontrols.Binding;
 import com.factorio.inputcontrols.ControlElement;
 import com.factorio.inputcontrols.ControlsProfile;
+import com.factorio.inputcontrols.ControlStyle;
 import com.factorio.inputcontrols.CustomMenu;
 import com.factorio.inputcontrols.InputControlsManager;
 import com.factorio.inputcontrols.ScrollWheel;
@@ -37,6 +38,7 @@ import com.factorio.core.FileUtils;
 import com.factorio.core.UnitUtils;
 import com.factorio.widget.InputControlsView;
 import com.factorio.widget.NumberPicker;
+import com.factorio.widget.ColorPickerView;
 import com.factorio.widget.SeekBar;
 
 import java.io.IOException;
@@ -69,6 +71,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         container.findViewById(R.id.BTAddElement).setOnClickListener(this);
         container.findViewById(R.id.BTRemoveElement).setOnClickListener(this);
         container.findViewById(R.id.BTElementSettings).setOnClickListener(this);
+        container.findViewById(R.id.BTStyle).setOnClickListener(this);
 
         toolbox = container.findViewById(R.id.Toolbox);
 
@@ -127,6 +130,9 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                     AppUtils.showToast(this, R.string.no_control_element_selected);
                 }
                 break;
+            case R.id.BTStyle:
+                showStylePanel();
+                break;
             case R.id.BTElementSettings:
                 ControlElement selectedElement = inputControlsView.getSelectedElement();
                 if (selectedElement != null) {
@@ -135,6 +141,122 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                 else AppUtils.showToast(this, R.string.no_control_element_selected);
                 break;
         }
+    }
+
+    /**
+     * Shows a panel glued to the bottom edge of the toolbox: same left edge and width, the toolbox loses its
+     * bottom corners and the panel its top corners, so both look like one window.
+     */
+    private PopupWindow showPanelBelowToolbox(View content) {
+        final int overlap = (int)UnitUtils.dpToPx(2);
+        ViewGroup parent = (ViewGroup)toolbox.getParent();
+        int width = toolbox.getWidth();
+        int available = (int)(parent.getHeight() - (toolbox.getY() + toolbox.getHeight()) - UnitUtils.dpToPx(8)) + overlap;
+
+        content.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        int height = Math.min(content.getMeasuredHeight(), Math.max(available, (int)UnitUtils.dpToPx(160)));
+
+        PopupWindow popupWindow = new PopupWindow(this);
+        popupWindow.setElevation(5.0f);
+        popupWindow.setBackgroundDrawable(getDrawable(R.drawable.input_controls_panel));
+        popupWindow.setWidth(width);
+        popupWindow.setHeight(height);
+        popupWindow.setContentView(content);
+        popupWindow.setFocusable(false);
+        popupWindow.setOutsideTouchable(true);
+        popupWindow.showAsDropDown(toolbox, 0, -overlap);
+        popupWindow.setFocusable(true);
+        popupWindow.update();
+
+        toolbox.setBackgroundResource(R.drawable.input_controls_toolbar_open);
+        return popupWindow;
+    }
+
+    private void restoreToolboxBackground() {
+        toolbox.setBackgroundResource(R.drawable.input_controls_toolbar);
+    }
+
+    private void showStylePanel() {
+        final ControlElement element = inputControlsView.getSelectedElement();
+        final ControlStyle common = profile.getStyle();
+        final ControlStyle target = element != null ? element.getStyle() : common;
+        final View view = LayoutInflater.from(this).inflate(R.layout.control_style_settings, null);
+
+        final CheckBox cbOutline = view.findViewById(R.id.CBStyleOutline);
+        final ColorPickerView cpvOutline = view.findViewById(R.id.CPVStyleOutline);
+        final SeekBar sbOutlineAlpha = view.findViewById(R.id.SBStyleOutlineAlpha);
+        final ColorPickerView cpvContent = view.findViewById(R.id.CPVStyleContent);
+        final SeekBar sbContentAlpha = view.findViewById(R.id.SBStyleContentAlpha);
+        final CheckBox cbIconFilter = view.findViewById(R.id.CBStyleIconFilter);
+        final boolean[] updating = {false};
+
+        final int[] palette = {0xffffff, 0xcfd8dc, 0x90a4ae, 0x000000, 0xff1744, 0xff9100, 0xffea00, 0x00e676, 0x1de9b6, 0x00b0ff, 0x651fff, 0xf50057};
+        cpvOutline.setPalette(palette);
+        cpvContent.setPalette(palette);
+
+        ((TextView)view.findViewById(R.id.TVStyleTarget)).setText(element != null ? R.string.style_target_element : R.string.style_target_all);
+        ((TextView)view.findViewById(R.id.BTStyleReset)).setText(element != null ? R.string.style_reset_element : R.string.style_reset_all);
+
+        // the widgets show what is really used: the element's own value or, if it has none, the common one
+        final Runnable load = () -> {
+            ControlStyle effective = ControlStyle.resolve(common, element != null ? element.getStyle() : null);
+            updating[0] = true;
+            cbOutline.setChecked(effective.showOutline);
+            cpvOutline.setColor(effective.outlineColor);
+            sbOutlineAlpha.setValue(effective.outlineAlpha * 100);
+            cpvContent.setColor(effective.contentColor);
+            sbContentAlpha.setValue(effective.contentAlpha * 100);
+            cbIconFilter.setChecked(effective.iconFilter);
+            updating[0] = false;
+        };
+        load.run();
+
+        final Runnable changed = () -> {
+            profile.save();
+            inputControlsView.invalidate();
+        };
+
+        cbOutline.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (updating[0]) return;
+            target.showOutline = isChecked;
+            changed.run();
+        });
+        cpvOutline.setOnColorChangedListener((color) -> {
+            target.outlineColor = color;
+            changed.run();
+        });
+        sbOutlineAlpha.setOnValueChangeListener((seekBar, value) -> {
+            if (updating[0]) return;
+            target.outlineAlpha = value / 100.0f;
+            changed.run();
+        });
+        cpvContent.setOnColorChangedListener((color) -> {
+            target.contentColor = color;
+            changed.run();
+        });
+        sbContentAlpha.setOnValueChangeListener((seekBar, value) -> {
+            if (updating[0]) return;
+            target.contentAlpha = value / 100.0f;
+            changed.run();
+        });
+        cbIconFilter.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (updating[0]) return;
+            target.iconFilter = isChecked;
+            changed.run();
+        });
+
+        view.findViewById(R.id.BTStyleReset).setOnClickListener((v) -> {
+            if (element != null) element.getStyle().clear();
+            else common.copyFrom(ControlStyle.defaults());
+            load.run();
+            changed.run();
+        });
+
+        PopupWindow popupWindow = showPanelBelowToolbox(view);
+        popupWindow.setOnDismissListener(() -> {
+            restoreToolboxBackground();
+            profile.save();
+        });
     }
 
     private void showControlElementSettings(View anchorView) {
@@ -543,8 +665,9 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
 
         updateLayout.run();
 
-        PopupWindow popupWindow = AppUtils.showPopupWindow(anchorView, view, 340, 0);
+        PopupWindow popupWindow = showPanelBelowToolbox(view);
         popupWindow.setOnDismissListener(() -> {
+            restoreToolboxBackground();
             byte iconId = 0;
             if (element.getCustomMenu() != null) element.getCustomMenu().setOnSelectionChanged(null);
             if (element.getType() == ControlElement.Type.BUTTON || element.getType() == ControlElement.Type.CUSTOM_MENU) {

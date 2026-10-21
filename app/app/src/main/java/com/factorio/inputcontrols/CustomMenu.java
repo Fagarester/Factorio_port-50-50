@@ -715,10 +715,11 @@ public class CustomMenu {
             boolean filled = node.pressed || node.hover;
             boolean selected = edit && node == selectedNode;
 
-            int outline = selected ? element.getHighlightColor() : lightColor;
+            int outline = selected ? element.getHighlightColor() : element.getOutlineColor();
+            int fillColor = element.isOutlineVisible() ? outline : withAlpha(element.getContentColor(), 0.3f);
             paint.setStrokeWidth(selected ? strokeWidth * 1.6f : strokeWidth);
             paint.setStyle(filled ? Paint.Style.FILL : Paint.Style.STROKE);
-            paint.setColor(withAlpha(outline, alpha));
+            paint.setColor(withAlpha(filled ? fillColor : outline, alpha));
 
             switch (node.shape) {
                 case CIRCLE:
@@ -741,7 +742,7 @@ public class CustomMenu {
             // open sub-menu indicator: a small dot on the rim
             if (!node.children.isEmpty()) {
                 paint.setStyle(Paint.Style.FILL);
-                paint.setColor(withAlpha(outline, alpha));
+                paint.setColor(withAlpha(element.getContentColor(), alpha));
                 canvas.drawCircle(cx + hw * 0.72f, cy - hh * 0.72f, Math.max(3, snap * 0.35f), paint);
             }
 
@@ -749,7 +750,7 @@ public class CustomMenu {
             if (!text.isEmpty() && p > 0.3f) {
                 paint.setStyle(Paint.Style.FILL);
                 paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, hw * 2 - strokeWidth * 3), snap * 2 * element.getScale()) * Mathf.clamp(p, 0, 1));
-                paint.setColor(withAlpha(filled ? darkColor : lightColor, alpha));
+                paint.setColor(withAlpha(filled ? element.getPressedContentColor() : element.getContentColor(), alpha));
                 canvas.drawText(text, cx, cy - ((paint.descent() + paint.ascent()) * 0.5f), paint);
             }
         }

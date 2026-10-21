@@ -13,6 +13,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
         android:background="@drawable/input_controls_toolbar"
+        android:minWidth="340dp"
         android:gravity="center_vertical"
         android:padding="4dp">
 
@@ -22,8 +23,9 @@
             android:src="@drawable/icon_move"  />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:paddingLeft="8dp"
             android:paddingRight="8dp">
@@ -55,6 +57,12 @@
             android:id="@+id/BTRemoveElement"
             style="@style/ToolButton"
             android:src="@drawable/icon_remove"  />
+
+        <ImageButton
+            android:id="@+id/BTStyle"
+            style="@style/ToolButton"
+            android:contentDescription="@string/style_button"
+            android:src="@drawable/icon_palette" />
 
         <ImageButton
             android:id="@+id/BTElementSettings"

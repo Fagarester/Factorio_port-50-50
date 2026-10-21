@@ -212,4 +212,16 @@
     <string name="custom_hide_on_path">Скрывать эту кнопку, когда выбрана вложенная</string>
     <string name="custom_root_hide">Скрывать корневую кнопку после выбора направления</string>
     <string name="custom_root_as_button">Использовать корневую кнопку и как кнопку (экспериментально, только HOLD: тап = эта кнопка, удержание = меню)</string>
+    <string name="style_button">Стиль кнопок</string>
+    <string name="style_target_all">Стиль: все кнопки</string>
+    <string name="style_target_element">Стиль: только выбранный элемент</string>
+    <string name="style_hint">Если ничего не выбрано, стиль действует на все кнопки. Чтобы настроить одну кнопку отдельно, сначала выбери её на экране.</string>
+    <string name="style_show_outline">Показывать обводку (форму) кнопок</string>
+    <string name="style_outline_color">Цвет обводки</string>
+    <string name="style_outline_alpha">Прозрачность обводки</string>
+    <string name="style_content_color">Цвет текста / иконки</string>
+    <string name="style_content_alpha">Прозрачность текста / иконки</string>
+    <string name="style_icon_filter">Фильтр иконок (красить иконки в цвет текста; выключи, чтобы иконки были цветными)</string>
+    <string name="style_reset_all">Сбросить общий стиль</string>
+    <string name="style_reset_element">Сбросить этот элемент к общему стилю</string>
 </resources>

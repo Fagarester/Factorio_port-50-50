@@ -22,6 +22,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
     private String name;
     private float cursorSpeed = 1.0f;
     private boolean disableMouseInput = false;
+    private ControlStyle style = ControlStyle.defaults();
     private final ArrayList<ControlElement> elements = new ArrayList<>();
     private final ArrayList<ExternalController> controllers = new ArrayList<>();
     private final List<ControlElement> immutableElements = Collections.unmodifiableList(elements);
@@ -44,6 +45,15 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    /** The common look of all buttons; elements can override single fields. */
+    public ControlStyle getStyle() {
+        return style;
+    }
+
+    public void setStyle(ControlStyle style) {
+        this.style = style != null ? ControlStyle.resolve(style, null) : ControlStyle.defaults();
     }
 
     public float getCursorSpeed() {
@@ -126,6 +136,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
             data.put("name", name);
             data.put("cursorSpeed", Float.valueOf(cursorSpeed));
             if (disableMouseInput) data.put("disableMouseInput", disableMouseInput);
+            data.put("style", style.toJSONObject());
 
             JSONArray elementsJSONArray = new JSONArray();
             if (!elementsLoaded && file.isFile()) {
@@ -241,6 +252,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
                     if (elementJSONObject.has("orientation")) element.setOrientation((byte)elementJSONObject.getInt("orientation"));
                     if (elementJSONObject.has("mouseMoveMode")) element.setMouseMoveMode(true);
                     if (elementJSONObject.has("opacity")) element.setOpacity((float)elementJSONObject.getDouble("opacity"));
+                    if (elementJSONObject.has("style")) element.getStyle().loadFrom(elementJSONObject.getJSONObject("style"));
                     if (elementJSONObject.has("scrollStyle")) element.setScrollStyle(ScrollWheel.Style.valueOf(elementJSONObject.getString("scrollStyle")));
                     if (elementJSONObject.has("radialStyle")) element.setRadialStyle(ControlElement.RadialStyle.valueOf(elementJSONObject.getString("radialStyle")));
                     if (elementJSONObject.has("radialTrigger")) element.setRadialTrigger(ControlElement.RadialTrigger.valueOf(elementJSONObject.getString("radialTrigger")));

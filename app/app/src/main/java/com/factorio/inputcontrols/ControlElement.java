@@ -139,6 +139,10 @@ public class ControlElement {
     private boolean gridByRows = false;
     private SideDrawer drawer;
     private CustomMenu customMenu;
+    private final ControlStyle styleOverrides = new ControlStyle();
+    private ControlStyle resolvedStyle;
+    private android.graphics.PorterDuffColorFilter iconFilterCache;
+    private int iconFilterCacheColor;
 
     public ControlElement(InputControlsView inputControlsView) {
         this.inputControlsView = inputControlsView;
@@ -276,6 +280,52 @@ public class ControlElement {
 
     public void setMouseMoveMode(boolean mouseMoveMode) {
         propertyFlags.set(FLAG_MOUSE_MOVE_MODE, mouseMoveMode);
+    }
+
+    /** Look overrides of this element; empty fields use the common style of the profile. */
+    public ControlStyle getStyle() {
+        return styleOverrides;
+    }
+
+    private ControlStyle style() {
+        if (resolvedStyle != null) return resolvedStyle;
+        ControlsProfile profile = inputControlsView.getProfile();
+        return ControlStyle.resolve(profile != null ? profile.getStyle() : null, styleOverrides);
+    }
+
+    private int styledColor(int rgb, float alpha) {
+        float opacity = inputControlsView.isEditMode() ? Math.max(0.15f, this.opacity) : this.opacity;
+        float total = Mathf.clamp(alpha * opacity * inputControlsView.getOverlayOpacity(), 0, 1);
+        return Color.argb((int)(total * 255), Color.red(rgb), Color.green(rgb), Color.blue(rgb));
+    }
+
+    public boolean isOutlineVisible() {
+        return style().showOutline;
+    }
+
+    /** Color of the shape of a button. A hidden outline stays faintly visible in the editor so it can be found. */
+    public int getOutlineColor() {
+        ControlStyle s = style();
+        float alpha = s.outlineAlpha;
+        if (!s.showOutline) alpha = inputControlsView.isEditMode() ? 0.3f : 0.0f;
+        return styledColor(s.outlineColor, alpha);
+    }
+
+    /** Color of the text / icon inside a button. */
+    public int getContentColor() {
+        ControlStyle s = style();
+        return styledColor(s.contentColor, s.contentAlpha);
+    }
+
+    /** Content color while the button is pressed (the shape is filled then, so the content gets dark). */
+    public int getPressedContentColor() {
+        ControlStyle s = style();
+        if (s.showOutline) return getDarkColor();
+        return styledColor(s.contentColor, s.contentAlpha * 0.6f);
+    }
+
+    public boolean isIconFilterEnabled() {
+        return style().iconFilter;
     }
 
     public Style getScrollStyle() {
@@ -604,7 +654,9 @@ public class ControlElement {
     public void draw(Canvas canvas) {
         int snappingSize = inputControlsView.getSnappingSize();
         Paint paint = inputControlsView.getPaint();
-        int lightColor = getLightColor();
+        ControlsProfile styleProfile = inputControlsView.getProfile();
+        resolvedStyle = ControlStyle.resolve(styleProfile != null ? styleProfile.getStyle() : null, styleOverrides);
+        int lightColor = (type == Type.BUTTON || type == Type.CUSTOM_MENU) ? getOutlineColor() : getLightColor();
 
         paint.setColor(propertyFlags.isSet(FLAG_SELECTED) ? getHighlightColor() : lightColor);
         paint.setStyle(Paint.Style.STROKE);
@@ -664,7 +716,7 @@ public class ControlElement {
                     paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, boundingBox.width() - strokeWidth * 2), snappingSize * 2 * scale));
                     paint.setTextAlign(Paint.Align.CENTER);
                     paint.setStyle(Paint.Style.FILL);
-                    paint.setColor(propertyFlags.isSet(FLAG_PRESSED) ? getDarkColor() : lightColor);
+                    paint.setColor(propertyFlags.isSet(FLAG_PRESSED) ? getPressedContentColor() : getContentColor());
                     canvas.drawText(text, x, (y - ((paint.descent() + paint.ascent()) * 0.5f)), paint);
                 }
                 break;
@@ -943,6 +995,7 @@ public class ControlElement {
         }
 
         if (rootLayerSaved) canvas.restore();
+        resolvedStyle = null;
     }
 
     /* ------------------------------------------------------------ radial menu geometry */
@@ -1153,7 +1206,20 @@ public class ControlElement {
     private void drawIcon(Canvas canvas, float cx, float cy, float width, float height, int iconId, boolean automargin) {
         Paint paint = inputControlsView.getPaint();
         Bitmap icon = inputControlsView.getIcon((byte)iconId);
-        paint.setColorFilter(propertyFlags.isSet(FLAG_PRESSED) ? inputControlsView.getDarkColorFilter() : inputControlsView.getLightColorFilter());
+        int oldPaintColor = paint.getColor();
+        boolean darkIcon = propertyFlags.isSet(FLAG_PRESSED) && isOutlineVisible();
+        int iconColor = darkIcon ? getDarkColor() : getContentColor();
+        if (isIconFilterEnabled()) {
+            // the filter (default) paints every icon in one color; without it the icons keep their own colors
+            int rgb = darkIcon ? 0x000000 : (iconColor & 0xffffff);
+            if (iconFilterCache == null || iconFilterCacheColor != rgb) {
+                iconFilterCache = new android.graphics.PorterDuffColorFilter(0xff000000 | rgb, android.graphics.PorterDuff.Mode.SRC_IN);
+                iconFilterCacheColor = rgb;
+            }
+            paint.setColorFilter(iconFilterCache);
+        }
+        else paint.setColorFilter(null);
+        paint.setAlpha(Color.alpha(iconColor));
         float snappingSize = inputControlsView.getSnappingSize();
         int margin = automargin ? (int)(snappingSize * (shape == Shape.CIRCLE || shape == Shape.SQUARE ? 2.0f : 1.0f) * scale) : 0;
         int halfSize = (int)((Math.min(width, height) - margin) * 0.5f);
@@ -1162,6 +1228,7 @@ public class ControlElement {
         Rect dstRect = new Rect((int)(cx - halfSize), (int)(cy - halfSize), (int)(cx + halfSize), (int)(cy + halfSize));
         canvas.drawBitmap(icon, srcRect, dstRect, paint);
         paint.setColorFilter(null);
+        paint.setColor(oldPaintColor);
     }
 
     public JSONObject toJSONObject() {
@@ -1181,6 +1248,7 @@ public class ControlElement {
             elementJSONObject.put("toggleSwitch", propertyFlags.isSet(FLAG_TOGGLE_SWITCH));
             elementJSONObject.put("text", text);
             elementJSONObject.put("iconId", iconId);
+            if (!styleOverrides.isEmpty()) elementJSONObject.put("style", styleOverrides.toJSONObject());
 
             if (type == Type.RANGE_BUTTON && range != null) {
                 elementJSONObject.put("range", range.name());

@@ -206,6 +206,7 @@ public class InputControlsManager {
             String profileName = null;
             float cursorSpeed = Float.NaN;
             boolean disableMouseInput = false;
+            ControlStyle style = null;
             int fieldsRead = 0;
             final byte numFieldsToBreak = 4;
 
@@ -229,6 +230,9 @@ public class InputControlsManager {
                     disableMouseInput = reader.nextBoolean();
                     fieldsRead++;
                 }
+                else if (name.equals("style")) {
+                    style = ControlStyle.read(reader);
+                }
                 else {
                     if (fieldsRead == numFieldsToBreak) break;
                     reader.skipValue();
@@ -239,6 +243,7 @@ public class InputControlsManager {
             profile.setName(profileName);
             profile.setCursorSpeed(cursorSpeed);
             profile.setDisableMouseInput(disableMouseInput);
+            if (style != null) profile.setStyle(style);
             return profile;
         }
         catch (IOException e) {

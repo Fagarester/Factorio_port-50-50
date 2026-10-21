@@ -220,4 +220,16 @@
     <string name="custom_hide_on_path">Hide this button once its sub-button is chosen</string>
     <string name="custom_root_hide">Hide the root button once a direction is chosen</string>
     <string name="custom_root_as_button">Use the root button as a button too (experimental, HOLD only: tap = this button, hold = menu)</string>
+    <string name="style_button">Button style</string>
+    <string name="style_target_all">Style: all buttons</string>
+    <string name="style_target_element">Style: the selected element only</string>
+    <string name="style_hint">With nothing selected the style applies to all buttons. Select a button on the screen first to style it separately.</string>
+    <string name="style_show_outline">Show button outline (shape)</string>
+    <string name="style_outline_color">Outline color</string>
+    <string name="style_outline_alpha">Outline opacity</string>
+    <string name="style_content_color">Text / icon color</string>
+    <string name="style_content_alpha">Text / icon opacity</string>
+    <string name="style_icon_filter">Icon filter (paint icons in the text color; turn off for colored icons)</string>
+    <string name="style_reset_all">Reset the common style</string>
+    <string name="style_reset_element">Reset this element to the common style</string>
 </resources>
