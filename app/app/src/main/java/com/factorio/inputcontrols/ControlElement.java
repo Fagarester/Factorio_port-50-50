@@ -44,7 +44,7 @@ public class ControlElement {
     public static final int FLAG_DRAWER_AUTOCLOSE = 1<<6;
     public static final long RADIAL_HYBRID_TAP_MILLISECONDS = 250;
     public enum Type {
-        BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, RADIAL_MENU, SCROLL_WHEEL, SIDE_DRAWER;
+        BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, RADIAL_MENU, SCROLL_WHEEL, SIDE_DRAWER, CUSTOM_MENU;
 
         public static String[] names() {
             Type[] types = values();
@@ -138,6 +138,7 @@ public class ControlElement {
     private int gridRows = 3;
     private boolean gridByRows = false;
     private SideDrawer drawer;
+    private CustomMenu customMenu;
 
     public ControlElement(InputControlsView inputControlsView) {
         this.inputControlsView = inputControlsView;
@@ -151,6 +152,8 @@ public class ControlElement {
         scrollWheel = null;
         if (drawer != null) drawer.reset();
         drawer = null;
+        if (customMenu != null) customMenu.reset();
+        customMenu = null;
         text = "";
 
         switch (type) {
@@ -189,6 +192,15 @@ public class ControlElement {
                 Arrays.fill(bindings, Binding.NONE);
                 states = new boolean[4];
                 drawer = new SideDrawer(inputControlsView, this);
+                break;
+            case CUSTOM_MENU:
+                shape = Shape.CIRCLE;
+                text = "\u2261";
+                bindings = new Binding[]{Binding.NONE};
+                states = new boolean[1];
+                propertyFlags.set(FLAG_DRAWER_AUTOCLOSE, true);
+                customMenu = new CustomMenu(inputControlsView, this);
+                customMenu.createDefaultNodes();
                 break;
         }
 
@@ -407,7 +419,21 @@ public class ControlElement {
         return propertyFlags.isSet(FLAG_SELECTED);
     }
 
+    public CustomMenu getCustomMenu() {
+        return customMenu;
+    }
+
+    void setRootPressed(boolean pressed) {
+        propertyFlags.set(FLAG_PRESSED, pressed);
+        inputControlsView.invalidate();
+    }
+
+    boolean containsRootPoint(float x, float y) {
+        return getBoundingBox().contains((int)(x + 0.5f), (int)(y + 0.5f));
+    }
+
     public void setSelected(boolean selected) {
+        if (type == Type.CUSTOM_MENU && customMenu != null && !selected) customMenu.selectNode(null);
         if (type == Type.RADIAL_MENU) propertyFlags.set(FLAG_VISIBLE, selected);
         propertyFlags.set(FLAG_SELECTED, selected);
     }
@@ -441,6 +467,7 @@ public class ControlElement {
 
         switch (type) {
             case BUTTON:
+            case CUSTOM_MENU:
                 switch (shape) {
                     case RECT:
                     case ROUND_RECT:
@@ -504,7 +531,10 @@ public class ControlElement {
     }
 
     String getBindingTextAt(int index) {
-        Binding binding = getBindingAt(index);
+        return getBindingText(getBindingAt(index));
+    }
+
+    static String getBindingText(Binding binding) {
         String text = binding.toString().replace("NUMPAD ", "NP").replace("BUTTON ", "");
         if (text.length() > 7) {
             String[] parts = text.split(" ");
@@ -583,6 +613,15 @@ public class ControlElement {
         Rect boundingBox = getBoundingBox();
 
         switch (type) {
+            case CUSTOM_MENU:
+                if (customMenu != null) {
+                    int rootColor = paint.getColor();
+                    customMenu.draw(canvas);
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(strokeWidth);
+                    paint.setColor(rootColor);
+                }
+                // the root button is drawn like a normal button, on top of its buttons
             case BUTTON: {
                 if (propertyFlags.isSet(FLAG_PRESSED)) paint.setStyle(Paint.Style.FILL);
 
@@ -1153,6 +1192,11 @@ public class ControlElement {
                 elementJSONObject.put("radialAngle", radialRotation);
                 elementJSONObject.put("radialDistance", radialDistance);
             }
+            else if (type == Type.CUSTOM_MENU) {
+                elementJSONObject.put("radialTrigger", radialTrigger.name());
+                elementJSONObject.put("drawerAutoClose", isDrawerAutoClose());
+                if (customMenu != null) elementJSONObject.put("nodes", customMenu.toJSONArray());
+            }
             else if (type == Type.SIDE_DRAWER) {
                 elementJSONObject.put("drawerSide", drawerSide);
                 elementJSONObject.put("drawerLayout", drawerLayout.name());
@@ -1171,6 +1215,7 @@ public class ControlElement {
 
     public boolean containsPoint(float x, float y) {
         if (type == Type.SIDE_DRAWER && drawer != null) return drawer.containsPoint(x, y);
+        if (type == Type.CUSTOM_MENU) return customMenu != null && customMenu.containsPoint(x, y);
         if (type == Type.RADIAL_MENU && propertyFlags.isSet(FLAG_VISIBLE)) {
             float outerRadius = getRadialOuterRadius() + (radialStyle == RadialStyle.BUBBLES ? inputControlsView.getSnappingSize() : 0);
             return Mathf.distance(boundingBox.centerX(), boundingBox.centerY(), x, y) < outerRadius;
@@ -1185,6 +1230,7 @@ public class ControlElement {
 
     public boolean handleTouchDown(int pointerId, float x, float y) {
         if (type == Type.SIDE_DRAWER) return drawer != null && drawer.handleTouchDown(pointerId, x, y);
+        if (type == Type.CUSTOM_MENU) return customMenu != null && customMenu.handleTouchDown(pointerId, x, y);
         if (currentPointerId == -1 && containsPoint(x, y)) {
             currentPointerId = pointerId;
             if (type == Type.BUTTON) {
@@ -1243,6 +1289,7 @@ public class ControlElement {
 
     public boolean handleTouchMove(int pointerId, float x, float y) {
         if (type == Type.SIDE_DRAWER) return drawer != null && drawer.handleTouchMove(pointerId, x, y);
+        if (type == Type.CUSTOM_MENU) return customMenu != null && customMenu.handleTouchMove(pointerId, x, y);
         if (pointerId == currentPointerId && (type == Type.D_PAD || type == Type.STICK || type == Type.TRACKPAD)) {
             float deltaX, deltaY;
             Rect boundingBox = getBoundingBox();
@@ -1374,6 +1421,7 @@ public class ControlElement {
 
     public boolean handleTouchUp(int pointerId, float x, float y) {
         if (type == Type.SIDE_DRAWER) return drawer != null && drawer.handleTouchUp(pointerId, x, y);
+        if (type == Type.CUSTOM_MENU) return customMenu != null && customMenu.handleTouchUp(pointerId, x, y);
         if (pointerId == currentPointerId) {
             if (type == Type.BUTTON) {
                 boolean selected = propertyFlags.isSet(FLAG_SELECTED);

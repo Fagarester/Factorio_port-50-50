@@ -209,4 +209,12 @@
     <string name="top">Top</string>
     <string name="bottom">Bottom</string>
     <string name="rows">Rows</string>
+    <string name="custom_trigger">Open by (TAP = tap, HOLD = hold and slide, HYBRID = both)</string>
+    <string name="custom_auto_close">Close the menu after a button is used</string>
+    <string name="custom_selected_root">Selected: root button. Tap a button in the editor to select it, drag it to move it.</string>
+    <string name="custom_selected_node">Selected: button %1$s (of %2$d)</string>
+    <string name="custom_add_button">+ Add a button to the selected one</string>
+    <string name="custom_remove_button">Delete this button (with its sub-buttons)</string>
+    <string name="custom_node_size">Button size</string>
+    <string name="custom_node_text">Button text (empty = binding name)</string>
 </resources>

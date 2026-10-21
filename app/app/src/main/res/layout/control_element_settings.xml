@@ -114,6 +114,100 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/LLCustomOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_trigger" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SCustomTrigger"
+                android:layout_width="match_parent" />
+
+            <CheckBox
+                android:id="@+id/CBCustomAutoClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_auto_close" />
+
+            <TextView
+                android:id="@+id/TVCustomSelected"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text="@string/custom_selected_root" />
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTCustomAdd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_add_button" />
+
+            <LinearLayout
+                android:id="@+id/LLCustomNode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/LLCustomNodeBinding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_node_size" />
+
+                <com.factorio.widget.SeekBar
+                    android:id="@+id/SBNodeSize"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:suffix="%"
+                    app:step="10"
+                    app:minValue="40"
+                    app:maxValue="320" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shape" />
+
+                <Spinner
+                    style="@style/ComboBox"
+                    android:id="@+id/SNodeShape"
+                    android:layout_width="match_parent" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_node_text" />
+
+                <EditText
+                    style="@style/EditText"
+                    android:id="@+id/ETNodeText"
+                    android:maxLength="8"
+                    android:layout_width="match_parent"
+                    android:hint="@string/none"
+                    android:inputType="textCapCharacters" />
+
+                <Button
+                    style="@style/ButtonNeutral"
+                    android:id="@+id/BTCustomRemove"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_remove_button" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/LLDrawerOptions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

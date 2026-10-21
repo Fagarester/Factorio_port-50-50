@@ -201,4 +201,12 @@
     <string name="top">Сверху</string>
     <string name="bottom">Снизу</string>
     <string name="rows">Ряды</string>
+    <string name="custom_trigger">Вызов (TAP — тап, HOLD — зажать и вести, HYBRID — оба)</string>
+    <string name="custom_auto_close">Закрывать меню после нажатия кнопки</string>
+    <string name="custom_selected_root">Выбрана: корневая кнопка. Тапни по кнопке в редакторе, чтобы выбрать её, и перетащи, чтобы переместить.</string>
+    <string name="custom_selected_node">Выбрана кнопка %1$s (всего %2$d)</string>
+    <string name="custom_add_button">+ Добавить кнопку к выбранной</string>
+    <string name="custom_remove_button">Удалить эту кнопку (вместе с вложенными)</string>
+    <string name="custom_node_size">Размер кнопки</string>
+    <string name="custom_node_text">Текст кнопки (пусто = название привязки)</string>
 </resources>

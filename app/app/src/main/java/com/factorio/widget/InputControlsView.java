@@ -19,6 +19,7 @@ import android.widget.FrameLayout;
 
 import com.factorio.inputcontrols.Binding;
 import com.factorio.inputcontrols.ControlElement;
+import com.factorio.inputcontrols.CustomMenu;
 import com.factorio.inputcontrols.ControlsProfile;
 import com.factorio.inputcontrols.ExternalController;
 import com.factorio.inputcontrols.ExternalControllerBinding;
@@ -50,6 +51,9 @@ public class InputControlsView extends View {
     private float offsetX;
     private float offsetY;
     private ControlElement selectedElement;
+    private CustomMenu.Node dragNode;
+    private float dragNodeOffsetX;
+    private float dragNodeOffsetY;
     private ControlsProfile profile;
     private float overlayOpacity = DEFAULT_OVERLAY_OPACITY;
     private TouchpadView touchpadView;
@@ -111,7 +115,8 @@ public class InputControlsView extends View {
             List<ControlElement> elements = profile.getElements();
             if (touchpadView != null && elements.isEmpty()) touchpadView.setPointerButtonRightEnabled(true);
             if (showTouchscreenControls) {
-                for (ControlElement element : elements) if (element.getType() != ControlElement.Type.SIDE_DRAWER) element.draw(canvas);
+                for (ControlElement element : elements) if (!isOverlayType(element.getType())) element.draw(canvas);
+                for (ControlElement element : elements) if (element.getType() == ControlElement.Type.CUSTOM_MENU) element.draw(canvas);
                 for (ControlElement element : elements) if (element.getType() == ControlElement.Type.SIDE_DRAWER) element.draw(canvas);
             }
         }
@@ -233,6 +238,10 @@ public class InputControlsView extends View {
         return null;
     }
 
+    private static boolean isOverlayType(ControlElement.Type type) {
+        return type == ControlElement.Type.SIDE_DRAWER || type == ControlElement.Type.CUSTOM_MENU;
+    }
+
     public Paint getPaint() {
         return paint;
     }
@@ -336,6 +345,7 @@ public class InputControlsView extends View {
                     ControlElement element = intersectElement(startX, startY);
                     moveCursor = true;
                     moveElement = false;
+                    dragNode = null;
                     if (element != null) {
                         offsetX = startX - element.getX();
                         offsetY = startY - element.getY();
@@ -343,6 +353,19 @@ public class InputControlsView extends View {
                     }
 
                     selectElement(element);
+
+                    if (element != null && element.getType() == ControlElement.Type.CUSTOM_MENU && element.getCustomMenu() != null) {
+                        // a button of a custom menu: select it and drag it relative to its parent
+                        CustomMenu menu = element.getCustomMenu();
+                        CustomMenu.Node node = menu.hitNodeEdit(startX, startY);
+                        menu.selectNode(node);
+                        if (node != null) {
+                            dragNode = node;
+                            PointF center = menu.getNodeCenter(node);
+                            dragNodeOffsetX = startX - center.x;
+                            dragNodeOffsetY = startY - center.y;
+                        }
+                    }
                     break;
                 }
                 case MotionEvent.ACTION_MOVE: {
@@ -352,7 +375,10 @@ public class InputControlsView extends View {
 
                         if (dx >= TouchpadView.MAX_TAP_TRAVEL_DISTANCE || dy >= TouchpadView.MAX_TAP_TRAVEL_DISTANCE) moveElement = true;
 
-                        if (moveElement) {
+                        if (moveElement && dragNode != null) {
+                            selectedElement.getCustomMenu().moveNodeTo(dragNode, event.getX() - dragNodeOffsetX, event.getY() - dragNodeOffsetY);
+                        }
+                        else if (moveElement) {
                             selectedElement.setX((int)Mathf.roundTo(event.getX() - offsetX, snappingSize));
                             selectedElement.setY((int)Mathf.roundTo(event.getY() - offsetY, snappingSize));
                             invalidate();
@@ -362,6 +388,7 @@ public class InputControlsView extends View {
                 }
                 case MotionEvent.ACTION_UP: {
                     if (selectedElement != null && profile != null && moveElement) profile.save();
+                    dragNode = null;
                     if (moveCursor) cursor.set((int)Mathf.roundTo(event.getX(), snappingSize), (int)Mathf.roundTo(event.getY(), snappingSize));
                     invalidate();
                     break;
@@ -382,13 +409,13 @@ public class InputControlsView extends View {
                     float y = event.getY(actionIndex);
 
                     touchpadView.setPointerButtonLeftEnabled(true);
-                    // side drawers are drawn on top, so they get the touch first
+                    // custom menus and side drawers are drawn on top, so they get the touch first
                     for (ControlElement element : profile.getElements()) {
-                        if (element.getType() == ControlElement.Type.SIDE_DRAWER && element.handleTouchDown(pointerId, x, y)) handled = true;
+                        if (isOverlayType(element.getType()) && element.handleTouchDown(pointerId, x, y)) handled = true;
                     }
                     if (handled) break;
                     for (ControlElement element : profile.getElements()) {
-                        if (element.getType() == ControlElement.Type.SIDE_DRAWER) continue;
+                        if (isOverlayType(element.getType())) continue;
                         if (element.handleTouchDown(pointerId, x, y)) handled = true;
                         if (element.getBindingAt(0) == Binding.MOUSE_LEFT_BUTTON) {
                             touchpadView.setPointerButtonLeftEnabled(false);

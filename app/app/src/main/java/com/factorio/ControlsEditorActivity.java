@@ -27,6 +27,7 @@ import com.factorio.core.LocaleHelper;
 import com.factorio.inputcontrols.Binding;
 import com.factorio.inputcontrols.ControlElement;
 import com.factorio.inputcontrols.ControlsProfile;
+import com.factorio.inputcontrols.CustomMenu;
 import com.factorio.inputcontrols.InputControlsManager;
 import com.factorio.inputcontrols.ScrollWheel;
 import com.factorio.inputcontrols.SideDrawer;
@@ -142,6 +143,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
 
         final Runnable[] radialRefresh = {null};
         final Runnable[] drawerGridSync = {null};
+        final Runnable[] customRefresh = {null};
         final Runnable updateLayout = () -> {
             ControlElement.Type type = element.getType();
             view.findViewById(R.id.LLShape).setVisibility(View.GONE);
@@ -153,6 +155,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             view.findViewById(R.id.LLOrientation).setVisibility(View.GONE);
             view.findViewById(R.id.LLScrollOptions).setVisibility(View.GONE);
             view.findViewById(R.id.LLDrawerOptions).setVisibility(View.GONE);
+            view.findViewById(R.id.LLCustomOptions).setVisibility(View.GONE);
 
             switch (type) {
                 case BUTTON:
@@ -169,6 +172,12 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                     ((RadioGroup)view.findViewById(R.id.RGOrientation)).check(element.getOrientation() == 1 ? R.id.RBVertical : R.id.RBHorizontal);
                     view.findViewById(R.id.LLScrollOptions).setVisibility(View.VISIBLE);
                     view.findViewById(R.id.LLOrientation).setVisibility(View.VISIBLE);
+                    break;
+                case CUSTOM_MENU:
+                    view.findViewById(R.id.LLShape).setVisibility(View.VISIBLE);
+                    view.findViewById(R.id.LLCustomTextIcon).setVisibility(View.VISIBLE);
+                    view.findViewById(R.id.LLCustomOptions).setVisibility(View.VISIBLE);
+                    if (customRefresh[0] != null) customRefresh[0].run();
                     break;
                 case SIDE_DRAWER:
                     ((NumberPicker)view.findViewById(R.id.NPDrawerCount)).setValue(element.getBindingCount());
@@ -271,6 +280,114 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             inputControlsView.invalidate();
         });
         sbRadialDistance.setValue(element.getRadialDistance() * 100);
+
+        loadIndexSpinner(view.findViewById(R.id.SCustomTrigger), ControlElement.RadialTrigger.names(), element.getRadialTrigger().ordinal(), (index) -> {
+            element.setRadialTrigger(ControlElement.RadialTrigger.values()[index]);
+            profile.save();
+        });
+
+        CheckBox cbCustomAutoClose = view.findViewById(R.id.CBCustomAutoClose);
+        cbCustomAutoClose.setChecked(element.isDrawerAutoClose());
+        cbCustomAutoClose.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            element.setDrawerAutoClose(isChecked);
+            profile.save();
+        });
+
+        final EditText etNodeText = view.findViewById(R.id.ETNodeText);
+        final boolean[] customUpdating = {false};
+        etNodeText.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(android.text.Editable editable) {
+                if (customUpdating[0] || element.getCustomMenu() == null) return;
+                CustomMenu.Node node = element.getCustomMenu().getSelectedNode();
+                if (node != null) {
+                    node.text = editable.toString().trim();
+                    profile.save();
+                    inputControlsView.invalidate();
+                }
+            }
+        });
+
+        final SeekBar sbNodeSize = view.findViewById(R.id.SBNodeSize);
+        sbNodeSize.setOnValueChangeListener((seekBar, value) -> {
+            if (customUpdating[0] || element.getCustomMenu() == null) return;
+            CustomMenu.Node node = element.getCustomMenu().getSelectedNode();
+            if (node != null) {
+                element.getCustomMenu().setNodeSize(node, value / 100.0f * 2.5f);
+                profile.save();
+            }
+        });
+
+        final Spinner sNodeShape = view.findViewById(R.id.SNodeShape);
+        sNodeShape.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, ControlElement.Shape.names()));
+        sNodeShape.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                if (customUpdating[0] || element.getCustomMenu() == null) return;
+                CustomMenu.Node node = element.getCustomMenu().getSelectedNode();
+                if (node != null && node.shape != ControlElement.Shape.values()[position]) {
+                    node.shape = ControlElement.Shape.values()[position];
+                    profile.save();
+                    inputControlsView.invalidate();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        customRefresh[0] = () -> {
+            CustomMenu menu = element.getCustomMenu();
+            if (menu == null) return;
+            CustomMenu.Node node = menu.getSelectedNode();
+            customUpdating[0] = true;
+
+            TextView tvSelected = view.findViewById(R.id.TVCustomSelected);
+            LinearLayout llNode = view.findViewById(R.id.LLCustomNode);
+            LinearLayout llNodeBinding = view.findViewById(R.id.LLCustomNodeBinding);
+            llNodeBinding.removeAllViews();
+
+            if (node == null) {
+                tvSelected.setText(R.string.custom_selected_root);
+                llNode.setVisibility(View.GONE);
+            }
+            else {
+                tvSelected.setText(getString(R.string.custom_selected_node, menu.getNodePath(node), menu.getNodeCount()));
+                llNode.setVisibility(View.VISIBLE);
+                loadNodeBindingSpinner(llNodeBinding, node);
+                sbNodeSize.setValue(node.size / 2.5f * 100.0f);
+                sNodeShape.setSelection(node.shape.ordinal(), false);
+                etNodeText.setText(node.text);
+            }
+            customUpdating[0] = false;
+        };
+
+        view.findViewById(R.id.BTCustomAdd).setOnClickListener((v) -> {
+            CustomMenu menu = element.getCustomMenu();
+            if (menu == null) return;
+            CustomMenu.Node added = menu.addChild(menu.getSelectedNode());
+            menu.selectNode(added);
+            profile.save();
+            customRefresh[0].run();
+            inputControlsView.invalidate();
+        });
+
+        view.findViewById(R.id.BTCustomRemove).setOnClickListener((v) -> {
+            CustomMenu menu = element.getCustomMenu();
+            if (menu == null || menu.getSelectedNode() == null) return;
+            CustomMenu.Node parent = menu.getSelectedNode().parent;
+            menu.removeNode(menu.getSelectedNode());
+            menu.selectNode(parent != null && !parent.isRoot() ? parent : null);
+            profile.save();
+            customRefresh[0].run();
+            inputControlsView.invalidate();
+        });
 
         loadIndexSpinner(view.findViewById(R.id.SDrawerSide), new String[]{getString(R.string.left), getString(R.string.right), getString(R.string.top), getString(R.string.bottom)}, element.getDrawerSide(), (index) -> {
             element.setDrawerSide((byte)index);
@@ -377,12 +494,17 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         final LinearLayout llIconList = view.findViewById(R.id.LLIconList);
         loadIcons(llIconList, element.getIconId());
 
+        if (element.getCustomMenu() != null) element.getCustomMenu().setOnSelectionChanged(() -> {
+            if (customRefresh[0] != null) customRefresh[0].run();
+        });
+
         updateLayout.run();
 
         PopupWindow popupWindow = AppUtils.showPopupWindow(anchorView, view, 340, 0);
         popupWindow.setOnDismissListener(() -> {
             byte iconId = 0;
-            if (element.getType() == ControlElement.Type.BUTTON) {
+            if (element.getCustomMenu() != null) element.getCustomMenu().setOnSelectionChanged(null);
+            if (element.getType() == ControlElement.Type.BUTTON || element.getType() == ControlElement.Type.CUSTOM_MENU) {
                 for (int i = 0; i < llIconList.getChildCount(); i++) {
                     View child = llIconList.getChildAt(i);
                     if (child.isSelected()) {
@@ -576,6 +698,76 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
 
                 if (binding != element.getBindingAt(index)) {
                     element.setBindingAt(index, binding);
+                    profile.save();
+                    inputControlsView.invalidate();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        update.run();
+        container.addView(view);
+    }
+
+    private void loadNodeBindingSpinner(final LinearLayout container, final CustomMenu.Node node) {
+        View view = LayoutInflater.from(this).inflate(R.layout.binding_field, container, false);
+        view.findViewById(R.id.LLTitleBar).setVisibility(View.GONE);
+
+        final Spinner sBindingType = view.findViewById(R.id.SBindingType);
+        final Spinner sBinding = view.findViewById(R.id.SBinding);
+
+        Runnable update = () -> {
+            String[] bindingEntries = null;
+            switch (sBindingType.getSelectedItemPosition()) {
+                case 0:
+                    bindingEntries = Binding.keyboardBindingLabels();
+                    break;
+                case 1:
+                    bindingEntries = Binding.mouseBindingLabels();
+                    break;
+                case 2:
+                    bindingEntries = Binding.gamepadBindingLabels();
+                    break;
+            }
+
+            sBinding.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, bindingEntries));
+            AppUtils.setSpinnerSelectionFromValue(sBinding, node.binding.toString());
+        };
+
+        sBindingType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                update.run();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        if (node.binding.isKeyboard()) sBindingType.setSelection(0, false);
+        else if (node.binding.isMouse()) sBindingType.setSelection(1, false);
+        else if (node.binding.isGamepad()) sBindingType.setSelection(2, false);
+
+        sBinding.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                Binding binding = Binding.NONE;
+                switch (sBindingType.getSelectedItemPosition()) {
+                    case 0:
+                        binding = Binding.keyboardBindingValues()[position];
+                        break;
+                    case 1:
+                        binding = Binding.mouseBindingValues()[position];
+                        break;
+                    case 2:
+                        binding = Binding.gamepadBindingValues()[position];
+                        break;
+                }
+
+                if (binding != node.binding) {
+                    node.binding = binding;
                     profile.save();
                     inputControlsView.invalidate();
                 }
