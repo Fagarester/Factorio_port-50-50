@@ -217,4 +217,5 @@
     <string name="custom_remove_button">Delete this button (with its sub-buttons)</string>
     <string name="custom_node_size">Button size</string>
     <string name="custom_node_text">Button text (empty = binding name)</string>
+    <string name="custom_hide_on_path">Hide this button once its sub-button is chosen</string>
 </resources>

@@ -314,6 +314,16 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             }
         });
 
+        final CheckBox cbNodeHidePath = view.findViewById(R.id.CBNodeHidePath);
+        cbNodeHidePath.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (customUpdating[0] || element.getCustomMenu() == null) return;
+            CustomMenu.Node node = element.getCustomMenu().getSelectedNode();
+            if (node != null) {
+                node.hideOnPath = isChecked;
+                profile.save();
+            }
+        });
+
         final SeekBar sbNodeSize = view.findViewById(R.id.SBNodeSize);
         sbNodeSize.setOnValueChangeListener((seekBar, value) -> {
             if (customUpdating[0] || element.getCustomMenu() == null) return;
@@ -364,6 +374,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
                 sbNodeSize.setValue(node.size / 2.5f * 100.0f);
                 sNodeShape.setSelection(node.shape.ordinal(), false);
                 etNodeText.setText(node.text);
+                cbNodeHidePath.setChecked(node.hideOnPath);
             }
             customUpdating[0] = false;
         };

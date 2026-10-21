@@ -37,6 +37,7 @@ public class CustomMenu {
         public float size = 2.5f;             // half size, in snap units
         public Shape shape = Shape.CIRCLE;
         public String text = "";
+        public boolean hideOnPath = false;    // hide this button while one of its sub-buttons is being chosen
         public final ArrayList<Node> children = new ArrayList<>();
         public Node parent;
 
@@ -45,6 +46,8 @@ public class CustomMenu {
         float progress;
         float target;
         float delay;
+        float fade = 1;
+        float fadeTarget = 1;
         boolean pressed;
         boolean hover;
 
@@ -56,6 +59,8 @@ public class CustomMenu {
     private static final float OPEN_DURATION = 230.0f;       // ms
     private static final float STAGGER = 35.0f;              // ms between sibling buttons
     private static final float VISIBLE_PROGRESS = 0.55f;
+    private static final float FADE_DURATION = 160.0f;       // ms
+    private static final long HOVER_DWELL = 140;             // ms a finger has to rest on a button (HOLD) to open its sub-buttons
     private static final float POSITION_STEP = 0.5f;         // snap units, used when dragging in the editor
     private static final float MIN_SIZE = 1.0f;
     private static final float MAX_SIZE = 8.0f;
@@ -73,10 +78,20 @@ public class CustomMenu {
     private boolean openedOnThisTouch;
     private boolean closedOnThisTouch;
     private Node hoverNode;
+    private Node pendingNode;
     private final SparseArray<Node> pointerNodes = new SparseArray<>();
 
     private final PointF tmpPoint = new PointF();
     private final RectF tmpRect = new RectF();
+
+    private final Runnable commitRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Node node = pendingNode;
+            pendingNode = null;
+            if (node != null && node == hoverNode && !node.open) setOpen(node, true);
+        }
+    };
 
     private final Runnable frameRunnable = new Runnable() {
         @Override
@@ -203,6 +218,10 @@ public class CustomMenu {
         return view.isEditMode() ? 1.0f : node.progress;
     }
 
+    private float getFade(Node node) {
+        return view.isEditMode() ? 1.0f : node.fade;
+    }
+
     private void getCenter(Node node, PointF out) {
         if (node.parent == null) {
             android.graphics.Rect box = element.getBoundingBox();
@@ -263,7 +282,7 @@ public class CustomMenu {
         collect(root, nodes);
         for (int i = nodes.size() - 1; i >= 0; i--) {
             Node node = nodes.get(i);
-            if (!all && (node.progress < VISIBLE_PROGRESS || !node.parent.open)) continue;
+            if (!all && (node.progress < VISIBLE_PROGRESS || node.fade < 0.5f || !node.parent.open)) continue;
             if (nodeContains(node, x, y)) return node;
         }
         return null;
@@ -311,6 +330,12 @@ public class CustomMenu {
                 else child.progress = Math.max(child.target, child.progress - delta * 1.3f);
                 busy = true;
             }
+            if (child.fade != child.fadeTarget) {
+                float delta = dt / FADE_DURATION;
+                if (child.fadeTarget > child.fade) child.fade = Math.min(child.fadeTarget, child.fade + delta);
+                else child.fade = Math.max(child.fadeTarget, child.fade - delta);
+                busy = true;
+            }
             if (step(child, dt)) busy = true;
         }
         return busy;
@@ -329,6 +354,7 @@ public class CustomMenu {
             child.delay = 0;
             child.open = false;
             child.hover = false;
+            child.fadeTarget = 1;
             closeSubtree(child);
         }
     }
@@ -339,6 +365,30 @@ public class CustomMenu {
             return;
         }
         node.open = open;
+        node.fadeTarget = open && node.hideOnPath ? 0 : 1;
+
+        if (node.parent != null) {
+            // once a direction is chosen the other buttons of the same level fly back; they return when it is closed
+            int position = 0;
+            for (Node sibling : node.parent.children) {
+                if (sibling != node) {
+                    if (open) {
+                        sibling.target = 0;
+                        sibling.delay = 0;
+                        sibling.open = false;
+                        sibling.hover = false;
+                        sibling.fadeTarget = 1;
+                        closeSubtree(sibling);
+                    }
+                    else if (node.parent.open) {
+                        sibling.target = 1;
+                        sibling.delay = position * STAGGER;
+                    }
+                }
+                position++;
+            }
+        }
+
         if (open) {
             int index = 0;
             for (Node child : node.children) {
@@ -369,6 +419,9 @@ public class CustomMenu {
         pointerNodes.clear();
         holdPointerId = -1;
         view.removeCallbacks(frameRunnable);
+        view.removeCallbacks(commitRunnable);
+        pendingNode = null;
+        hoverNode = null;
         animating = false;
         resetRuntime(root);
     }
@@ -376,6 +429,7 @@ public class CustomMenu {
     private void resetRuntime(Node node) {
         node.open = false;
         node.progress = node.target = 0;
+        node.fade = node.fadeTarget = 1;
         node.delay = 0;
         node.pressed = false;
         node.hover = false;
@@ -394,22 +448,30 @@ public class CustomMenu {
         view.postDelayed(() -> view.handleInputEvent(binding, false), 30);
     }
 
-    /** In HOLD mode only the branch that leads to the node stays open. */
-    private void showBranch(Node node) {
-        ArrayList<Node> nodes = new ArrayList<>();
-        collect(root, nodes);
-        for (Node other : nodes) {
-            if (other.open && !isInSubtree(node, other)) setOpen(other, false);
-        }
-        if (node != null && !node.children.isEmpty() && !node.open) setOpen(node, true);
-    }
-
+    /**
+     * HOLD mode: the finger moves over the buttons. Resting on a button that has sub-buttons opens them (and the
+     * other directions disappear); moving back to a button of an upper level closes the deeper levels again.
+     * Empty space between the buttons changes nothing, so the finger can travel to a sub-button.
+     */
     private void setHover(Node node) {
         if (hoverNode == node) return;
         if (hoverNode != null) hoverNode.hover = false;
         hoverNode = node;
-        if (node != null) node.hover = true;
-        showBranch(node);
+        view.removeCallbacks(commitRunnable);
+        pendingNode = null;
+
+        if (node != null) {
+            node.hover = true;
+            ArrayList<Node> nodes = new ArrayList<>();
+            collect(root, nodes);
+            for (Node other : nodes) {
+                if (other.open && !isInSubtree(node, other)) setOpen(other, false);
+            }
+            if (!node.children.isEmpty() && !node.open) {
+                pendingNode = node;
+                view.postDelayed(commitRunnable, HOVER_DWELL);
+            }
+        }
         view.invalidate();
     }
 
@@ -559,7 +621,9 @@ public class CustomMenu {
             float cy = tmpPoint.y;
             float hw = getHalfWidth(node);
             float hh = getHalfHeight(node);
-            float alpha = Mathf.clamp(p * 1.4f, 0, 1);
+            float fade = getFade(node);
+            if (fade <= 0.01f) continue;
+            float alpha = Mathf.clamp(p * 1.4f, 0, 1) * fade;
             boolean filled = node.pressed || node.hover;
             boolean selected = edit && node == selectedNode;
 
@@ -623,6 +687,7 @@ public class CustomMenu {
             object.put("size", node.size);
             object.put("shape", node.shape.name());
             if (node.text != null && !node.text.isEmpty()) object.put("text", node.text);
+            if (node.hideOnPath) object.put("hideOnPath", true);
             if (!node.children.isEmpty()) object.put("nodes", nodesToJSON(node));
             array.put(object);
         }
@@ -650,6 +715,7 @@ public class CustomMenu {
                 node.shape = Shape.CIRCLE;
             }
             node.text = object.optString("text", "");
+            node.hideOnPath = object.optBoolean("hideOnPath", false);
             parent.children.add(node);
             if (object.has("nodes")) loadNodes(node, object.getJSONArray("nodes"));
         }
