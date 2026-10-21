@@ -299,6 +299,8 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         rootSync[0] = () -> {
             boolean holdMode = element.getRadialTrigger() == ControlElement.RadialTrigger.HOLD;
             cbRootAsButton.setEnabled(holdMode);
+            // with TAP there is no way back from a hidden root, unless the menu closes itself after a button is used
+            cbRootHidePath.setEnabled(element.getRadialTrigger() != ControlElement.RadialTrigger.TAP || element.isDrawerAutoClose());
             llRootBinding.removeAllViews();
             if (holdMode && cbRootAsButton.isChecked()) loadBindingSpinner(element, llRootBinding, 0, 0);
         };
@@ -320,6 +322,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         cbCustomAutoClose.setOnCheckedChangeListener((buttonView, isChecked) -> {
             element.setDrawerAutoClose(isChecked);
             profile.save();
+            if (rootSync[0] != null) rootSync[0].run();
         });
 
         final EditText etNodeText = view.findViewById(R.id.ETNodeText);

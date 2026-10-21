@@ -162,6 +162,14 @@ public class CustomMenu {
         return view.isEditMode() ? 1.0f : rootFade;
     }
 
+    /**
+     * With the TAP trigger a hidden root would leave no way back, so hiding only works there when the menu is
+     * closed automatically after a button is used.
+     */
+    private boolean isRootHideAllowed() {
+        return rootHideOnPath && (element.getRadialTrigger() != RadialTrigger.TAP || element.isDrawerAutoClose());
+    }
+
     private void updateRootFade() {
         boolean chosen = false;
         for (Node child : root.children) {
@@ -170,7 +178,7 @@ public class CustomMenu {
                 break;
             }
         }
-        rootFadeTarget = rootHideOnPath && root.open && chosen ? 0 : 1;
+        rootFadeTarget = isRootHideAllowed() && root.open && chosen ? 0 : 1;
         if (rootFade != rootFadeTarget) startAnimation();
     }
 
