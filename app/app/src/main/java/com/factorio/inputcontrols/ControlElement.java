@@ -611,6 +611,7 @@ public class ControlElement {
         float strokeWidth = snappingSize * 0.25f;
         paint.setStrokeWidth(strokeWidth);
         Rect boundingBox = getBoundingBox();
+        boolean rootLayerSaved = false;
 
         switch (type) {
             case CUSTOM_MENU:
@@ -620,6 +621,14 @@ public class ControlElement {
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setStrokeWidth(strokeWidth);
                     paint.setColor(rootColor);
+
+                    float rootFade = customMenu.getRootFade();
+                    if (rootFade <= 0.01f) break;
+                    if (rootFade < 0.99f) {
+                        float margin = snappingSize * 2;
+                        canvas.saveLayerAlpha(boundingBox.left - margin, boundingBox.top - margin, boundingBox.right + margin, boundingBox.bottom + margin, (int)(rootFade * 255));
+                        rootLayerSaved = true;
+                    }
                 }
                 // the root button is drawn like a normal button, on top of its buttons
             case BUTTON: {
@@ -932,6 +941,8 @@ public class ControlElement {
                 break;
             }
         }
+
+        if (rootLayerSaved) canvas.restore();
     }
 
     /* ------------------------------------------------------------ radial menu geometry */
@@ -1195,7 +1206,11 @@ public class ControlElement {
             else if (type == Type.CUSTOM_MENU) {
                 elementJSONObject.put("radialTrigger", radialTrigger.name());
                 elementJSONObject.put("drawerAutoClose", isDrawerAutoClose());
-                if (customMenu != null) elementJSONObject.put("nodes", customMenu.toJSONArray());
+                if (customMenu != null) {
+                    elementJSONObject.put("nodes", customMenu.toJSONArray());
+                    elementJSONObject.put("rootHideOnPath", customMenu.isRootHideOnPath());
+                    elementJSONObject.put("rootAsButton", customMenu.isRootAsButton());
+                }
             }
             else if (type == Type.SIDE_DRAWER) {
                 elementJSONObject.put("drawerSide", drawerSide);

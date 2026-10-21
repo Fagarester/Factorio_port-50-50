@@ -218,4 +218,6 @@
     <string name="custom_node_size">Button size</string>
     <string name="custom_node_text">Button text (empty = binding name)</string>
     <string name="custom_hide_on_path">Hide this button once its sub-button is chosen</string>
+    <string name="custom_root_hide">Hide the root button once a direction is chosen</string>
+    <string name="custom_root_as_button">Use the root button as a button too (experimental, HOLD only: tap = this button, hold = menu)</string>
 </resources>

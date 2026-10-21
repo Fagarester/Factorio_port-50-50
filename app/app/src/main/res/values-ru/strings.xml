@@ -210,4 +210,6 @@
     <string name="custom_node_size">Размер кнопки</string>
     <string name="custom_node_text">Текст кнопки (пусто = название привязки)</string>
     <string name="custom_hide_on_path">Скрывать эту кнопку, когда выбрана вложенная</string>
+    <string name="custom_root_hide">Скрывать корневую кнопку после выбора направления</string>
+    <string name="custom_root_as_button">Использовать корневую кнопку и как кнопку (экспериментально, только HOLD: тап = эта кнопка, удержание = меню)</string>
 </resources>

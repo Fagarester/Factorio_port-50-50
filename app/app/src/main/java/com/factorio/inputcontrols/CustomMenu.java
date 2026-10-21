@@ -60,6 +60,7 @@ public class CustomMenu {
     private static final float STAGGER = 35.0f;              // ms between sibling buttons
     private static final float VISIBLE_PROGRESS = 0.55f;
     private static final float FADE_DURATION = 160.0f;       // ms
+    private static final long ROOT_HOLD_DELAY = 200;         // ms; with "root as button" a shorter touch is a tap on the root button
     private static final long HOVER_DWELL = 140;             // ms a finger has to rest on a button (HOLD) to open its sub-buttons
     private static final float POSITION_STEP = 0.5f;         // snap units, used when dragging in the editor
     private static final float MIN_SIZE = 1.0f;
@@ -68,6 +69,11 @@ public class CustomMenu {
     private final InputControlsView view;
     private final ControlElement element;
     private final Node root = new Node();
+    private boolean rootHideOnPath = false;
+    private boolean rootAsButton = false;
+    private float rootFade = 1;
+    private float rootFadeTarget = 1;
+    private boolean holdOpenPending = false;
     private Node selectedNode;
     private Runnable onSelectionChanged;
 
@@ -83,6 +89,17 @@ public class CustomMenu {
 
     private final PointF tmpPoint = new PointF();
     private final RectF tmpRect = new RectF();
+
+    private final Runnable holdOpenRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!holdOpenPending || holdPointerId == -1) return;
+            holdOpenPending = false;
+            setOpen(root, true);
+            openedOnThisTouch = true;
+            view.invalidate();
+        }
+    };
 
     private final Runnable commitRunnable = new Runnable() {
         @Override
@@ -100,6 +117,12 @@ public class CustomMenu {
             float dt = Math.min(50, now - lastFrameTime);
             lastFrameTime = now;
             boolean busy = step(root, dt);
+            if (rootFade != rootFadeTarget) {
+                float delta = dt / FADE_DURATION;
+                if (rootFadeTarget > rootFade) rootFade = Math.min(rootFadeTarget, rootFade + delta);
+                else rootFade = Math.max(rootFadeTarget, rootFade - delta);
+                busy = true;
+            }
             view.invalidate();
             if (busy) view.postOnAnimation(this);
             else animating = false;
@@ -115,6 +138,40 @@ public class CustomMenu {
 
     public Node getRoot() {
         return root;
+    }
+
+    public boolean isRootHideOnPath() {
+        return rootHideOnPath;
+    }
+
+    public void setRootHideOnPath(boolean hide) {
+        this.rootHideOnPath = hide;
+        updateRootFade();
+    }
+
+    public boolean isRootAsButton() {
+        return rootAsButton;
+    }
+
+    public void setRootAsButton(boolean rootAsButton) {
+        this.rootAsButton = rootAsButton;
+    }
+
+    /** 0..1 opacity of the root button (it can hide itself once a direction has been chosen). */
+    public float getRootFade() {
+        return view.isEditMode() ? 1.0f : rootFade;
+    }
+
+    private void updateRootFade() {
+        boolean chosen = false;
+        for (Node child : root.children) {
+            if (child.open) {
+                chosen = true;
+                break;
+            }
+        }
+        rootFadeTarget = rootHideOnPath && root.open && chosen ? 0 : 1;
+        if (rootFade != rootFadeTarget) startAnimation();
     }
 
     public void createDefaultNodes() {
@@ -397,6 +454,7 @@ public class CustomMenu {
             }
         }
         else closeSubtree(node);
+        updateRootFade();
         startAnimation();
     }
 
@@ -420,6 +478,9 @@ public class CustomMenu {
         holdPointerId = -1;
         view.removeCallbacks(frameRunnable);
         view.removeCallbacks(commitRunnable);
+        view.removeCallbacks(holdOpenRunnable);
+        holdOpenPending = false;
+        rootFade = rootFadeTarget = 1;
         pendingNode = null;
         hoverNode = null;
         animating = false;
@@ -437,6 +498,11 @@ public class CustomMenu {
     }
 
     /* ----------------------------------------------------------------- touch */
+
+    /** "Root as button" only works together with the HOLD trigger. */
+    private boolean isRootButtonActive() {
+        return rootAsButton && element.getRadialTrigger() == RadialTrigger.HOLD && element.getBindingAt(0) != Binding.NONE;
+    }
 
     private boolean isAutoClose() {
         return element.isDrawerAutoClose();
@@ -502,6 +568,11 @@ public class CustomMenu {
                 }
                 else setOpen(root, true);
             }
+            else if (isRootButtonActive() && !root.open) {
+                // tap = press the root button, hold = open the menu: decide after a short delay
+                holdOpenPending = true;
+                view.postDelayed(holdOpenRunnable, ROOT_HOLD_DELAY);
+            }
             else if (root.open) {
                 // HYBRID: the menu was left open by a short tap, the next tap on the root closes it
                 closeAll();
@@ -542,6 +613,15 @@ public class CustomMenu {
             holdPointerId = -1;
             element.setRootPressed(false);
             RadialTrigger trigger = element.getRadialTrigger();
+
+            if (holdOpenPending) {
+                // released before the menu opened: a tap on the root button
+                holdOpenPending = false;
+                view.removeCallbacks(holdOpenRunnable);
+                pulse(element.getBindingAt(0));
+                view.invalidate();
+                return true;
+            }
 
             if (trigger != RadialTrigger.TAP && openedOnThisTouch && !closedOnThisTouch) {
                 Node chosen = hoverNode;

@@ -135,6 +135,24 @@
                 android:layout_height="wrap_content"
                 android:text="@string/custom_auto_close" />
 
+            <CheckBox
+                android:id="@+id/CBRootHidePath"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_root_hide" />
+
+            <CheckBox
+                android:id="@+id/CBRootAsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_root_as_button" />
+
+            <LinearLayout
+                android:id="@+id/LLRootBinding"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
             <TextView
                 android:id="@+id/TVCustomSelected"
                 android:layout_width="match_parent"

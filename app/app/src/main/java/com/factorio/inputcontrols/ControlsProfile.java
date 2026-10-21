@@ -248,6 +248,8 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
                     if (elementJSONObject.has("drawerLayout")) element.setDrawerLayout(SideDrawer.Layout.valueOf(elementJSONObject.getString("drawerLayout")));
                     if (element.getType() == ControlElement.Type.CUSTOM_MENU && elementJSONObject.has("nodes")) {
                         element.getCustomMenu().loadFromJSON(elementJSONObject.getJSONArray("nodes"));
+                        element.getCustomMenu().setRootHideOnPath(elementJSONObject.optBoolean("rootHideOnPath", false));
+                        element.getCustomMenu().setRootAsButton(elementJSONObject.optBoolean("rootAsButton", false));
                     }
                     if (elementJSONObject.has("gridColumns")) element.setGridColumns(elementJSONObject.getInt("gridColumns"));
                     if (elementJSONObject.has("gridRows")) element.setGridRows(elementJSONObject.getInt("gridRows"));

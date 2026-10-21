@@ -281,10 +281,39 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         });
         sbRadialDistance.setValue(element.getRadialDistance() * 100);
 
+        final Runnable[] rootSync = {null};
         loadIndexSpinner(view.findViewById(R.id.SCustomTrigger), ControlElement.RadialTrigger.names(), element.getRadialTrigger().ordinal(), (index) -> {
             element.setRadialTrigger(ControlElement.RadialTrigger.values()[index]);
             profile.save();
+            if (rootSync[0] != null) rootSync[0].run();
         });
+
+        final CheckBox cbRootHidePath = view.findViewById(R.id.CBRootHidePath);
+        final CheckBox cbRootAsButton = view.findViewById(R.id.CBRootAsButton);
+        final LinearLayout llRootBinding = view.findViewById(R.id.LLRootBinding);
+        if (element.getCustomMenu() != null) {
+            cbRootHidePath.setChecked(element.getCustomMenu().isRootHideOnPath());
+            cbRootAsButton.setChecked(element.getCustomMenu().isRootAsButton());
+        }
+        // the root can only act as a button together with the HOLD trigger: otherwise the box is visible but locked
+        rootSync[0] = () -> {
+            boolean holdMode = element.getRadialTrigger() == ControlElement.RadialTrigger.HOLD;
+            cbRootAsButton.setEnabled(holdMode);
+            llRootBinding.removeAllViews();
+            if (holdMode && cbRootAsButton.isChecked()) loadBindingSpinner(element, llRootBinding, 0, 0);
+        };
+        cbRootHidePath.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (element.getCustomMenu() == null) return;
+            element.getCustomMenu().setRootHideOnPath(isChecked);
+            profile.save();
+        });
+        cbRootAsButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (element.getCustomMenu() == null) return;
+            element.getCustomMenu().setRootAsButton(isChecked);
+            profile.save();
+            rootSync[0].run();
+        });
+        rootSync[0].run();
 
         CheckBox cbCustomAutoClose = view.findViewById(R.id.CBCustomAutoClose);
         cbCustomAutoClose.setChecked(element.isDrawerAutoClose());
