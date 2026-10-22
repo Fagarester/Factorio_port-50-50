@@ -349,7 +349,7 @@ public class SideDrawer {
         float cornerRadius = snap * 1.0f * scale;
         float p = getProgress();
 
-        int backgroundColor = withAlpha(Color.argb(255, 12, 12, 12), Math.min(1.0f, view.getOverlayOpacity() * element.getOpacity() * 1.6f));
+        int backgroundColor = withAlpha(Color.argb(255, 12, 12, 12), Math.min(1.0f, 0.65f * element.getOpacity()));
         int baseColor = element.isSelected() ? element.getHighlightColor() : lightColor;
 
         paint.setStrokeWidth(strokeWidth);

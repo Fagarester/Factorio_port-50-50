@@ -90,7 +90,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private XServer xServer;
     private InputControlsManager inputControlsManager;
     private RootFS rootFS;
-    private Runnable editInputControlsCallback;
     private String[] graphicsDriver = {GraphicsDrivers.DEFAULT_VULKAN_DRIVER, GraphicsDrivers.DEFAULT_OPENGL_DRIVER};
     private String audioDriver = Container.DEFAULT_AUDIO_DRIVER;
     private ScreenInfo screenInfo = new ScreenInfo(Container.DEFAULT_SCREEN_SIZE);
@@ -210,10 +209,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            if (editInputControlsCallback != null) {
-                editInputControlsCallback.run();
-                editInputControlsCallback = null;
-            }
+            applyInputControlsScreenResult(data);
         }
     }
 
@@ -280,7 +276,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_input_controls:
-                showInputControlsDialog();
+                openInputControlsScreen();
                 drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_toggle_fullscreen:
@@ -614,7 +610,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         rootView.addView(touchpadView);
 
         inputControlsView = new InputControlsView(this);
-        inputControlsView.setOverlayOpacity(preferences.getFloat("overlay_opacity", InputControlsView.DEFAULT_OVERLAY_OPACITY));
+        inputControlsView.setShowTouchscreenControls(preferences.getBoolean("show_touchscreen_controls", true));
+        xServer.setRelativeMouseMovement(preferences.getBoolean("relative_mouse_movement", false));
         inputControlsView.setTouchpadView(touchpadView);
         inputControlsView.setXServer(xServer);
         inputControlsView.setVisibility(View.GONE);
@@ -631,64 +628,33 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         AppUtils.observeSoftKeyboardVisibility(drawerLayout, renderer::setScreenOffsetYRelativeToCursor);
     }
 
-    private void showInputControlsDialog() {
-        final ContentDialog dialog = new ContentDialog(this, R.layout.input_controls_dialog);
-        dialog.setTitle(R.string.input_controls);
-        dialog.setIcon(R.drawable.icon_input_controls);
+    /**
+     * "Input controls" in the side menu opens the input controls screen directly: profile selection and editing,
+     * import / export and the three switches. When it is closed the game applies the result.
+     */
+    private void openInputControlsScreen() {
+        ControlsProfile activeProfile = inputControlsView.getProfile();
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("edit_input_controls", true);
+        intent.putExtra("from_game", true);
+        intent.putExtra("selected_profile_id", activeProfile != null ? activeProfile.id : 0);
+        startActivityForResult(intent, MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE);
+    }
 
-        final Spinner sProfile = dialog.findViewById(R.id.SProfile);
-        Runnable loadProfileSpinner = () -> {
-            ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
-            ArrayList<String> profileItems = new ArrayList<>();
-            int selectedPosition = 0;
-            profileItems.add("-- "+getString(R.string.disabled)+" --");
-            for (int i = 0; i < profiles.size(); i++) {
-                ControlsProfile profile = profiles.get(i);
-                if (profile == inputControlsView.getProfile()) selectedPosition = i + 1;
-                profileItems.add(profile.getName());
-            }
+    private void applyInputControlsScreenResult(@Nullable Intent data) {
+        int profileId = data != null ? data.getIntExtra("selected_profile_id", 0) : 0;
 
-            sProfile.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profileItems));
-            sProfile.setSelection(selectedPosition);
-        };
-        loadProfileSpinner.run();
+        // the profile may have been edited (or imported / duplicated) there: read everything from the files again
+        inputControlsManager.loadProfiles(false);
+        ControlsProfile profile = profileId > 0 ? inputControlsManager.getProfile(profileId) : null;
 
-        final CheckBox cbRelativeMouseMovement = dialog.findViewById(R.id.CBRelativeMouseMovement);
-        cbRelativeMouseMovement.setChecked(xServer.isRelativeMouseMovement());
+        if (profile != null) showInputControls(profile);
+        else hideInputControls();
 
-        final CheckBox cbShowControlsWithGamepad = dialog.findViewById(R.id.CBShowControlsWithGamepad);
-        cbShowControlsWithGamepad.setChecked(showControlsWithGamepad);
-
-        final CheckBox cbShowTouchscreenControls = dialog.findViewById(R.id.CBShowTouchscreenControls);
-        cbShowTouchscreenControls.setChecked(inputControlsView.isShowTouchscreenControls());
-
-        dialog.findViewById(R.id.BTSettings).setOnClickListener((v) -> {
-            int position = sProfile.getSelectedItemPosition();
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("edit_input_controls", true);
-            intent.putExtra("selected_profile_id", position > 0 ? inputControlsManager.getProfiles().get(position - 1).id : 0);
-            editInputControlsCallback = () -> {
-                hideInputControls();
-                inputControlsManager.loadProfiles(true);
-                loadProfileSpinner.run();
-            };
-            startActivityForResult(intent, MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE);
-        });
-
-        dialog.setOnConfirmCallback(() -> {
-            xServer.setRelativeMouseMovement(cbRelativeMouseMovement.isChecked());
-            inputControlsView.setShowTouchscreenControls(cbShowTouchscreenControls.isChecked());
-            showControlsWithGamepad = cbShowControlsWithGamepad.isChecked();
-            preferences.edit().putBoolean("show_controls_with_gamepad", showControlsWithGamepad).apply();
-            int position = sProfile.getSelectedItemPosition();
-            if (position > 0) {
-                showInputControls(inputControlsManager.getProfiles().get(position - 1));
-            }
-            else hideInputControls();
-            updateControlsForGamepad(-1);
-        });
-
-        dialog.show();
+        xServer.setRelativeMouseMovement(preferences.getBoolean("relative_mouse_movement", false));
+        showControlsWithGamepad = preferences.getBoolean("show_controls_with_gamepad", false);
+        inputControlsView.setShowTouchscreenControls(preferences.getBoolean("show_touchscreen_controls", true));
+        updateControlsForGamepad(-1);
     }
 
     // id of the profile that is switched on automatically for native games:

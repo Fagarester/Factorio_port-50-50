@@ -59,7 +59,7 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
 
         inputControlsView = new InputControlsView(this);
         inputControlsView.setEditMode(true);
-        inputControlsView.setOverlayOpacity(0.6f);
+        inputControlsView.setOverlayOpacity(1.0f);
 
         profile = InputControlsManager.loadProfile(this, ControlsProfile.getProfileFile(this, getIntent().getIntExtra("profile_id", 0)));
         ((TextView)findViewById(R.id.TVProfileName)).setText(profile.getName());

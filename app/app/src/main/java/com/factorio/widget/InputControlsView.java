@@ -36,7 +36,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class InputControlsView extends View {
-    public static final float DEFAULT_OVERLAY_OPACITY = 0.4f;
+    public static final float DEFAULT_OVERLAY_OPACITY = 1.0f;   // no hidden transparency: opacity is set per element and in the style panel
     private boolean editMode = false;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private ColorFilter lightColorFilter;

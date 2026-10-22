@@ -147,7 +147,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // file manager: the back gesture goes up one folder, it leaves only from a root ("Game" / "Download")
         if (currentFragment instanceof FileManagerFragment && ((FileManagerFragment)currentFragment).handleBack()) return;
 
-        if (currentFragment instanceof SettingsFragment || editInputControls) {
+        if (editInputControls) {
+            finishInputControlsEditing();
+            return;
+        }
+
+        if (currentFragment instanceof SettingsFragment) {
             finish();
             return;
         }
@@ -174,12 +179,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-        if (editInputControls) {
-            setResult(RESULT_OK);
-            finish();
-        }
+        if (editInputControls) finishInputControlsEditing();
         else drawerLayout.openDrawer(GravityCompat.START);
         return true;
+    }
+
+    /** Leaves the input controls screen and tells the game which profile is selected, so that it applies it. */
+    private void finishInputControlsEditing() {
+        Intent result = new Intent();
+        if (currentFragment instanceof InputControlsFragment) {
+            result.putExtra("selected_profile_id", ((InputControlsFragment)currentFragment).getCurrentProfileId());
+        }
+        setResult(RESULT_OK, result);
+        finish();
     }
 
     @Override
@@ -194,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startGame();
                 break;
             case R.id.menu_item_input_controls:
-                showFragment(new InputControlsFragment(selectedProfileId));
+                showFragment(new InputControlsFragment(selectedProfileId, editInputControls && openedFromGame));
                 break;
             case R.id.menu_item_files:
                 showFragment(new FileManagerFragment());

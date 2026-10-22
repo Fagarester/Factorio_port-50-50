@@ -65,26 +65,30 @@
             app:minValue="10"
             app:maxValue="250" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/overlay_opacity"/>
-
-        <com.factorio.widget.SeekBar
-            android:id="@+id/SBOverlayOpacity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:suffix="%"
-            app:step="5"
-            app:minValue="10"
-            app:maxValue="100" />
-
         <CheckBox
             android:id="@+id/CBDisableMouseInput"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/disable_mouse_input"
             android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/CBShowTouchscreenControls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/show_touchscreen_controls" />
+
+        <CheckBox
+            android:id="@+id/CBShowControlsWithGamepad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/show_controls_with_gamepad" />
+
+        <CheckBox
+            android:id="@+id/CBRelativeMouseMovement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/relative_mouse_movement" />
 
         <View
             style="@style/HorizontalLine"

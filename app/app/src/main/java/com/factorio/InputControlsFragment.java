@@ -54,9 +54,21 @@ public class InputControlsFragment extends Fragment {
     private Runnable updateLayout;
     private Callback<ControlsProfile> importProfileCallback;
     private final int selectedProfileId;
+    private final boolean openedFromGame;
 
     public InputControlsFragment(int selectedProfileId) {
+        this(selectedProfileId, false);
+    }
+
+    /** openedFromGame: the selected profile is the one that is switched on in the running game. */
+    public InputControlsFragment(int selectedProfileId, boolean openedFromGame) {
         this.selectedProfileId = selectedProfileId;
+        this.openedFromGame = openedFromGame;
+    }
+
+    /** Id of the selected profile, 0 when none is selected (in the game that means the controls are off). */
+    public int getCurrentProfileId() {
+        return currentProfile != null ? currentProfile.id : 0;
     }
 
     @Override
@@ -128,9 +140,18 @@ public class InputControlsFragment extends Fragment {
 
         updateLayout.run();
 
-        SeekBar sbOverlayOpacity = view.findViewById(R.id.SBOverlayOpacity);
-        sbOverlayOpacity.setOnValueChangeListener((seekBar, value) -> preferences.edit().putFloat("overlay_opacity", value / 100.0f).apply());
-        sbOverlayOpacity.setValue(preferences.getFloat("overlay_opacity", InputControlsView.DEFAULT_OVERLAY_OPACITY) * 100);
+        // these three used to live in the in-game dialog; the game applies them when it gets back from this screen
+        CheckBox cbShowTouchscreenControls = view.findViewById(R.id.CBShowTouchscreenControls);
+        cbShowTouchscreenControls.setChecked(preferences.getBoolean("show_touchscreen_controls", true));
+        cbShowTouchscreenControls.setOnCheckedChangeListener((buttonView, isChecked) -> preferences.edit().putBoolean("show_touchscreen_controls", isChecked).apply());
+
+        CheckBox cbShowControlsWithGamepad = view.findViewById(R.id.CBShowControlsWithGamepad);
+        cbShowControlsWithGamepad.setChecked(preferences.getBoolean("show_controls_with_gamepad", false));
+        cbShowControlsWithGamepad.setOnCheckedChangeListener((buttonView, isChecked) -> preferences.edit().putBoolean("show_controls_with_gamepad", isChecked).apply());
+
+        CheckBox cbRelativeMouseMovement = view.findViewById(R.id.CBRelativeMouseMovement);
+        cbRelativeMouseMovement.setChecked(preferences.getBoolean("relative_mouse_movement", false));
+        cbRelativeMouseMovement.setOnCheckedChangeListener((buttonView, isChecked) -> preferences.edit().putBoolean("relative_mouse_movement", isChecked).apply());
 
         view.findViewById(R.id.BTAddProfile).setOnClickListener((v) -> ContentDialog.prompt(context, R.string.profile_name, null, (name) -> {
             currentProfile = manager.createProfile(name);
@@ -273,7 +294,7 @@ public class InputControlsFragment extends Fragment {
     private void loadProfileSpinner(Spinner spinner) {
         final ArrayList<ControlsProfile> profiles = manager.getProfiles();
         ArrayList<String> values = new ArrayList<>();
-        values.add("-- "+getString(R.string.select_profile)+" --");
+        values.add("-- "+getString(openedFromGame ? R.string.disabled : R.string.select_profile)+" --");
 
         int selectedPosition = 0;
         for (int i = 0; i < profiles.size(); i++) {
