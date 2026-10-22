@@ -42,12 +42,36 @@ public class InputControlsManager {
     }
 
     public ArrayList<ControlsProfile> getProfiles() {
-        return getProfiles(false);
+        if (!profilesLoaded) loadProfiles();
+        return profiles;
     }
 
-    public ArrayList<ControlsProfile> getProfiles(boolean ignoreTemplates) {
-        if (!profilesLoaded) loadProfiles(ignoreTemplates);
-        return profiles;
+    /**
+     * Only one bundled profile is left ("control", formerly "RTS"). On devices that already have the old
+     * bundled profiles they are removed once: the template, the virtual gamepad and FPS (only when they still
+     * carry the original id and name, so profiles made by the user are never touched) and RTS is renamed.
+     */
+    private void removeObsoleteBundledProfiles(File profilesDir, SharedPreferences preferences) {
+        if (preferences.getBoolean("inputcontrols_bundled_cleanup_v1", false)) return;
+
+        File[] files = profilesDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                ControlsProfile profile = loadProfile(context, file);
+                if (profile == null) continue;
+
+                String name = profile.getName();
+                boolean obsolete = (profile.id == 2 && "Template (12 buttons)".equals(name)) ||
+                                   (profile.id == 3 && "Virtual Gamepad".equals(name)) ||
+                                   (profile.id == 4 && "FPS".equals(name));
+                if (obsolete) FileUtils.delete(file);
+                else if (profile.id == 1 && "RTS".equals(name)) {
+                    profile.setName("control");
+                    profile.save();
+                }
+            }
+        }
+        preferences.edit().putBoolean("inputcontrols_bundled_cleanup_v1", true).apply();
     }
 
     private void copyAssetProfilesIfNeeded() {
@@ -58,6 +82,7 @@ public class InputControlsManager {
         }
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        removeObsoleteBundledProfiles(profilesDir, preferences);
 
         int newVersion = AppUtils.getVersionCode(context);
         int oldVersion = preferences.getInt("inputcontrols_app_version", 0);
@@ -91,7 +116,7 @@ public class InputControlsManager {
         catch (IOException e) {}
     }
 
-    public void loadProfiles(boolean ignoreTemplates) {
+    public void loadProfiles() {
         File profilesDir = InputControlsManager.getProfilesDir(context);
         copyAssetProfilesIfNeeded();
 
@@ -100,7 +125,7 @@ public class InputControlsManager {
         if (files != null) {
             for (File file : files) {
                 ControlsProfile profile = loadProfile(context, file);
-                if (!(ignoreTemplates && profile.isTemplate())) profiles.add(profile);
+                profiles.add(profile);
                 maxProfileId = Math.max(maxProfileId, profile.id);
             }
         }

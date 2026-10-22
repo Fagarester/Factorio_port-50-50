@@ -52,51 +52,10 @@
             </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cursor_speed"/>
-
-        <com.factorio.widget.SeekBar
-            android:id="@+id/SBCursorSpeed"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:suffix="%"
-            app:minValue="10"
-            app:maxValue="250" />
-
-        <CheckBox
-            android:id="@+id/CBDisableMouseInput"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/disable_mouse_input"
-            android:layout_marginTop="8dp" />
-
-        <CheckBox
-            android:id="@+id/CBShowTouchscreenControls"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/show_touchscreen_controls" />
-
-        <CheckBox
-            android:id="@+id/CBShowControlsWithGamepad"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/show_controls_with_gamepad" />
-
-        <CheckBox
-            android:id="@+id/CBRelativeMouseMovement"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/relative_mouse_movement" />
-
-        <View
-            style="@style/HorizontalLine"
-            android:layout_marginTop="16dp" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal">
 
             <Button
@@ -116,7 +75,6 @@
                 android:text="@string/export_profile" />
         </LinearLayout>
 
-        <View style="@style/HorizontalLine" />
 
         <Button
             style="@style/ButtonPositive"
@@ -124,7 +82,118 @@
             android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
             android:text="@string/controls_editor" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+            <LinearLayout style="@style/FieldSet">
+                <CheckBox
+                    android:id="@+id/CBShowTouchscreenControls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/show_touchscreen_controls" />
+
+                <CheckBox
+                    android:id="@+id/CBShowControlsWithGamepad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/show_controls_with_gamepad" />
+            </LinearLayout>
+            <TextView
+                style="@style/FieldSetLabel"
+                android:text="@string/controls_group" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout style="@style/FieldSet">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/cursor_speed" />
+                <com.factorio.widget.SeekBar
+                    android:id="@+id/SBCursorSpeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:suffix="%"
+                    app:minValue="10"
+                    app:maxValue="200" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cursor_size" />
+                        <com.factorio.widget.SeekBar
+                            android:id="@+id/SBCursorSize"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:suffix="%"
+                            app:step="5"
+                            app:minValue="100"
+                            app:maxValue="200" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginLeft="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/color" />
+                        <com.factorio.widget.ColorPickerView
+                            android:id="@+id/CPVCursorColor"
+                            android:layout_width="84dp"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View style="@style/FieldSeparator" />
+
+                <CheckBox
+                    android:id="@+id/CBDisableMouseInput"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/disable_mouse_input" />
+
+                <CheckBox
+                    android:id="@+id/CBRelativeMouseMovement"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relative_mouse_movement" />
+
+                <CheckBox
+                    android:id="@+id/CBMoveCursorToTouchpoint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/move_cursor_to_touchpoint" />
+
+                <CheckBox
+                    android:id="@+id/CBCapturePointerOnExternalMouse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/capture_pointer_on_external_mouse" />
+            </LinearLayout>
+            <TextView
+                style="@style/FieldSetLabel"
+                android:text="@string/mouse_and_cursor" />
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"

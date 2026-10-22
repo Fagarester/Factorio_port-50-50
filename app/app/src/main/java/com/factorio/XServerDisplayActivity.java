@@ -644,8 +644,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private void applyInputControlsScreenResult(@Nullable Intent data) {
         int profileId = data != null ? data.getIntExtra("selected_profile_id", 0) : 0;
 
+        // mouse and cursor settings are changed on that screen too
+        GLRenderer renderer = xServerView.getRenderer();
+        renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
+        renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
+        globalCursorSpeed = preferences.getFloat("cursor_speed", 1.0f);
+        capturePointerOnExternalMouse = preferences.getBoolean("capture_pointer_on_external_mouse", true);
+        touchpadView.setMoveCursorToTouchpoint(preferences.getBoolean("move_cursor_to_touchpoint", false));
+
         // the profile may have been edited (or imported / duplicated) there: read everything from the files again
-        inputControlsManager.loadProfiles(false);
+        inputControlsManager.loadProfiles();
         ControlsProfile profile = profileId > 0 ? inputControlsManager.getProfile(profileId) : null;
 
         if (profile != null) showInputControls(profile);
@@ -658,7 +666,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     // id of the profile that is switched on automatically for native games:
-    // 1 = RTS (assets/inputcontrols/profiles/controls-1.icp), 2 = Template (12 buttons), 3 = Virtual Gamepad, 4 = FPS
+    // 1 = "control" (assets/inputcontrols/profiles/controls-1.icp), the only bundled profile
     private static final int DEFAULT_NATIVE_CONTROLS_PROFILE_ID = 1;
 
     private boolean isNativeGameContainer() {
@@ -671,7 +679,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         inputControlsView.requestFocus();
         inputControlsView.setProfile(profile);
 
-        touchpadView.setSensitivity(profile.getCursorSpeed() * globalCursorSpeed);
+        // one cursor speed for everything: the common one (the profile's own value is kept in sync for the stick-driven cursor)
+        profile.setCursorSpeed(globalCursorSpeed);
+        touchpadView.setSensitivity(globalCursorSpeed);
         touchpadView.setPointerButtonRightEnabled(false);
 
         GLRenderer renderer = xServerView.getRenderer();

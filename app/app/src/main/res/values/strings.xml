@@ -232,4 +232,6 @@
     <string name="style_icon_filter">Icon filter (paint icons in the text color; turn off for colored icons)</string>
     <string name="style_reset_all">Reset the common style</string>
     <string name="style_reset_element">Reset this element to the common style</string>
+    <string name="controls_group">Controls</string>
+    <string name="mouse_and_cursor">Mouse and cursor</string>
 </resources>

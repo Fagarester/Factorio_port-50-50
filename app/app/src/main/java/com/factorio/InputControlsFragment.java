@@ -37,6 +37,7 @@ import com.factorio.inputcontrols.ControlsProfile;
 import com.factorio.inputcontrols.ExternalController;
 import com.factorio.inputcontrols.InputControlsManager;
 import com.factorio.widget.InputControlsView;
+import com.factorio.widget.ColorPickerView;
 import com.factorio.widget.SeekBar;
 
 import org.json.JSONException;
@@ -110,13 +111,28 @@ public class InputControlsFragment extends Fragment {
         final Spinner sProfile = view.findViewById(R.id.SProfile);
         loadProfileSpinner(sProfile);
 
+        // everything about the mouse and the cursor lives in one frame; speed, size, color and the switches are
+        // common settings, only "disable mouse input" belongs to the selected profile
         final SeekBar sbCursorSpeed = view.findViewById(R.id.SBCursorSpeed);
-        sbCursorSpeed.setOnValueChangeListener((seekBar, value) -> {
-            if (currentProfile != null) {
-                currentProfile.setCursorSpeed(value / 100.0f);
-                currentProfile.save();
-            }
-        });
+        sbCursorSpeed.setValue(preferences.getFloat("cursor_speed", 1.0f) * 100);
+        sbCursorSpeed.setOnValueChangeListener((seekBar, value) -> preferences.edit().putFloat("cursor_speed", value / 100.0f).apply());
+
+        final SeekBar sbCursorSize = view.findViewById(R.id.SBCursorSize);
+        sbCursorSize.setValue(preferences.getFloat("cursor_scale", 1.0f) * 100);
+        sbCursorSize.setOnValueChangeListener((seekBar, value) -> preferences.edit().putFloat("cursor_scale", value / 100.0f).apply());
+
+        final ColorPickerView cpvCursorColor = view.findViewById(R.id.CPVCursorColor);
+        cpvCursorColor.setPalette(0xffffff, 0x000000, 0x651fff, 0xffea00, 0xff9100, 0xf50057, 0x00b0ff, 0x1de9b6);
+        cpvCursorColor.setColor(preferences.getInt("cursor_color", 0xffffff));
+        cpvCursorColor.setOnColorChangedListener((color) -> preferences.edit().putInt("cursor_color", color).apply());
+
+        CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
+        cbMoveCursorToTouchpoint.setChecked(preferences.getBoolean("move_cursor_to_touchpoint", false));
+        cbMoveCursorToTouchpoint.setOnCheckedChangeListener((buttonView, isChecked) -> preferences.edit().putBoolean("move_cursor_to_touchpoint", isChecked).apply());
+
+        CheckBox cbCapturePointerOnExternalMouse = view.findViewById(R.id.CBCapturePointerOnExternalMouse);
+        cbCapturePointerOnExternalMouse.setChecked(preferences.getBoolean("capture_pointer_on_external_mouse", true));
+        cbCapturePointerOnExternalMouse.setOnCheckedChangeListener((buttonView, isChecked) -> preferences.edit().putBoolean("capture_pointer_on_external_mouse", isChecked).apply());
 
         CheckBox cbDisableMouseInput = view.findViewById(R.id.CBDisableMouseInput);
         cbDisableMouseInput.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -127,14 +143,7 @@ public class InputControlsFragment extends Fragment {
         });
 
         updateLayout = () -> {
-            if (currentProfile != null) {
-                sbCursorSpeed.setValue(currentProfile.getCursorSpeed() * 100);
-                cbDisableMouseInput.setChecked(currentProfile.isDisableMouseInput());
-            }
-            else {
-                sbCursorSpeed.setValue(100);
-                cbDisableMouseInput.setChecked(false);
-            }
+            cbDisableMouseInput.setChecked(currentProfile != null && currentProfile.isDisableMouseInput());
             loadExternalControllers(view);
         };
 

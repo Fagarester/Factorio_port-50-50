@@ -182,10 +182,6 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
         return immutableElements;
     }
 
-    public boolean isTemplate() {
-        return name.toLowerCase(Locale.ENGLISH).contains("template");
-    }
-
     public ArrayList<ExternalController> loadControllers() {
         controllers.clear();
         controllersLoaded = false;

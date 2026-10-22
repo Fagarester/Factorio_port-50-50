@@ -100,12 +100,6 @@ public class SettingsFragment extends Fragment {
         final int oldTheme = Math.max(0, Math.min(THEME_BUTTON_IDS.length - 1, preferences.getInt("app_theme", APP_THEME_DARK6)));
         rgAppTheme.check(THEME_BUTTON_IDS[oldTheme]);
 
-        final CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
-        cbMoveCursorToTouchpoint.setChecked(preferences.getBoolean("move_cursor_to_touchpoint", false));
-
-        final CheckBox cbCapturePointerOnExternalMouse = view.findViewById(R.id.CBCapturePointerOnExternalMouse);
-        cbCapturePointerOnExternalMouse.setChecked(preferences.getBoolean("capture_pointer_on_external_mouse", true));
-
         final CheckBox cbEnableDebugLogs = view.findViewById(R.id.CBEnableDebugLogs);
         cbEnableDebugLogs.setChecked(preferences.getBoolean("enable_debug_logs", false));
 
@@ -117,16 +111,6 @@ public class SettingsFragment extends Fragment {
         etLogFile.setText(preferences.getString("log_file", defaultLogPath));
         etLogFile.setVisibility(cbSaveLogsToFile.isChecked() ? View.VISIBLE : View.GONE);
         cbSaveLogsToFile.setOnCheckedChangeListener((buttonView, isChecked) -> etLogFile.setVisibility(isChecked ? View.VISIBLE : View.GONE));
-
-        final SeekBar sbCursorSpeed = view.findViewById(R.id.SBCursorSpeed);
-        sbCursorSpeed.setValue(preferences.getFloat("cursor_speed", 1.0f) * 100);
-
-        final SeekBar sbCursorSize = view.findViewById(R.id.SBCursorSize);
-        sbCursorSize.setValue(preferences.getFloat("cursor_scale", 1.0f) * 100);
-
-        final ColorPickerView cpvCursorColor = view.findViewById(R.id.CPVCursorColor);
-        cpvCursorColor.setPalette(0xffffff, 0x000000, 0x651fff, 0xffea00, 0xff9100, 0xf50057, 0x00b0ff, 0x1de9b6);
-        cpvCursorColor.setColor(preferences.getInt("cursor_color", 0xffffff));
 
         final Spinner sLanguage = view.findViewById(R.id.SLanguage);
         sLanguage.setSelection(LocaleHelper.getLocaleIndex(context));
@@ -144,11 +128,6 @@ public class SettingsFragment extends Fragment {
             }
 
             SharedPreferences.Editor editor = preferences.edit();
-            editor.putBoolean("move_cursor_to_touchpoint", cbMoveCursorToTouchpoint.isChecked());
-            editor.putBoolean("capture_pointer_on_external_mouse", cbCapturePointerOnExternalMouse.isChecked());
-            editor.putFloat("cursor_speed", sbCursorSpeed.getValue() / 100.0f);
-            editor.putFloat("cursor_scale", sbCursorSize.getValue() / 100.0f);
-            editor.putInt("cursor_color", cpvCursorColor.getColor());
             editor.putBoolean("enable_debug_logs", cbEnableDebugLogs.isChecked());
             editor.putBoolean("save_logs_to_file", cbSaveLogsToFile.isChecked());
 

@@ -224,4 +224,6 @@
     <string name="style_icon_filter">Фильтр иконок (красить иконки в цвет текста; выключи, чтобы иконки были цветными)</string>
     <string name="style_reset_all">Сбросить общий стиль</string>
     <string name="style_reset_element">Сбросить этот элемент к общему стилю</string>
+    <string name="controls_group">Управление</string>
+    <string name="mouse_and_cursor">Мышь и курсор</string>
 </resources>
