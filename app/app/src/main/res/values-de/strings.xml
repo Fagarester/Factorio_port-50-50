@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Ein Netzwerkfehler ist aufgetreten</string>
     <string name="you_cannot_remove_this_component_version">Diese Komponentenversion kann nicht entfernt werden</string>
     <string name="columns">Spalten</string>
-    <string name="theme">Design</string>
     <string name="max_device_memory">Maximaler Gerätespeicher</string>
     <string name="configuration">Konfiguration</string>
     <string name="logs">Protokolle</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiP-Modus</string>
     <string name="zero_no_limit">0 (Kein Limit)</string>
     <string name="custom">Benutzerdefiniert</string>
-    <string name="light">Hell</string>
-    <string name="dark">Dunkel</string>
     <string name="both">Beides</string>
     <string name="low_latency">Niedrige Latenz</string>
     <string name="power_saving">Energiesparen</string>

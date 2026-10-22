@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">ネットワークエラーが発生しました</string>
     <string name="you_cannot_remove_this_component_version">このコンポーネントバージョンは削除できません</string>
     <string name="columns">列</string>
-    <string name="theme">テーマ</string>
     <string name="max_device_memory">最大デバイスメモリ</string>
     <string name="configuration">設定</string>
     <string name="logs">ログ</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiPモード</string>
     <string name="zero_no_limit">0（制限なし）</string>
     <string name="custom">カスタム</string>
-    <string name="light">ライト</string>
-    <string name="dark">ダーク</string>
     <string name="both">両方</string>
     <string name="low_latency">低遅延</string>
     <string name="power_saving">省電力</string>

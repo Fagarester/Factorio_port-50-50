@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Er is een netwerkfout opgetreden</string>
     <string name="you_cannot_remove_this_component_version">U kunt deze componentversie niet verwijderen</string>
     <string name="columns">Kolommen</string>
-    <string name="theme">Thema</string>
     <string name="max_device_memory">Maximaal apparaatgeheugen</string>
     <string name="configuration">Configuratie</string>
     <string name="logs">Logboeken</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiP-modus</string>
     <string name="zero_no_limit">0 (Geen limiet)</string>
     <string name="custom">Aangepast</string>
-    <string name="light">Licht</string>
-    <string name="dark">Donker</string>
     <string name="both">Beide</string>
     <string name="low_latency">Lage latentie</string>
     <string name="power_saving">Energiebesparing</string>

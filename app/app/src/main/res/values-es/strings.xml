@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Se produjo un error de red</string>
     <string name="you_cannot_remove_this_component_version">No se puede eliminar esta versión del componente</string>
     <string name="columns">Columnas</string>
-    <string name="theme">Tema</string>
     <string name="max_device_memory">Memoria máxima del dispositivo</string>
     <string name="configuration">Configuración</string>
     <string name="logs">Registros</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">Modo imagen en imagen</string>
     <string name="zero_no_limit">0 (sin límite)</string>
     <string name="custom">Personalizado</string>
-    <string name="light">Claro</string>
-    <string name="dark">Oscuro</string>
     <string name="both">Ambos</string>
     <string name="low_latency">Baja latencia</string>
     <string name="power_saving">Ahorro de energía</string>

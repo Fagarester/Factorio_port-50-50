@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Сталася помилка мережі</string>
     <string name="you_cannot_remove_this_component_version">Ви не можете видалити цю версію компонента</string>
     <string name="columns">Стовпці</string>
-    <string name="theme">Тема</string>
     <string name="max_device_memory">Максимальний обсяг пам\'яті</string>
     <string name="configuration">Конфігурація</string>
     <string name="logs">Логи</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">Режим PiP (Картинка в картинці)</string>
     <string name="zero_no_limit">0 (Без обмежень)</string>
     <string name="custom">Власний</string>
-    <string name="light">Світла</string>
-    <string name="dark">Темна</string>
     <string name="both">Обидва</string>
     <string name="low_latency">Низька задержка</string>
     <string name="power_saving">Енергозбереження</string>

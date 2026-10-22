@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">네트워크 오류가 발생했습니다</string>
     <string name="you_cannot_remove_this_component_version">이 컴포넌트 버전은 제거할 수 없습니다</string>
     <string name="columns">열</string>
-    <string name="theme">테마</string>
     <string name="max_device_memory">최대 기기 메모리</string>
     <string name="configuration">구성</string>
     <string name="logs">로그</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiP 모드</string>
     <string name="zero_no_limit">0 (제한 없음)</string>
     <string name="custom">사용자 정의</string>
-    <string name="light">라이트</string>
-    <string name="dark">다크</string>
     <string name="both">둘 다</string>
     <string name="low_latency">낮은 지연 시간</string>
     <string name="power_saving">절전</string>

@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">发生网络错误</string>
     <string name="you_cannot_remove_this_component_version">无法删除此组件版本</string>
     <string name="columns">列</string>
-    <string name="theme">主题</string>
     <string name="max_device_memory">设备最大内存</string>
     <string name="configuration">配置</string>
     <string name="logs">日志</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">画中画模式</string>
     <string name="zero_no_limit">0（无限制）</string>
     <string name="custom">自定义</string>
-    <string name="light">浅色</string>
-    <string name="dark">深色</string>
     <string name="both">两者</string>
     <string name="low_latency">低延迟</string>
     <string name="power_saving">节能</string>

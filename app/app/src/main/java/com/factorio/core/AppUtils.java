@@ -374,38 +374,8 @@ public abstract class AppUtils {
         return typedValue.data;
     }
 
+    /** The app has a single (orange) theme. */
     public static void setActivityTheme(Activity activity) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
-        int appTheme = preferences.getInt("app_theme", SettingsFragment.APP_THEME_DARK6);
-        if (appTheme == SettingsFragment.APP_THEME_LIGHT) {
-            activity.setTheme(R.style.AppThemeLight);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK) {
-            activity.setTheme(R.style.AppThemeDark);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK1) {
-            activity.setTheme(R.style.AppThemeDark1);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK2) {
-            activity.setTheme(R.style.AppThemeDark2);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK3) {
-            activity.setTheme(R.style.AppThemeDark3);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK4) {
-            activity.setTheme(R.style.AppThemeDark4);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK5) {
-            activity.setTheme(R.style.AppThemeDark5);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK6) {
-            activity.setTheme(R.style.AppThemeDark6);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK7) {
-            activity.setTheme(R.style.AppThemeDark7);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK8) {
-            activity.setTheme(R.style.AppThemeDark8);
-        }
+        activity.setTheme(R.style.AppTheme);
     }
 }

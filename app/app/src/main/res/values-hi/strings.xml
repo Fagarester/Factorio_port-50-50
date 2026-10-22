@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">नेटवर्क त्रुटि हुई</string>
     <string name="you_cannot_remove_this_component_version">इस घटक संस्करण को नहीं हटाया जा सकता</string>
     <string name="columns">कॉलम</string>
-    <string name="theme">थीम</string>
     <string name="max_device_memory">डिवाइस की अधिकतम मेमोरी</string>
     <string name="configuration">कॉन्फ़िगरेशन</string>
     <string name="logs">लॉग</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiP मोड</string>
     <string name="zero_no_limit">0 (कोई सीमा नहीं)</string>
     <string name="custom">कस्टम</string>
-    <string name="light">हल्का</string>
-    <string name="dark">गहरा</string>
     <string name="both">दोनों</string>
     <string name="low_latency">कम विलंबता</string>
     <string name="power_saving">पावर बचत</string>

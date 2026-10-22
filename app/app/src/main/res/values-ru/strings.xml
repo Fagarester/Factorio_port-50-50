@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Произошла сетевая ошибка</string>
     <string name="you_cannot_remove_this_component_version">Вы не можете удалить эту версию компонента</string>
     <string name="columns">Столбцы</string>
-    <string name="theme">Тема</string>
     <string name="max_device_memory">Максимальный объем памяти</string>
     <string name="configuration">Конфигурация</string>
     <string name="logs">Логи</string>
@@ -118,8 +117,6 @@
     <string name="pip_mode">Режим PiP</string>
     <string name="zero_no_limit">0 (Нет ограничений)</string>
     <string name="custom">Пользовательский</string>
-    <string name="light">Свет</string>
-    <string name="dark">Темный</string>
     <string name="both">Оба</string>
     <string name="low_latency">Низкая задержка</string>
     <string name="power_saving">Энергосбережение</string>
@@ -226,4 +223,7 @@
     <string name="style_reset_element">Сбросить этот элемент к общему стилю</string>
     <string name="controls_group">Управление</string>
     <string name="mouse_and_cursor">Мышь и курсор</string>
+    <string name="variables_and_logging">Переменные и логирование</string>
+    <string name="environment_variables">Переменные окружения</string>
+    <string name="logging">Логирование</string>
 </resources>

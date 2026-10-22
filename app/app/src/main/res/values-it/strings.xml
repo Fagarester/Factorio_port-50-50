@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Si è verificato un errore di rete</string>
     <string name="you_cannot_remove_this_component_version">Impossibile rimuovere questa versione del componente</string>
     <string name="columns">Colonne</string>
-    <string name="theme">Tema</string>
     <string name="max_device_memory">Memoria dispositivo massima</string>
     <string name="configuration">Configurazione</string>
     <string name="logs">Log</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">Modalità PiP</string>
     <string name="zero_no_limit">0 (Nessun limite)</string>
     <string name="custom">Personalizzato</string>
-    <string name="light">Chiaro</string>
-    <string name="dark">Scuro</string>
     <string name="both">Entrambi</string>
     <string name="low_latency">Bassa latenza</string>
     <string name="power_saving">Risparmio energetico</string>

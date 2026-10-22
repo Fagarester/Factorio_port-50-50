@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Желі қатесі орын алды</string>
     <string name="you_cannot_remove_this_component_version">Компоненттің бұл нұсқасын жою мүмкін емес</string>
     <string name="columns">Бағандар</string>
-    <string name="theme">Тақырып</string>
     <string name="max_device_memory">Құрылғының максималды жады</string>
     <string name="configuration">Конфигурация</string>
     <string name="logs">Журналдар</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiP режимі</string>
     <string name="zero_no_limit">0 (шектеусіз)</string>
     <string name="custom">Өзгертілген</string>
-    <string name="light">Ашық</string>
-    <string name="dark">Қараңғы</string>
     <string name="both">Екеуі де</string>
     <string name="low_latency">Төмен кідіріс</string>
     <string name="power_saving">Қуатты үнемдеу</string>

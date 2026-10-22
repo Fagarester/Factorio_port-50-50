@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">A network error occurred</string>
     <string name="you_cannot_remove_this_component_version">You cannot remove this component version</string>
     <string name="columns">Columns</string>
-    <string name="theme">Theme</string>
     <string name="max_device_memory">Max Device Memory</string>
     <string name="configuration">Configuration</string>
     <string name="logs">Logs</string>
@@ -118,16 +117,6 @@
     <string name="pip_mode">PiP Mode</string>
     <string name="zero_no_limit">0 (No limit)</string>
     <string name="custom">Custom</string>
-    <string name="light">Light</string>
-    <string name="dark">Dark</string>
-    <string name="dark1">red</string>
-    <string name="dark2">green</string>
-    <string name="dark3">blue</string>
-    <string name="dark4">purple</string>
-    <string name="dark5">yellow</string>
-    <string name="dark6">orange</string>
-    <string name="dark7">darken</string>
-    <string name="dark8">colors</string>
     <string name="both">Both</string>
     <string name="low_latency">Low Latency</string>
     <string name="power_saving">Power Saving</string>
@@ -234,4 +223,7 @@
     <string name="style_reset_element">Reset this element to the common style</string>
     <string name="controls_group">Controls</string>
     <string name="mouse_and_cursor">Mouse and cursor</string>
+    <string name="variables_and_logging">Variables and logging</string>
+    <string name="environment_variables">Environment variables</string>
+    <string name="logging">Logging</string>
 </resources>

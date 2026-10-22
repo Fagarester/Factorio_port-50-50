@@ -38,20 +38,6 @@ import com.factorio.widget.LogView;
 import com.factorio.widget.SeekBar;
 
 public class SettingsFragment extends Fragment {
-    public static final byte APP_THEME_LIGHT = 0;
-    public static final byte APP_THEME_DARK = 1;
-    public static final byte APP_THEME_DARK1 = 2;
-    public static final byte APP_THEME_DARK2 = 3;
-    public static final byte APP_THEME_DARK3 = 4;
-    public static final byte APP_THEME_DARK4 = 5;
-    public static final byte APP_THEME_DARK5 = 6;
-    public static final byte APP_THEME_DARK6 = 7;
-    public static final byte APP_THEME_DARK7 = 8;
-    public static final byte APP_THEME_DARK8 = 9;
-
-    // radio buttons in the order of the APP_THEME_* constants above
-    private static final int[] THEME_BUTTON_IDS = {R.id.RBLight, R.id.RBDark, R.id.RBDark1, R.id.RBDark2, R.id.RBDark3,
-                                                   R.id.RBDark4, R.id.RBDark5, R.id.RBDark6, R.id.RBDark7, R.id.RBDark8};
     private SharedPreferences preferences;
     private Container container; // the single built-in container (null until the system files are installed)
 
@@ -93,12 +79,21 @@ public class SettingsFragment extends Fragment {
             envVarsView.setEnvVars(new EnvVars(container.getEnvVars()));
             view.findViewById(R.id.BTAddEnvVar).setOnClickListener((v) -> (new AddEnvVarDialog(context, envVarsView)).show());
         }
-        else flContainerSettings.setVisibility(View.GONE);
+        else {
+            flContainerSettings.setVisibility(View.GONE);
+            view.findViewById(R.id.FLEnvVars).setVisibility(View.GONE);
+        }
         final GraphicsDriverPicker finalGraphicsDriverPicker = graphicsDriverPicker;
 
-        final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
-        final int oldTheme = Math.max(0, Math.min(THEME_BUTTON_IDS.length - 1, preferences.getInt("app_theme", APP_THEME_DARK6)));
-        rgAppTheme.check(THEME_BUTTON_IDS[oldTheme]);
+        // ---- bottom section "variables and logging": folded until the header is tapped ----
+        final View llAdvancedBody = view.findViewById(R.id.LLAdvancedBody);
+        final TextView tvAdvancedArrow = view.findViewById(R.id.TVAdvancedArrow);
+        view.findViewById(R.id.LLAdvancedHeader).setOnClickListener((v) -> {
+            boolean expand = llAdvancedBody.getVisibility() != View.VISIBLE;
+            android.transition.TransitionManager.beginDelayedTransition((ViewGroup)llAdvancedBody.getParent());
+            llAdvancedBody.setVisibility(expand ? View.VISIBLE : View.GONE);
+            tvAdvancedArrow.setText(expand ? "\u25B2" : "\u25BC");
+        });
 
         final CheckBox cbEnableDebugLogs = view.findViewById(R.id.CBEnableDebugLogs);
         cbEnableDebugLogs.setChecked(preferences.getBoolean("enable_debug_logs", false));
@@ -131,19 +126,9 @@ public class SettingsFragment extends Fragment {
             editor.putBoolean("enable_debug_logs", cbEnableDebugLogs.isChecked());
             editor.putBoolean("save_logs_to_file", cbSaveLogsToFile.isChecked());
 
-            int newTheme = oldTheme;
-            int checkedId = rgAppTheme.getCheckedRadioButtonId();
-            for (int i = 0; i < THEME_BUTTON_IDS.length; i++) {
-                if (THEME_BUTTON_IDS[i] == checkedId) {
-                    newTheme = i;
-                    break;
-                }
-            }
-            editor.putInt("app_theme", newTheme);
-
             int newLCIndex = sLanguage.getSelectedItemPosition();
             editor.putInt("lc_index", newLCIndex);
-            boolean restartApp = oldLCIndex != newLCIndex || oldTheme != newTheme;
+            boolean restartApp = oldLCIndex != newLCIndex;
 
             String logPath = etLogFile.getText().toString().trim();
             if (!logPath.equals(defaultLogPath) && !logPath.isEmpty()) {
@@ -152,7 +137,7 @@ public class SettingsFragment extends Fragment {
             else editor.remove("log_file");
 
             if (editor.commit()) {
-                if (restartApp) AppUtils.restartActivity(activity); // language / theme
+                if (restartApp) AppUtils.restartActivity(activity); // language
                 else if (activity.isOpenedFromGame()) {
                     // the game is running with the old settings
                     ContentDialog.confirm(context, R.string.the_settings_have_been_changed_do_you_want_to_restart_the_app, () -> AppUtils.restartApplication(context));

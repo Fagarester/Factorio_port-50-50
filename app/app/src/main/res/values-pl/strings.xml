@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Wystąpił błąd sieci</string>
     <string name="you_cannot_remove_this_component_version">Nie można usunąć tej wersji komponentu</string>
     <string name="columns">Kolumny</string>
-    <string name="theme">Motyw</string>
     <string name="max_device_memory">Maksymalna pamięć urządzenia</string>
     <string name="configuration">Konfiguracja</string>
     <string name="logs">Dzienniki</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">Tryb PiP</string>
     <string name="zero_no_limit">0 (Brak limitu)</string>
     <string name="custom">Niestandardowy</string>
-    <string name="light">Jasny</string>
-    <string name="dark">Ciemny</string>
     <string name="both">Oba</string>
     <string name="low_latency">Niskie opóźnienie</string>
     <string name="power_saving">Oszczędzanie energii</string>

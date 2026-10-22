@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Bir ağ hatası oluştu</string>
     <string name="you_cannot_remove_this_component_version">Bu bileşen sürümü kaldırılamaz</string>
     <string name="columns">Sütunlar</string>
-    <string name="theme">Tema</string>
     <string name="max_device_memory">Maksimum Cihaz Belleği</string>
     <string name="configuration">Yapılandırma</string>
     <string name="logs">Günlükler</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">PiP Modu</string>
     <string name="zero_no_limit">0 (Sınır yok)</string>
     <string name="custom">Özel</string>
-    <string name="light">Açık</string>
-    <string name="dark">Koyu</string>
     <string name="both">Her İkisi</string>
     <string name="low_latency">Düşük Gecikme</string>
     <string name="power_saving">Güç Tasarrufu</string>

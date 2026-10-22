@@ -34,7 +34,7 @@
 
         <activity android:name="com.factorio.XServerDisplayActivity"
             android:exported="false"
-            android:theme="@style/AppThemeFullscreenDark"
+            android:theme="@style/AppThemeFullscreen"
             android:supportsPictureInPicture="true"
             android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation"
@@ -42,11 +42,11 @@
 
         <activity android:name="com.factorio.ControlsEditorActivity"
             android:exported="false"
-            android:theme="@style/AppThemeFullscreenDark"
+            android:theme="@style/AppThemeFullscreen"
             android:screenOrientation="sensorLandscape" />
 
         <activity android:name="com.factorio.ExternalControllerBindingsActivity"
-            android:theme="@style/AppThemeDark"
+            android:theme="@style/AppTheme"
             android:exported="false"
             android:screenOrientation="sensor" />
 

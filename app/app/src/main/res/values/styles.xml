@@ -20,137 +20,11 @@
         <item name="android:radioButtonStyle">@style/RadioButton</item>
         <item name="radioButtonStyle">@style/RadioButton</item>
     </style>
-    <style name="AppThemeLight" parent="@style/AppThemeBase">
-        <item name="colorAccent">#0288d1</item>
-        <item name="colorPrimary">#607d8b</item>
-        <item name="colorPrimaryDark">#455a64</item>
-        <item name="colorControlNormal">#e0e0e0</item>
-        <item name="colorPrimaryText">#424242</item>
-        <item name="colorSecondaryText">#757575</item>
-        <item name="colorPrimarySurface">#fafafa</item>
-        <item name="colorSecondarySurface">#ffffff</item>
-        <item name="colorPrimaryVariant">#607d8b</item>
-        <item name="colorSecondaryVariant">#d3dce0</item>
-        <item name="colorError">#ef5350</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_light</item>
-        <item name="toolboxBackground">@drawable/toolbox_light</item>
-        <item name="panelBackground">@drawable/panel_background_light</item>
-        <item name="preloaderBackground">@drawable/preloader_background_light</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_light</item>
-    </style>
-    <style name="AppThemeDark" parent="@style/AppThemeBase">
-        <item name="colorAccent">#0288d1</item>
-        <item name="colorPrimary">#505963</item>
-        <item name="colorPrimaryDark">#3f474f</item>
-        <item name="colorControlNormal">#616161</item>
-        <item name="colorPrimaryText">#fafafa</item>
-        <item name="colorSecondaryText">#9e9e9e</item>
-        <item name="colorPrimarySurface">#1b1e21</item>
-        <item name="colorSecondarySurface">#2d3238</item>
-        <item name="colorPrimaryVariant">#56677a</item>
-        <item name="colorSecondaryVariant">#37424f</item>
-        <item name="colorError">#ef5350</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
     
     
     
     
-    <style name="AppThemeDark1" parent="@style/AppThemeBase">
-        <item name="colorAccent">#ffff0000</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ff2d0000</item>
-        <item name="colorPrimaryText">#ffc40000</item>
-        <item name="colorSecondaryText">#ff790000</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#D32F2F</item>
-        <item name="colorSecondaryVariant">#000000</item>
-        <item name="colorError">#FF5252</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
-    <style name="AppThemeDark2" parent="@style/AppThemeBase">
-        <item name="colorAccent">#ff0cff00</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ff002704</item>
-        <item name="colorPrimaryText">#ff10c400</item>
-        <item name="colorSecondaryText">#ff007b00</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#ff13e700</item>
-        <item name="colorSecondaryVariant">#000000</item>
-        <item name="colorError">#FF3D00</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
-    <style name="AppThemeDark3" parent="@style/AppThemeBase">
-        <item name="colorAccent">#ff0003ff</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ff00072a</item>
-        <item name="colorPrimaryText">#ff000aac</item>
-        <item name="colorSecondaryText">#ff050079</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#ff0200e1</item>
-        <item name="colorSecondaryVariant">#000000</item>
-        <item name="colorError">#CF6679</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
-    <style name="AppThemeDark4" parent="@style/AppThemeBase">
-        <item name="colorAccent">#FF00FF</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ff28002a</item>
-        <item name="colorPrimaryText">#ffbe00ae</item>
-        <item name="colorSecondaryText">#ff7d0081</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#ffe900eb</item>
-        <item name="colorSecondaryVariant">#000000</item>
-        <item name="colorError">#FF5252</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
-    <style name="AppThemeDark5" parent="@style/AppThemeBase">
-        <item name="colorAccent">#FFEB00</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ff2a2b00</item>
-        <item name="colorPrimaryText">#ffc2b300</item>
-        <item name="colorSecondaryText">#ff807400</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#ffd7c600</item>
-        <item name="colorSecondaryVariant">#000000</item>
-        <item name="colorError">#FF5252</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
-    <style name="AppThemeDark6" parent="@style/AppThemeBase">
+    <style name="AppTheme" parent="@style/AppThemeBase">
         <item name="colorAccent">#ffff6f00</item>
         <item name="colorPrimary">#000000</item>
         <item name="colorPrimaryDark">#000000</item>
@@ -168,97 +42,16 @@
         <item name="preloaderBackground">@drawable/preloader_background_dark</item>
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
-    <style name="AppThemeDark7" parent="@style/AppThemeBase">
-        <item name="colorAccent">#ff181818</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ff000000</item>
-        <item name="colorPrimaryText">#FFFFFF</item>
-        <item name="colorSecondaryText">#ff181818</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#ff181818</item>
-        <item name="colorSecondaryVariant">#121212</item>
-        <item name="colorError">#CF6679</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
-        <item name="toolboxBackground">@drawable/toolbox_dark</item>
-        <item name="panelBackground">@drawable/panel_background_dark</item>
-        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-    </style>
-    <style name="AppThemeDark8" parent="@style/AppThemeBase">
-        <item name="colorAccent">#ffff0700</item>
-        <item name="colorPrimary">#000000</item>
-        <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#ffb300ff</item>
-        <item name="colorPrimaryText">#ff00ff12</item>
-        <item name="colorSecondaryText">#000000</item>
-        <item name="colorPrimarySurface">#000000</item>
-        <item name="colorSecondarySurface">#000000</item>
-        <item name="colorPrimaryVariant">#ffff00e8</item>
-        <item name="colorSecondaryVariant">#000000</item>
-        <item name="colorError">#D32F2F</item>
-        <item name="popupMenuBackground">@drawable/content_dialog_background_light</item>
-        <item name="toolboxBackground">@drawable/toolbox_light</item>
-        <item name="panelBackground">@drawable/panel_background_light</item>
-        <item name="preloaderBackground">@drawable/preloader_background_light</item>
-        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_light</item>
-    </style>
     
     
     
-    <style name="AppThemeFullscreenLight" parent="@style/AppThemeLight">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
     <!-- MainActivity window before onCreate: black, no animation (no flash of the containers list) -->
-    <style name="AppThemeLauncher" parent="@style/AppThemeDark6">
+    <style name="AppThemeLauncher" parent="@style/AppTheme">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:windowAnimationStyle">@null</item>
     </style>
 
-    <style name="AppThemeFullscreenDark" parent="@style/AppThemeDark">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-        <style name="AppThemeFullscreenDark1" parent="@style/AppThemeDark1">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark2" parent="@style/AppThemeDark2">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark3" parent="@style/AppThemeDark3">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark4" parent="@style/AppThemeDark4">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark5" parent="@style/AppThemeDark5">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark6" parent="@style/AppThemeDark6">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark7" parent="@style/AppThemeDark7">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style>
-    <style name="AppThemeFullscreenDark8" parent="@style/AppThemeDark8">
+    <style name="AppThemeFullscreen" parent="@style/AppTheme">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>

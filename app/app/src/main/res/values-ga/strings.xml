@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">Tharla earráid líonra</string>
     <string name="you_cannot_remove_this_component_version">Ní féidir an leagan comhpháirte seo a bhaint</string>
     <string name="columns">Colúin</string>
-    <string name="theme">Téama</string>
     <string name="max_device_memory">Uasmhéid cuimhne gléis</string>
     <string name="configuration">Cumraíocht</string>
     <string name="logs">Loganna</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">Mód PiP</string>
     <string name="zero_no_limit">0 (Gan teorainn)</string>
     <string name="custom">Saincheaptha</string>
-    <string name="light">Éadrom</string>
-    <string name="dark">Dorcha</string>
     <string name="both">An dá cheann</string>
     <string name="low_latency">Moill íseal</string>
     <string name="power_saving">Coigilt cumhachta</string>

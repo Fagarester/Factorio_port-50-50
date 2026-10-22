@@ -181,6 +181,68 @@
                             android:src="@drawable/icon_audio_settings" />
                     </LinearLayout>
 
+                </LinearLayout>
+                <TextView
+                    style="@style/FieldSetLabel"
+                    android:text="@string/container"/>
+            </FrameLayout>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout style="@style/FieldSet">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/language"/>
+                    <Spinner
+                        style="@style/ComboBox"
+                        android:id="@+id/SLanguage"
+                        android:layout_width="match_parent"
+                        android:entries="@array/language_entries"/>
+                </LinearLayout>
+                <TextView
+                    style="@style/FieldSetLabel"
+                    android:text="@string/system"/>
+            </FrameLayout>
+            <LinearLayout
+                android:id="@+id/LLAdvancedHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimaryVariant"
+                    android:text="@string/variables_and_logging"/>
+                <TextView
+                    android:id="@+id/TVAdvancedArrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorPrimaryVariant"
+                    android:text="▼"/>
+            </LinearLayout>
+            <View style="@style/HorizontalLine" />
+            <LinearLayout
+                android:id="@+id/LLAdvancedBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+            <FrameLayout
+                android:id="@+id/FLEnvVars"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout style="@style/FieldSet">
                     <LinearLayout
                         android:id="@+id/LLTabEnvVars"
                         android:layout_width="match_parent"
@@ -207,91 +269,7 @@
                 </LinearLayout>
                 <TextView
                     style="@style/FieldSetLabel"
-                    android:text="@string/container"/>
-            </FrameLayout>
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <LinearLayout style="@style/FieldSet">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/language"/>
-                    <Spinner
-                        style="@style/ComboBox"
-                        android:id="@+id/SLanguage"
-                        android:layout_width="match_parent"
-                        android:entries="@array/language_entries"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/theme"/>
-                    <HorizontalScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:scrollbars="none">
-                        <RadioGroup
-                            android:id="@+id/RGAppTheme"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-                            <RadioButton
-                                android:id="@+id/RBLight"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/light"/>
-                            <RadioButton
-                                android:id="@+id/RBDark"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark"/>
-                            <RadioButton
-                                android:id="@+id/RBDark1"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark1"/>
-                            <RadioButton
-                                android:id="@+id/RBDark2"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark2"/>
-                            <RadioButton
-                                android:id="@+id/RBDark3"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark3"/>
-                            <RadioButton
-                                android:id="@+id/RBDark4"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark4"/>
-                            <RadioButton
-                                android:id="@+id/RBDark5"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark5"/>
-                            <RadioButton
-                                android:id="@+id/RBDark6"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark6"/>
-                            <RadioButton
-                                android:id="@+id/RBDark7"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark7"/>
-                            <RadioButton
-                                android:id="@+id/RBDark8"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/dark8"/>
-                        </RadioGroup>
-                    </HorizontalScrollView>
-                </LinearLayout>
-                <TextView
-                    style="@style/FieldSetLabel"
-                    android:text="@string/system"/>
+                    android:text="@string/environment_variables"/>
             </FrameLayout>
             <FrameLayout
                 android:layout_width="match_parent"
@@ -318,8 +296,9 @@
                 </LinearLayout>
                 <TextView
                     style="@style/FieldSetLabel"
-                    android:text="@string/advanced"/>
+                    android:text="@string/logging"/>
             </FrameLayout>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
     <com.google.android.material.floatingactionbutton.FloatingActionButton

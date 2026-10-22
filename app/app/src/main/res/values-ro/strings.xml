@@ -81,7 +81,6 @@
     <string name="a_network_error_occurred">A apărut o eroare de rețea</string>
     <string name="you_cannot_remove_this_component_version">Nu puteți elimina această versiune de componentă</string>
     <string name="columns">Coloane</string>
-    <string name="theme">Temă</string>
     <string name="max_device_memory">Memorie maximă dispozitiv</string>
     <string name="configuration">Configurație</string>
     <string name="logs">Jurnale</string>
@@ -117,8 +116,6 @@
     <string name="pip_mode">Mod PiP</string>
     <string name="zero_no_limit">0 (Fără limită)</string>
     <string name="custom">Personalizat</string>
-    <string name="light">Deschis</string>
-    <string name="dark">Întunecat</string>
     <string name="both">Ambele</string>
     <string name="low_latency">Latență scăzută</string>
     <string name="power_saving">Economisire energie</string>
