@@ -293,9 +293,13 @@ public class ControlElement {
         return ControlStyle.resolve(profile != null ? profile.getStyle() : null, styleOverrides);
     }
 
+    /**
+     * Final color of the styled parts of a button. The opacity comes only from the style sliders and the
+     * element's own opacity: the common "overlay opacity" (40% by default) is not applied here any more.
+     */
     private int styledColor(int rgb, float alpha) {
         float opacity = inputControlsView.isEditMode() ? Math.max(0.15f, this.opacity) : this.opacity;
-        float total = Mathf.clamp(alpha * opacity * inputControlsView.getOverlayOpacity(), 0, 1);
+        float total = Mathf.clamp(alpha * opacity, 0, 1);
         return Color.argb((int)(total * 255), Color.red(rgb), Color.green(rgb), Color.blue(rgb));
     }
 
