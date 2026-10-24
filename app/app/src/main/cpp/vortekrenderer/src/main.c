@@ -6,6 +6,7 @@
 #include "vortek_serializer.h"
 #include "request_handler.h"
 #include "vulkan_helper.h"
+#include "bcn_layer.h"
 #include "jni_utils.h"
 
 #include "adrenotools/driver.h"
@@ -71,4 +72,15 @@ Java_com_factorio_xenvironment_components_VortekRendererComponent_handleExtraDat
                                                                                          int requestId,
                                                                                          int requestLength) {
     return handleExtraDataRequest((VkContext*)contextPtr, requestId, requestLength);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_factorio_xenvironment_components_VortekRendererComponent_initBcnLayer(JNIEnv *env,
+                                                                                jobject obj,
+                                                                                jstring layerPath) {
+    if (!layerPath) return JNI_FALSE;
+    const char* layerPathC = (*env)->GetStringUTFChars(env, layerPath, NULL);
+    bool loaded = bcnLayerLoad(layerPathC);
+    (*env)->ReleaseStringUTFChars(env, layerPath, layerPathC);
+    return loaded ? JNI_TRUE : JNI_FALSE;
 }

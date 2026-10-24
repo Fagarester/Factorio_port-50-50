@@ -232,4 +232,9 @@
     <string name="image_cache_size">Image Cache Size</string>
     <string name="graphics_block_turnip">Turnip + OpenGL / Zink (current)</string>
     <string name="graphics_block_vortek">Vortek + Gladio / Zink 22.2.5 (original Winlator)</string>
+    <string name="bcn_emulation">BCn Emulation (Mali / non-Qualcomm GPUs)</string>
+    <string name="bcn_mode_cpu">CPU decode (default)</string>
+    <string name="bcn_mode_gpu">GPU layer (new build)</string>
+    <string name="bcn_mode_gpu_astc">GPU layer, legacy build: ASTC</string>
+    <string name="bcn_mode_gpu_etc2">GPU layer, legacy build: ETC2</string>
 </resources>

@@ -1,5 +1,10 @@
 package com.factorio.xenvironment.components;
 
+import com.factorio.core.TarCompressorUtils;
+import java.io.File;
+import android.util.Log;
+import android.system.Os;
+import android.system.ErrnoException;
 import android.content.Context;
 
 import androidx.annotation.Keep;
@@ -36,6 +41,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
     }
 
     public static class Options {
+        public int bcnMode = 0; // not read by native code
         public int vkMaxVersion = VK_MAX_VERSION;
         public short maxDeviceMemory = 0;
         public short imageCacheSize = IMAGE_CACHE_SIZE;
@@ -61,6 +67,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
             options.maxDeviceMemory = (short)config.getInt("maxDeviceMemory");
             options.imageCacheSize = (short)config.getInt("imageCacheSize", VortekRendererComponent.IMAGE_CACHE_SIZE);
             options.resourceMemoryType = (byte)config.getInt("resourceMemoryType");
+            options.bcnMode = config.getInt("bcnMode");
 
             // custom (adrenotools) Vulkan drivers are not used in this fork: Vortek always runs on the system driver
             options.libvulkanPath = null;
@@ -75,6 +82,38 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
 
         String nativeLibraryDir = xServer.activity.getApplicationInfo().nativeLibraryDir;
         initVulkanWrapper(nativeLibraryDir, options.libvulkanPath);
+
+        // optional GPU BCn emulation (Mali etc.); on any problem Vortek simply keeps decoding BC textures on the CPU
+        String bcnLayerPath = prepareBcnLayer(xServer.activity, options.bcnMode);
+        if (bcnLayerPath != null && !initBcnLayer(bcnLayerPath)) Log.w("VortekRenderer", "BCn layer not loaded, using CPU decoding");
+    }
+
+    /** 0 = CPU decode, 1 = GPU layer (new build), 2 = legacy build -> ASTC, 3 = legacy build -> ETC2. Returns the layer path or null. */
+    private static String prepareBcnLayer(Context context, int mode) {
+        if (mode <= 0 || mode > 3) return null;
+        if (GPUHelper.isAdreno(context)) return null; // Adreno/Turnip has native BC support, the layer is not needed
+
+        boolean legacy = mode != 1;
+        String name = legacy ? "leegao_bcn_legacy" : "leegao_bcn";
+        File dir = new File(context.getFilesDir(), "bcn_layer/"+(legacy ? "legacy" : "current"));
+        File layerFile = new File(dir, "usr/lib/libbcn_layer.so");
+        if (!layerFile.isFile()) {
+            dir.mkdirs();
+            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, "graphics_driver/"+name+".tzst", dir);
+        }
+        if (!layerFile.isFile()) return null;
+
+        try {
+            Os.setenv("BCN_DISABLE_DISK_CACHE", "0", true);
+            if (legacy) {
+                Os.setenv("BCN_COMPUTE_AUTO", "1", true);
+                Os.setenv(mode == 3 ? "BCN_TRANSCODE_TO_ETC2" : "BCN_TRANSCODE_TO_ASTC", "1", true);
+            }
+        }
+        catch (ErrnoException e) {
+            Log.w("VortekRenderer", "unable to set BCn layer environment", e);
+        }
+        return layerFile.getPath();
     }
 
     @Override
@@ -167,6 +206,8 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
     private native void destroyVkContext(long contextPtr);
 
     private native void initVulkanWrapper(String nativeLibraryDir, String libvulkanPath);
+
+    private native boolean initBcnLayer(String layerPath);
 
     private native boolean handleExtraDataRequest(long contextPtr, int requestCode, int requestLength);
 }

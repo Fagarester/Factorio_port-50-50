@@ -25,6 +25,7 @@ public class VortekConfigDialog extends ContentDialog {
         final Spinner sMaxDeviceMemory = findViewById(R.id.SMaxDeviceMemory);
         final Spinner sImageCacheSize = findViewById(R.id.SImageCacheSize);
         final Spinner sResourceMemoryType = findViewById(R.id.SResourceMemoryType);
+        final Spinner sBcnMode = findViewById(R.id.SBcnMode);
         final MultiSelectionComboBox mscbExposedExtensions = findViewById(R.id.MSCBExposedExtensions);
 
         final String[] deviceExtensions = GPUHelper.vkGetDeviceExtensions();
@@ -49,6 +50,7 @@ public class VortekConfigDialog extends ContentDialog {
         AppUtils.setSpinnerSelectionFromMemorySize(sMaxDeviceMemory, config.get("maxDeviceMemory", "0"));
         AppUtils.setSpinnerSelectionFromNumber(sImageCacheSize, config.get("imageCacheSize", String.valueOf(VortekRendererComponent.IMAGE_CACHE_SIZE)));
         sResourceMemoryType.setSelection(config.getInt("resourceMemoryType"));
+        sBcnMode.setSelection(config.getInt("bcnMode"));
 
         setOnConfirmCallback(() -> {
             KeyValueSet newConfig = new KeyValueSet();
@@ -56,6 +58,7 @@ public class VortekConfigDialog extends ContentDialog {
             newConfig.put("maxDeviceMemory", StringUtils.parseMemorySize(sMaxDeviceMemory.getSelectedItem()));
             newConfig.put("imageCacheSize", StringUtils.parseNumber(sImageCacheSize.getSelectedItem()));
             newConfig.put("resourceMemoryType", sResourceMemoryType.getSelectedItemPosition());
+            newConfig.put("bcnMode", sBcnMode.getSelectedItemPosition());
 
             String[] selectedItems = mscbExposedExtensions.getSelectedItems();
             if (selectedItems.length > 0) {

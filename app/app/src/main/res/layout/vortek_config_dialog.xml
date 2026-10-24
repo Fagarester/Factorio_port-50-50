@@ -44,6 +44,17 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/bcn_emulation" />
+
+        <Spinner
+            style="@style/ComboBox"
+            android:layout_width="match_parent"
+            android:id="@+id/SBcnMode"
+            android:entries="@array/bcn_mode_entries" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/exposed_extensions" />
 
         <com.factorio.widget.MultiSelectionComboBox

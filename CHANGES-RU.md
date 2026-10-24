@@ -12,6 +12,15 @@
 - Выбор драйвера adrenotools в настройках Vortek не переносился (системный драйвер).
 - Собрано без проверки компиляцией (нет NDK) — проверять сборкой в CI.
 
+## Дополнение для Mali / MediaTek (по мотивам Winlator Mali)
+1. **Исправления Gladio из Winlator Mali** перенесены в `gladiolegacy` (только блок Vortek/Gladio): пересоздание display buffer при смене размера окна, id фреймбуферов через `glGenFramebuffers`, убран лишний `glFlush`, явные `precision` в шейдерах GLSL ES 3.20, include в `stb_dxt.h`.
+2. **GPU-эмуляция BCn** (опция «BCn Emulation» в настройках Vortek, по умолчанию выключена = прежнее CPU-декодирование):
+   - слой `libbcn_layer.so` (leegao, модификация WinMali-Dev; ассеты `leegao_bcn.tzst` и `leegao_bcn_legacy.tzst`) собран под bionic и в glibc-процессе игры не загрузится, поэтому он подключается внутри сервера Vortek, который работает в Android-процессе;
+   - `bcn_layer.c` вручную встраивает слой между Vortek и системным драйвером (цепочка instance/device по интерфейсу loader–layer); слой сообщает textureCompressionBC=true, и CPU-декодер Vortek сам отключается;
+   - при любой ошибке загрузки или `vkCreateInstance` слоя Vortek продолжает работать как раньше; на Adreno слой не используется;
+   - режимы: CPU / GPU (новая сборка) / GPU legacy → ASTC / GPU legacy → ETC2.
+   - **Не проверялось на устройстве.** Лицензия слоя — на стороне его авторов (Winlator Mali / leegao).
+
 # Что изменено в этой версии
 
 1. **Workflow** `.github/workflows/build.yml`: имя `Build Factorio`, артефакт `Factorio-debug`.

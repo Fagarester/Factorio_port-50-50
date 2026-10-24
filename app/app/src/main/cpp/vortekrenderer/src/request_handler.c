@@ -1,6 +1,7 @@
 #include "request_handler.h"
 #include "vk_context.h"
 #include "vulkan_helper.h"
+#include "bcn_layer.h"
 #include "sysvshared_memory.h"
 
 #define MSG_DEBUG_UNIMPLEMENTED_FUNC "%s not implemented yet\n"
@@ -25,7 +26,7 @@ void vt_handle_vkCreateInstance(VkContext* context) {
                      skipExtensions, ARRAY_SIZE(skipExtensions));
 
     VkInstance instance;
-    VkResult result = vulkanWrapper.vkCreateInstance(&createInfo, NULL, &instance);
+    VkResult result = bcnLayerCreateInstance(&createInfo, &instance);
     if (result == VK_SUCCESS) initVulkanInstance(context, instance, createInfo.pApplicationInfo);
 
     VT_SERIALIZE_CMD(VkInstance, instance);
@@ -165,7 +166,7 @@ void vt_handle_vkCreateDevice(VkContext* context) {
                      globalImplementedDeviceExtensions, ARRAY_SIZE(globalImplementedDeviceExtensions));
 
     VkDevice device;
-    VkResult result = vulkanWrapper.vkCreateDevice(physicalDevice, &createInfo, NULL, &device);
+    VkResult result = bcnLayerCreateDevice(physicalDevice, &createInfo, &device);
     if (result == VK_SUCCESS) initVulkanDevice(context, physicalDevice, device);
 
     VT_SERIALIZE_CMD(VkDevice, device);

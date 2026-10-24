@@ -40,6 +40,9 @@
 #ifndef STB_INCLUDE_STB_DXT_H
 #define STB_INCLUDE_STB_DXT_H
 
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
