@@ -1,3 +1,17 @@
+# Блок «Vortek + Gladio / Zink 22.2.5» (оригинальный Winlator) — отдельно от Turnip
+
+В настройках графики теперь два независимых блока, активен ровно один (галочка):
+1. **Turnip + OpenGL / Zink** — как раньше, код не менялся.
+2. **Vortek + Gladio / Zink 22.2.5** — стек оригинального Winlator.
+
+Как достигнута независимость:
+- Нативно: свои библиотеки `vortekrenderer`, `gladiolegacy`, `libadrenotools`. Нужные им функции Бруно (arrays, ring_buffer, ashmem) вынесены в приватную статическую `legacy_common` со скрытыми символами — общий `libwinlator.so` они не подменяют. Единственная связь с `libwinlator` — `globalEGLContext` для Gladio.
+- GLX: для блока 2 используется `LegacyGLXExtension` (копия GLX Бруно: отвечает на CreateContext и т.д.), для блока 1 — прежний `GLXExtension`. Выбор в `XServer.setupExtensions()` по `isLegacyGraphics()`.
+- Запуск: `extractLegacyGraphicsDriverFiles()` — отдельный метод со своим cacheId (`legacy-…`), свои файлы (`vortek-2.1`, `gladio-1.1`, `zink-22.2.5`), симлинки `libGL.so.1`/`libGL.so`. Старый путь `extractGraphicsDriverFiles()` для Turnip/Zink не изменён (кроме удаления `libvulkan_vortek.so` при возврате).
+- Хранение: активный блок = `graphicsDriver` (`vortek,gladio`); выбор и настройки блоков лежат в extras (`graphicsBlockTurnip`, `graphicsBlockVortek`, `graphicsConfigVortek`), формат блока 1 прежний.
+- Выбор драйвера adrenotools в настройках Vortek не переносился (системный драйвер).
+- Собрано без проверки компиляцией (нет NDK) — проверять сборкой в CI.
+
 # Что изменено в этой версии
 
 1. **Workflow** `.github/workflows/build.yml`: имя `Build Factorio`, артефакт `Factorio-debug`.

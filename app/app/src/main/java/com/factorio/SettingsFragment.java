@@ -71,7 +71,7 @@ public class SettingsFragment extends Fragment {
         if (container != null) {
             loadScreenSizeSpinner(view, container.getScreenSize());
             setupResolutionButtons(view, context);
-            graphicsDriverPicker = new GraphicsDriverPicker(view.findViewById(R.id.LLGraphicsDriver), container.getGraphicsDriver(), container.getGraphicsDriverConfig());
+            graphicsDriverPicker = new GraphicsDriverPicker(view.findViewById(R.id.LLGraphicsDriver), container);
             ((TextView)view.findViewById(R.id.TVDetectedGpu)).setText(GraphicsDriverPicker.getDetectedGpuText(context));
             AppUtils.setSpinnerSelectionFromIdentifier(sAudioDriver, container.getAudioDriver());
             vAudioDriverConfig.setTag(container.getAudioDriverConfig());
@@ -115,8 +115,7 @@ public class SettingsFragment extends Fragment {
             if (container != null) {
                 container.setScreenSize(getScreenSize(view));
                 container.setEnvVars(envVarsView.getEnvVars());
-                container.setGraphicsDriver(finalGraphicsDriverPicker.getGraphicsDriver());
-                container.setGraphicsDriverConfig(finalGraphicsDriverPicker.getGraphicsDriverConfig());
+                finalGraphicsDriverPicker.applyTo(container);
                 container.setAudioDriver(StringUtils.parseIdentifier(sAudioDriver.getSelectedItem()));
                 container.setAudioDriverConfig(vAudioDriverConfig.getTag().toString());
                 container.saveData();

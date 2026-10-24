@@ -9,6 +9,7 @@ import com.factorio.xserver.extensions.BigReqExtension;
 import com.factorio.xserver.extensions.DRI3Extension;
 import com.factorio.xserver.extensions.Extension;
 import com.factorio.xserver.extensions.GLXExtension;
+import com.factorio.xserver.extensions.LegacyGLXExtension;
 import com.factorio.xserver.extensions.MITSHMExtension;
 import com.factorio.xserver.extensions.PresentExtension;
 import com.factorio.xserver.extensions.RandRExtension;
@@ -197,7 +198,7 @@ public class XServer {
             new PresentExtension(this, opcode--),
             new SyncExtension(this, opcode--),
             new XComposite(this, opcode--),
-            new GLXExtension(this, opcode--),
+            activity != null && activity.isLegacyGraphics() ? new LegacyGLXExtension(this, opcode--) : new GLXExtension(this, opcode--),
             new RandRExtension(this, opcode--)
         };
     }

@@ -226,4 +226,10 @@
     <string name="variables_and_logging">Variables and logging</string>
     <string name="environment_variables">Environment variables</string>
     <string name="logging">Logging</string>
+    <string name="vulkan_version">Vulkan Version</string>
+    <string name="resource_memory_type">Resource Memory Type</string>
+    <string name="exposed_extensions">Exposed Extensions</string>
+    <string name="image_cache_size">Image Cache Size</string>
+    <string name="graphics_block_turnip">Turnip + OpenGL / Zink (current)</string>
+    <string name="graphics_block_vortek">Vortek + Gladio / Zink 22.2.5 (original Winlator)</string>
 </resources>

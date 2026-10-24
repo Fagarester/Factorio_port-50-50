@@ -3,6 +3,7 @@ package com.factorio.renderer;
 import androidx.annotation.Keep;
 
 import com.factorio.xserver.Drawable;
+import com.factorio.xserver.XServer;
 
 import java.nio.ByteBuffer;
 
@@ -78,6 +79,17 @@ public class GPUImage extends Texture {
         imageKHRPtr = 0;
         hardwareBufferPtr = 0;
         super.destroy();
+    }
+
+    public static GPUImage createOrObtain(XServer xServer, Drawable drawable, boolean cpuAccess, boolean useHALPixelFormatBGRA8888) {
+        final Texture texture = drawable.getTexture();
+        if (!(texture instanceof GPUImage)) {
+            xServer.getRenderer().xServerView.queueEvent(texture::destroy);
+            GPUImage gpuImage = new GPUImage(drawable, cpuAccess, useHALPixelFormatBGRA8888);
+            drawable.setTexture(gpuImage);
+            return gpuImage;
+        }
+        else return (GPUImage)texture;
     }
 
     public long getHardwareBufferPtr() {

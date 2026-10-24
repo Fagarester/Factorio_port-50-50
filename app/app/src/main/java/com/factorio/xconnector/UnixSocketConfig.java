@@ -8,6 +8,7 @@ public class UnixSocketConfig {
     public static final String SYSVSHM_SERVER_PATH = "/tmp/.sysvshm/SM0";
     public static final String ALSA_SERVER_PATH = "/tmp/.sound/AS0";
     public static final String PULSE_SERVER_PATH = "/tmp/.sound/PS0";
+    public static final String VORTEK_SERVER_PATH = "/tmp/.vortek/V0";
     public static final String XSERVER_PATH = "/tmp/.X11-unix/X0";
     public final String path;
 

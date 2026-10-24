@@ -70,6 +70,7 @@ import com.factorio.xenvironment.components.GuestProgramLauncherComponent;
 import com.factorio.xenvironment.components.NetworkInfoUpdateComponent;
 import com.factorio.xenvironment.components.PulseAudioComponent;
 import com.factorio.xenvironment.components.SysVSharedMemoryComponent;
+import com.factorio.xenvironment.components.VortekRendererComponent;
 import com.factorio.xenvironment.components.XServerComponent;
 import com.factorio.xserver.ScreenInfo;
 import com.factorio.xserver.Window;
@@ -162,7 +163,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         screenInfo = new ScreenInfo(container.getScreenSize());
 
         this.graphicsDriver = GraphicsDrivers.parseIdentifiers(graphicsDriver);
-        this.graphicsDriverConfig = GraphicsDrivers.parseConfigs(graphicsDriver, graphicsDriverConfig);
+        this.graphicsDriverConfig = GraphicsDrivers.getActiveConfigs(container);
 
         preloaderDialog.show(R.string.starting_up);
 
@@ -568,6 +569,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             environment.addComponent(pulseAudioComponent);
         }
 
+        if (GraphicsDrivers.isLegacyMode(graphicsDriver)) {
+            VortekRendererComponent.Options options = VortekRendererComponent.Options.fromKeyValueSet(this, graphicsDriverConfig[0]);
+            environment.addComponent(new VortekRendererComponent(xServer, UnixSocketConfig.create(rootPath, UnixSocketConfig.VORTEK_SERVER_PATH), options));
+        }
+
         guestProgramLauncherComponent.setEnvVars(envVars);
         guestProgramLauncherComponent.setTerminationCallback((status) -> runOnUiThread(() -> {
             // The game died before it opened a window (usually a broken graphics driver): do not hang on the loading
@@ -768,7 +774,67 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
     }
 
+    /** true when the Vortek + Gladio / Zink 22.2.5 block is selected (used by XServer to pick the GLX implementation). */
+    public boolean isLegacyGraphics() {
+        return graphicsDriver != null && GraphicsDrivers.isLegacyMode(graphicsDriver);
+    }
+
+    /**
+     * Vortek + Gladio / Zink 22.2.5 (original Winlator stack). Completely separate from the Turnip / Zink code below:
+     * own cache id, own files, own environment variables. Switching between the two blocks re-extracts the files.
+     */
+    private void extractLegacyGraphicsDriverFiles() {
+        envVars.put("vblank_mode", "0");
+
+        String cacheId = "legacy-"+GraphicsDrivers.VORTEK+"-"+DefaultVersion.VORTEK+"-"+graphicsDriver[1]+"-"+DefaultVersion.valueOf(graphicsDriver[1]);
+        boolean changed = !cacheId.equals(container.getExtra("graphicsDriver"));
+        File rootDir = rootFS.getRootDir();
+        File libDir = rootFS.getLibDir();
+
+        if (changed) {
+            FileUtils.delete(new File(libDir, "libvulkan_freedreno.so"));
+            FileUtils.delete(new File(libDir, "libvulkan_vortek.so"));
+            FileUtils.delete(new File(libDir, "turnip-deps"));
+            File[] oldGL = libDir.listFiles((dir, name) -> name.startsWith("libGL.so"));
+            if (oldGL != null) for (File file : oldGL) FileUtils.delete(file);
+
+            File vulkanICDDir = new File(rootDir, "/usr/share/vulkan/icd.d");
+            FileUtils.delete(vulkanICDDir);
+            vulkanICDDir.mkdirs();
+
+            container.putExtra("graphicsDriver", cacheId);
+            container.saveData();
+
+            TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/vortek-"+DefaultVersion.VORTEK+".tzst", rootDir);
+
+            String glPackage = null;
+            if (graphicsDriver[1].equals(GraphicsDrivers.GLADIO)) glPackage = "gladio-"+DefaultVersion.GLADIO;
+            else if (graphicsDriver[1].equals(GraphicsDrivers.ZINK_LEGACY)) glPackage = "zink-"+DefaultVersion.ZINK_LEGACY;
+            if (glPackage != null) {
+                TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/"+glPackage+".tzst", rootDir);
+                // these packages only carry libGL.so.1.7.0: the links that the rootfs loader needs are created here
+                FileUtils.symlink("libGL.so.1.7.0", new File(libDir, "libGL.so.1").getPath());
+                FileUtils.symlink("libGL.so.1", new File(libDir, "libGL.so").getPath());
+            }
+        }
+
+        switch (graphicsDriver[1]) {
+            case GraphicsDrivers.GLADIO:
+                envVars.put("GLADIO_NO_ERROR", "1");
+                break;
+            case GraphicsDrivers.ZINK_LEGACY:
+                envVars.put("GALLIUM_DRIVER", "zink");
+                envVars.put("ZINK_CONTEXT_THREADED", "1");
+                envVars.put("MESA_GL_VERSION_OVERRIDE", "3.3");
+                break;
+        }
+    }
+
     private void extractGraphicsDriverFiles() {
+        if (GraphicsDrivers.isLegacyMode(graphicsDriver)) {
+            extractLegacyGraphicsDriverFiles();
+            return;
+        }
         envVars.put("vblank_mode", "0");
 
         String cacheId = "";
@@ -793,6 +859,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         if (changed) {
             FileUtils.delete(new File(libDir, "libvulkan_freedreno.so"));
+            FileUtils.delete(new File(libDir, "libvulkan_vortek.so")); // left over from the Vortek block
             FileUtils.delete(new File(libDir, "turnip-deps")); // libraries that come with a Turnip build: never keep the ones of the previous build
             File[] oldGL = libDir.listFiles((dir, name) -> name.startsWith("libGL.so")); // any libGL version of a previous Zink
             if (oldGL != null) for (File file : oldGL) FileUtils.delete(file);
