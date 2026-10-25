@@ -612,6 +612,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         guestProgramLauncherComponent.setEnvVars(envVars);
         guestProgramLauncherComponent.setTerminationCallback((status) -> runOnUiThread(() -> {
+            // diagnostics: the game ended (by itself or because the diagnostics stopped it). Never close the app here,
+            // the diagnostics go on with the next setup (finish() ignores a second call)
+            if (diag != null) {
+                diag.finish("game exited early (status "+status+")");
+                return;
+            }
             // The game died before it opened a window (usually a broken graphics driver): do not hang on the loading
             // animation / silently kill the app, show what happened.
             if (!firstWindowShown && status != null && status != 0 && !isFinishing()) showEarlyExitDialog(status);
