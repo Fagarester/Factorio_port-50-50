@@ -13,6 +13,7 @@ add_library(vortekrenderer SHARED
             src/vk_object.c
             src/request_handler.c
             src/bcn_layer.c
+            src/vortek_report.c
             src/vulkan_helper.c
             src/vk_context.c
             src/resource_memory.c

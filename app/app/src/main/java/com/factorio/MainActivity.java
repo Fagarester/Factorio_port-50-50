@@ -67,10 +67,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
+        if (getIntent().hasExtra(com.factorio.core.Diagnostics.EXTRA_DONE)) {
+            final String donePath = getIntent().getStringExtra(com.factorio.core.Diagnostics.EXTRA_DONE);
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() ->
+                new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle(R.string.diagnostics_done_title)
+                    .setMessage(getString(R.string.diagnostics_done_message, donePath))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show(), 600);
+        }
+        com.factorio.core.Diagnostics.recoverIfInterrupted(this); // a diagnostics run that was cut short: give the user's settings back
+
         Intent startIntent = getIntent();
         openedFromGame = startIntent.getBooleanExtra("from_game", false) || XServerDisplayActivity.isRunning();
         boolean openedByShortcutOrApp = startIntent.getBooleanExtra("edit_input_controls", false) ||
             startIntent.getBooleanExtra("open_settings", false) ||
+            startIntent.hasExtra(com.factorio.core.Diagnostics.EXTRA_DONE) ||
             startIntent.getIntExtra("container_id", 0) != 0 ||
             startIntent.getIntExtra("selected_menu_item_id", 0) != 0;
         if (savedInstanceState == null && !openedByShortcutOrApp && tryFastAutoStart()) return;

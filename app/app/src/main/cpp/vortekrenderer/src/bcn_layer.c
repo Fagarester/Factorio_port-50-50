@@ -93,6 +93,15 @@ bool bcnLayerLoad(const char* path) {
     return result;
 }
 
+// Called every time the Vulkan wrapper is (re)initialised: its function pointers are fresh then, so a chained layer of a
+// previous run must be forgotten (the game can be restarted many times in one process, e.g. by the diagnostics).
+void bcnLayerReset(void) {
+    pthread_mutex_lock(&bcnMutex);
+    bcnLoaded = false;
+    bcnActive = false;
+    pthread_mutex_unlock(&bcnMutex);
+}
+
 bool bcnLayerIsActive(void) {
     return bcnActive;
 }

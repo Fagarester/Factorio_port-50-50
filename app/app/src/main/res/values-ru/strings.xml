@@ -226,4 +226,10 @@
     <string name="variables_and_logging">Переменные и логирование</string>
     <string name="environment_variables">Переменные окружения</string>
     <string name="logging">Логирование</string>
+    <string name="diagnostics">Диагностика</string>
+    <string name="diagnostics_long">Диагностика (долгая)</string>
+    <string name="diagnostics_hint">Запускает игру с множеством вариантов графики по очереди и записывает логи и скриншоты каждого. Готовый zip отправьте разработчику.</string>
+    <string name="diagnostics_confirm">Игра автоматически запустится %1$d раз (всего около %2$d мин) с разными настройками графики и будет закрываться. Не трогайте экран и держите устройство на зарядке. Ваши настройки будут восстановлены в конце.</string>
+    <string name="diagnostics_done_title">Диагностика завершена</string>
+    <string name="diagnostics_done_message">Ваши настройки восстановлены. Отправьте этот файл:\n\n%1$s</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.factorio.xenvironment.components;
 
+import com.factorio.widget.LogView;
+import com.factorio.core.FileUtils;
 import com.factorio.core.TarCompressorUtils;
 import java.io.File;
 import android.util.Log;
@@ -55,7 +57,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
             Options options = new Options();
             String exposedDeviceExtensions = config.get("exposedDeviceExtensions", "all");
             if (!exposedDeviceExtensions.isEmpty() && !exposedDeviceExtensions.equals("all")) {
-                options.exposedDeviceExtensions = exposedDeviceExtensions.split("\\|");
+                options.exposedDeviceExtensions = exposedDeviceExtensions.split("[:|]")  /* the config dialog joins with ":" (older versions used "|") */;
             }
 
             String vkMaxVersion = config.get("vkMaxVersion", VortekConfigDialog.DEFAULT_VK_MAX_VERSION);
@@ -83,9 +85,23 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
         String nativeLibraryDir = xServer.activity.getApplicationInfo().nativeLibraryDir;
         initVulkanWrapper(nativeLibraryDir, options.libvulkanPath);
 
+        // the report describes the plain system driver, so it is made before the (optional) BCn layer is chained in
+        String vulkanReport;
+        try {
+            vulkanReport = getVulkanReport();
+        }
+        catch (Throwable e) {
+            vulkanReport = "getVulkanReport failed: "+e;
+        }
+
         // optional GPU BCn emulation (Mali etc.); on any problem Vortek simply keeps decoding BC textures on the CPU
         String bcnLayerPath = prepareBcnLayer(xServer.activity, options.bcnMode);
-        if (bcnLayerPath != null && !initBcnLayer(bcnLayerPath)) Log.w("VortekRenderer", "BCn layer not loaded, using CPU decoding");
+        boolean bcnLayerLoaded = false;
+        if (bcnLayerPath != null) {
+            bcnLayerLoaded = initBcnLayer(bcnLayerPath);
+            if (!bcnLayerLoaded) Log.w("VortekRenderer", "BCn layer not loaded, using CPU decoding");
+        }
+        writeReport(vulkanReport, bcnLayerPath, bcnLayerLoaded);
     }
 
     /** 0 = CPU decode, 1 = GPU layer (new build), 2 = legacy build -> ASTC, 3 = legacy build -> ETC2. Returns the layer path or null. */
@@ -208,6 +224,32 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
     private native void initVulkanWrapper(String nativeLibraryDir, String libvulkanPath);
 
     private native boolean initBcnLayer(String layerPath);
+
+    private native String getVulkanReport();
+
+    /** vortek-report.txt next to factorio-native.log: settings, BCn layer state and what the system Vulkan driver reports. */
+    private void writeReport(String vulkanReport, String bcnLayerPath, boolean bcnLayerLoaded) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Vortek report ").append(new java.util.Date()).append("\n");
+            sb.append("options: vkMaxVersion=").append(options.vkMaxVersion).append(" maxDeviceMemory=").append(options.maxDeviceMemory)
+              .append(" imageCacheSize=").append(options.imageCacheSize).append(" resourceMemoryType=").append(options.resourceMemoryType)
+              .append(" bcnMode=").append(options.bcnMode).append("\n");
+            sb.append("exposedExtensions: ").append(options.exposedDeviceExtensions != null ? java.util.Arrays.toString(options.exposedDeviceExtensions) : "(all)").append("\n");
+            sb.append("BCn layer: ");
+            if (options.bcnMode <= 0) sb.append("off (CPU decoding)\n");
+            else if (bcnLayerPath == null) sb.append("requested but not available (Adreno, missing file or unpack error) -> CPU decoding\n");
+            else sb.append(bcnLayerLoaded ? "LOADED " : "FAILED to load ").append(bcnLayerPath).append("\n");
+            sb.append("\n").append(vulkanReport);
+
+            File dir = LogView.getLogFile().getParentFile();
+            if (dir != null && dir.isDirectory() && dir.canWrite()) FileUtils.writeString(new File(dir, "vortek-report.txt"), sb.toString());
+            Log.i("VortekRenderer", sb.toString());
+        }
+        catch (Exception e) {
+            Log.w("VortekRenderer", "unable to write vortek-report", e);
+        }
+    }
 
     private native boolean handleExtraDataRequest(long contextPtr, int requestCode, int requestLength);
 }

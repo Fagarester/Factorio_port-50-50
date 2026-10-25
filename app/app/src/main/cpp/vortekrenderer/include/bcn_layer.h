@@ -8,5 +8,6 @@
 // or anything fails, every call falls through to the plain driver and the CPU texture decoder keeps working as before.
 extern bool bcnLayerLoad(const char* path);
 extern bool bcnLayerIsActive(void);
+extern void bcnLayerReset(void);
 extern VkResult bcnLayerCreateInstance(const VkInstanceCreateInfo* createInfo, VkInstance* instance);
 extern VkResult bcnLayerCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* createInfo, VkDevice* device);

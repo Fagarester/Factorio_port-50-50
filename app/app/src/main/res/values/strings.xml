@@ -237,4 +237,10 @@
     <string name="bcn_mode_gpu">GPU layer (new build)</string>
     <string name="bcn_mode_gpu_astc">GPU layer, legacy build: ASTC</string>
     <string name="bcn_mode_gpu_etc2">GPU layer, legacy build: ETC2</string>
+    <string name="diagnostics">Diagnostics</string>
+    <string name="diagnostics_long">Diagnostics (long)</string>
+    <string name="diagnostics_hint">Runs the game with many graphics setups one after another and records logs and screenshots for each. Send the resulting zip to the developer.</string>
+    <string name="diagnostics_confirm">The game will be started automatically %1$d times (about %2$d min in total) with different graphics settings and closed again. Do not touch the screen and keep the device charged. Your own settings are restored at the end.</string>
+    <string name="diagnostics_done_title">Diagnostics finished</string>
+    <string name="diagnostics_done_message">Your settings were restored. Send this file:\n\n%1$s</string>
 </resources>

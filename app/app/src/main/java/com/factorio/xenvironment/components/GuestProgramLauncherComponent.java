@@ -135,6 +135,18 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         }
 
         File nativeFile = new File(nativeExec.startsWith("/") && !nativeExec.startsWith("/storage") ? rootDir+nativeExec : nativeExec);
+        if (!nativeFile.isFile()) {
+            // Without this check the glibc loader only prints "cannot open shared object file" for the game binary.
+            final String reason = describeMissingGame(nativeSrc, nativeFile);
+            android.util.Log.e("Factorio", reason);
+            File missingLogDir = LogView.getLogFile().getParentFile();
+            if (missingLogDir != null && missingLogDir.isDirectory() && missingLogDir.canWrite()) {
+                FileUtils.writeString(new File(missingLogDir, "factorio-native.log"), reason+"\n");
+            }
+            final android.app.Activity missingActivity = (android.app.Activity)environment.getContext();
+            missingActivity.runOnUiThread(() -> AppUtils.showToast(missingActivity, reason));
+            return -1;
+        }
         nativeFile.setExecutable(true);
         String loader = rootFS.getLibDir()+"/ld-linux-aarch64.so.1";
         // Because the game is started through the glibc loader, /proc/self/exe points to the
@@ -326,5 +338,21 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             return;
         }
         for (File child : children) collectSignature(child, acc);
+    }
+
+    /** Explains why the game executable is not inside the rootfs (see NATIVE_SRC / NATIVE_EXEC in the container variables). */
+    private static String describeMissingGame(String nativeSrc, File nativeFile) {
+        String head = "Game not found: "+nativeFile.getPath()+". ";
+        if (nativeSrc == null || nativeSrc.isEmpty()) {
+            return head+"NATIVE_SRC is not set, so nothing was copied into the app. Set NATIVE_SRC to the game folder (it must contain bin/arm64/factorio and data/).";
+        }
+        File srcDir = new File(nativeSrc);
+        if (!srcDir.exists()) return head+"The folder from NATIVE_SRC does not exist or the app cannot see it: "+nativeSrc+". Check the path and give the app access to all files / storage.";
+        if (!srcDir.isDirectory()) return head+"NATIVE_SRC is not a folder: "+nativeSrc;
+        String[] children = srcDir.list();
+        if (children == null) return head+"The app has no permission to read "+nativeSrc+". Grant storage / all-files access, or move the game to another folder.";
+        File srcBinary = new File(srcDir, "bin/arm64/factorio");
+        if (!srcBinary.isFile()) return head+"There is no bin/arm64/factorio inside "+nativeSrc+" (this build needs the Linux ARM64 game folder).";
+        return head+"The copy into the app did not finish (free storage space? interrupted copy?). Start the game again; if it repeats, delete rootfs/home/xuser/"+srcDir.getName()+" and retry.";
     }
 }

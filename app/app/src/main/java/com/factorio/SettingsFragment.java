@@ -17,6 +17,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
@@ -111,6 +112,9 @@ public class SettingsFragment extends Fragment {
         sLanguage.setSelection(LocaleHelper.getLocaleIndex(context));
         final int oldLCIndex = sLanguage.getSelectedItemPosition();
 
+        view.findViewById(R.id.BTDiagnostics).setOnClickListener((v) -> startDiagnostics(false));
+        view.findViewById(R.id.BTDiagnosticsLong).setOnClickListener((v) -> startDiagnostics(true));
+
         view.findViewById(R.id.BTConfirm).setOnClickListener((v) -> {
             if (container != null) {
                 container.setScreenSize(getScreenSize(view));
@@ -200,5 +204,18 @@ public class SettingsFragment extends Fragment {
             ((EditText)view.findViewById(R.id.ETScreenWidth)).setText(screenSize[0]);
             ((EditText)view.findViewById(R.id.ETScreenHeight)).setText(screenSize[1]);
         }
+    }
+
+    private void startDiagnostics(final boolean longMode) {
+        final Activity activity = getActivity();
+        if (activity == null) return;
+        final int count = com.factorio.core.Diagnostics.buildVariants(activity, longMode).size();
+        final int minutes = com.factorio.core.Diagnostics.estimateMinutes(activity, longMode);
+        new androidx.appcompat.app.AlertDialog.Builder(activity)
+            .setTitle(longMode ? R.string.diagnostics_long : R.string.diagnostics)
+            .setMessage(getString(R.string.diagnostics_confirm, count, minutes))
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok, (dialog, which) -> com.factorio.core.Diagnostics.start(activity, longMode))
+            .show();
     }
 }

@@ -63,6 +63,7 @@ Java_com_factorio_xenvironment_components_VortekRendererComponent_initVulkanWrap
                                                                                     jstring libvulkanPath) {
     void* libvulkan = openVulkanLibrary(env, nativeLibraryDir, libvulkanPath);
     initVulkanWrapper(&vulkanWrapper, libvulkan);
+    bcnLayerReset();
 }
 
 JNIEXPORT jboolean JNICALL

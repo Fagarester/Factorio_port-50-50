@@ -82,6 +82,8 @@ import java.util.ArrayList;
 import java.util.concurrent.Executors;
 
 public class XServerDisplayActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    private com.factorio.core.Diagnostics.Session diag = null;
+
     private XServerView xServerView;
     private InputControlsView inputControlsView;
     private TouchpadView touchpadView;
@@ -153,6 +155,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             return;
         }
         containerManager.activateContainer(container);
+
+        // automatic diagnostics (settings -> Diagnostics): this start belongs to one test setup, the container is adjusted here
+        diag = com.factorio.core.Diagnostics.beginVariant(this, container);
 
         if (!checkNativeGame()) return;
 
@@ -349,6 +354,22 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             sb.append("Driver report ").append(new java.util.Date()).append("\n");
             sb.append("App version code: ").append(AppUtils.getVersionCode(this)).append("\n\n");
 
+            if (GraphicsDrivers.isLegacyMode(graphicsDriver)) {
+                sb.append("BLOCK: Vortek + ").append(GraphicsDrivers.getName(graphicsDriver[1])).append(" (original Winlator stack)\n");
+                sb.append("  Vortek config: ").append(graphicsDriverConfig[0]).append("\n");
+                sb.append("  cacheId: ").append(container.getExtra("graphicsDriver")).append("\n");
+                sb.append(DriverReport.describe(new File(libDir, "libvulkan_vortek.so"))).append("\n");
+                String icd = FileUtils.readString(new File(rootDir, "usr/share/vulkan/icd.d/vortek_icd.aarch64.json"));
+                sb.append("  ICD: ").append(icd != null ? icd.replaceAll("\\s+", " ").trim() : "MISSING").append("\n");
+                File[] legacyGL = libDir.listFiles((dir, name) -> name.startsWith("libGL.so"));
+                if (legacyGL != null) {
+                    java.util.Arrays.sort(legacyGL);
+                    for (File file : legacyGL) sb.append(DriverReport.describe(file)).append("\n");
+                }
+                else sb.append("  libGL.so*: MISSING\n");
+                sb.append("  details of the Vulkan driver: vortek-report.txt (next to factorio-native.log)\n");
+            }
+
             if (graphicsDriver[0].equals(GraphicsDrivers.TURNIP)) {
                 String version = graphicsDriverConfig[0].get("version", DefaultVersion.TURNIP);
                 sb.append("VULKAN: Turnip, selected version '").append(version).append("'");
@@ -410,6 +431,11 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     private void showEarlyExitDialog(int status) {
+        if (diag != null) { // diagnostics: record it and go on with the next setup instead of showing a dialog
+            if (preloaderDialog != null) preloaderDialog.close();
+            diag.finish("game exited early (status "+status+")");
+            return;
+        }
         if (preloaderDialog != null) preloaderDialog.close();
 
         String tail = "";
@@ -431,6 +457,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             .setCancelable(false)
             .setPositiveButton(R.string.exit, (dialog, which) -> exit())
             .show();
+    }
+
+    /** Used by the diagnostics: stops the game and the X server without closing the app. */
+    public void diagShutdown() {
+        try {
+            winHandler.stop();
+            if (environment != null) environment.stopEnvironmentComponents();
+        }
+        catch (Exception e) {}
+        environment = null;
     }
 
     private void exit() {
@@ -585,6 +621,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         setupNativeGamepadBridge();
         environment.startEnvironmentComponents();
+        if (diag != null) diag.onEnvironmentStarted(xServerView);
 
         winHandler.start();
         envVars.clear();
