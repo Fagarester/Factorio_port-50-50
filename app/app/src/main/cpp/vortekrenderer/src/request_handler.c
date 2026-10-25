@@ -259,6 +259,8 @@ void vt_handle_vkQueueSubmit(VkContext* context) {
         if (clientWaiting && !(clientWaiting = false)) vt_send(context->clientRing, VK_SUCCESS, NULL, 0);
     }
 
+    if (context->memorySync >= 2) ResourceMemory_syncAll();
+
     VkResult result = vulkanWrapper.vkQueueSubmit(queue, submitCount, submits, fence);
     if (result == VK_ERROR_DEVICE_LOST) context->status = result;
 
@@ -333,6 +335,9 @@ void vt_handle_vkFlushMappedMemoryRanges(VkContext* context) {
     VkMappedMemoryRange memoryRanges[memoryRangeCount];
     vt_unserialize_vkFlushMappedMemoryRanges(VK_NULL_HANDLE, NULL, memoryRanges, context->inputBuffer, &context->memoryPool);
 
+    // the guest wrote through its own CPU mapping: clean the CPU cache so that the GPU reads current data
+    if (context->memorySync > 0) for (uint32_t i = 0; i < memoryRangeCount; i++) ResourceMemory_syncByMemory(memoryRanges[i].memory, false);
+
     VkResult result = vulkanWrapper.vkFlushMappedMemoryRanges(device, memoryRangeCount, memoryRanges);
     vt_send(context->clientRing, result, NULL, 0);
 }
@@ -346,6 +351,8 @@ void vt_handle_vkInvalidateMappedMemoryRanges(VkContext* context) {
 
     VkMappedMemoryRange memoryRanges[memoryRangeCount];
     vt_unserialize_vkInvalidateMappedMemoryRanges(VK_NULL_HANDLE, NULL, memoryRanges, context->inputBuffer, &context->memoryPool);
+
+    if (context->memorySync > 0) for (uint32_t i = 0; i < memoryRangeCount; i++) ResourceMemory_syncByMemory(memoryRanges[i].memory, true);
 
     VkResult result = vulkanWrapper.vkInvalidateMappedMemoryRanges(device, memoryRangeCount, memoryRanges);
     vt_send(context->clientRing, result, NULL, 0);

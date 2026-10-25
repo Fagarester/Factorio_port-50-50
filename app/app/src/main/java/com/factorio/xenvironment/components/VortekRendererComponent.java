@@ -48,6 +48,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
         public short maxDeviceMemory = 0;
         public short imageCacheSize = IMAGE_CACHE_SIZE;
         public byte resourceMemoryType = 0;
+        public byte memorySync = 0; // 0 = off, 1 = CPU cache sync on flush/invalidate, 2 = also before every queue submit (read by native code)
         public String[] exposedDeviceExtensions = null;
         public String libvulkanPath = null;
 
@@ -69,6 +70,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
             options.maxDeviceMemory = (short)config.getInt("maxDeviceMemory");
             options.imageCacheSize = (short)config.getInt("imageCacheSize", VortekRendererComponent.IMAGE_CACHE_SIZE);
             options.resourceMemoryType = (byte)config.getInt("resourceMemoryType");
+            options.memorySync = (byte)config.getInt("memorySync");
             options.bcnMode = config.getInt("bcnMode");
 
             // custom (adrenotools) Vulkan drivers are not used in this fork: Vortek always runs on the system driver
@@ -234,12 +236,15 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
             sb.append("Vortek report ").append(new java.util.Date()).append("\n");
             sb.append("options: vkMaxVersion=").append(options.vkMaxVersion).append(" maxDeviceMemory=").append(options.maxDeviceMemory)
               .append(" imageCacheSize=").append(options.imageCacheSize).append(" resourceMemoryType=").append(options.resourceMemoryType)
-              .append(" bcnMode=").append(options.bcnMode).append("\n");
+              .append(" bcnMode=").append(options.bcnMode).append(" memorySync=").append(options.memorySync).append("\n");
             sb.append("exposedExtensions: ").append(options.exposedDeviceExtensions != null ? java.util.Arrays.toString(options.exposedDeviceExtensions) : "(all)").append("\n");
             sb.append("BCn layer: ");
             if (options.bcnMode <= 0) sb.append("off (CPU decoding)\n");
             else if (bcnLayerPath == null) sb.append("requested but not available (Adreno, missing file or unpack error) -> CPU decoding\n");
             else sb.append(bcnLayerLoaded ? "LOADED " : "FAILED to load ").append(bcnLayerPath).append("\n");
+            sb.append("dma heaps: system-uncached=").append(new File("/dev/dma_heap/system-uncached").exists())
+              .append(" system=").append(new File("/dev/dma_heap/system").exists())
+              .append(" ion=").append(new File("/dev/ion").exists()).append("\n");
             sb.append("\n").append(vulkanReport);
 
             File dir = LogView.getLogFile().getParentFile();

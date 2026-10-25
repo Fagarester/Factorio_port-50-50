@@ -105,6 +105,11 @@
         <item>DMA Buffer</item>
         <item>Native Hardware Buffer</item>
     </string-array>
+    <string-array name="memory_sync_entries">
+        <item>@string/memory_sync_off</item>
+        <item>@string/memory_sync_flush</item>
+        <item>@string/memory_sync_always</item>
+    </string-array>
     <string-array name="bcn_mode_entries">
         <item>@string/bcn_mode_cpu</item>
         <item>@string/bcn_mode_gpu</item>

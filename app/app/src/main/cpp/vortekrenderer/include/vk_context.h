@@ -13,6 +13,7 @@ typedef struct VkContext {
     short maxDeviceMemory;
     short imageCacheSize;
     ResourceMemoryType resourceMemoryType;
+    int memorySync; // see ResourceMemory_setSyncMode
     ArrayList* exposedDeviceExtensions;
     ArrayList* disabledDeviceExtensions;
     uint64_t totalAllocationSize;

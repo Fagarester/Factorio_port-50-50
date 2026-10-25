@@ -112,6 +112,8 @@ VkContext* createVkContext(JNIEnv* env, jobject obj, int clientFd, jobject optio
     context->maxDeviceMemory = getJFieldByName(env, options, "maxDeviceMemory", "S").s;
     context->imageCacheSize = getJFieldByName(env, options, "imageCacheSize", "S").s;
     context->resourceMemoryType = getJFieldByName(env, options, "resourceMemoryType", "B").b;
+    context->memorySync = getJFieldByName(env, options, "memorySync", "B").b;
+    ResourceMemory_setSyncMode(context->memorySync);
     context->exposedDeviceExtensions = jstringArrayToCharArray(env, exposedDeviceExtensions);
 
     pthread_mutex_init(&context->extraDataRequestsMutex, NULL);

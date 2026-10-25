@@ -2,9 +2,104 @@
 #include "sysvshared_memory.h"
 #include "vulkan_helper.h"
 #include "dma_utils.h"
+#include <pthread.h>
+#include <errno.h>
+#include <sys/ioctl.h>
 
 extern int AHardwareBuffer_getFd(AHardwareBuffer* hardwareBuffer);
 extern DeviceMemoryInfo deviceMemoryInfo;
+
+
+/* ---- CPU cache maintenance (DMA_BUF_IOCTL_SYNC). Defined locally so the code builds with any NDK header level. ---- */
+struct vt_dma_buf_sync { uint64_t flags; };
+#define VT_DMA_BUF_SYNC_READ  (1 << 0)
+#define VT_DMA_BUF_SYNC_WRITE (2 << 0)
+#define VT_DMA_BUF_SYNC_START (0 << 2)
+#define VT_DMA_BUF_SYNC_END   (1 << 2)
+#define VT_DMA_BUF_IOCTL_SYNC _IOW('b', 0, struct vt_dma_buf_sync)
+
+static pthread_mutex_t registryMutex = PTHREAD_MUTEX_INITIALIZER;
+static ResourceMemory** registry = NULL;
+static int registryCount = 0;
+static int registryCapacity = 0;
+static int syncMode = 0;
+static int syncCount = 0;
+
+static void registryAdd(ResourceMemory* resourceMemory) {
+    pthread_mutex_lock(&registryMutex);
+    if (registryCount == registryCapacity) {
+        int newCapacity = registryCapacity ? registryCapacity * 2 : 64;
+        ResourceMemory** newRegistry = realloc(registry, sizeof(ResourceMemory*) * newCapacity);
+        if (newRegistry) {
+            registry = newRegistry;
+            registryCapacity = newCapacity;
+        }
+    }
+    if (registryCount < registryCapacity) registry[registryCount++] = resourceMemory;
+    pthread_mutex_unlock(&registryMutex);
+}
+
+static void registryRemove(ResourceMemory* resourceMemory) {
+    pthread_mutex_lock(&registryMutex);
+    for (int i = 0; i < registryCount; i++) {
+        if (registry[i] == resourceMemory) {
+            registry[i] = registry[--registryCount];
+            break;
+        }
+    }
+    pthread_mutex_unlock(&registryMutex);
+}
+
+static void syncResourceMemory(ResourceMemory* resourceMemory, bool invalidate) {
+    if (!resourceMemory || resourceMemory->fd < 0 || resourceMemory->syncUnsupported) return;
+
+    struct vt_dma_buf_sync sync;
+    // CPU wrote -> clean caches so the GPU sees the data (END|WRITE); GPU wrote -> invalidate before the CPU reads (START|READ)
+    sync.flags = invalidate ? (VT_DMA_BUF_SYNC_START | VT_DMA_BUF_SYNC_READ) : (VT_DMA_BUF_SYNC_END | VT_DMA_BUF_SYNC_WRITE);
+
+    int res;
+    do {
+        res = ioctl(resourceMemory->fd, VT_DMA_BUF_IOCTL_SYNC, &sync);
+    }
+    while (res == -1 && errno == EINTR);
+
+    if (res == 0) syncCount++;
+    else resourceMemory->syncUnsupported = true;
+}
+
+void ResourceMemory_setSyncMode(int mode) {
+    syncMode = mode;
+    syncCount = 0;
+}
+
+int ResourceMemory_getSyncMode(void) {
+    return syncMode;
+}
+
+int ResourceMemory_getSyncCount(void) {
+    return syncCount;
+}
+
+void ResourceMemory_syncByMemory(VkDeviceMemory memory, bool invalidate) {
+    if (syncMode <= 0 || !memory) return;
+
+    pthread_mutex_lock(&registryMutex);
+    for (int i = 0; i < registryCount; i++) {
+        if (registry[i]->memory == memory) {
+            syncResourceMemory(registry[i], invalidate);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&registryMutex);
+}
+
+void ResourceMemory_syncAll(void) {
+    if (syncMode < 2) return;
+
+    pthread_mutex_lock(&registryMutex);
+    for (int i = 0; i < registryCount; i++) syncResourceMemory(registry[i], false);
+    pthread_mutex_unlock(&registryMutex);
+}
 
 static ResourceMemory* internalAllocate() {
     ResourceMemory* resourceMemory = calloc(1, sizeof(ResourceMemory));
@@ -160,6 +255,7 @@ ResourceMemory* ResourceMemory_allocate(VkContext* context, VkDevice device, VkM
 
     if (result == VK_SUCCESS) context->totalAllocationSize += memoryInfo->allocationSize;
     resourceMemory->allocationSize = memoryInfo->allocationSize;
+    if (resourceMemory->fd != -1) registryAdd(resourceMemory);
     return resourceMemory;
 
 error:
@@ -170,6 +266,7 @@ error:
 void ResourceMemory_free(VkContext* context, VkDevice device, ResourceMemory* resourceMemory) {
     if (!resourceMemory) return;
 
+    registryRemove(resourceMemory);
     if (resourceMemory->buffer) {
         vulkanWrapper.vkDestroyBuffer(device, resourceMemory->buffer, NULL);
         resourceMemory->buffer = VK_NULL_HANDLE;

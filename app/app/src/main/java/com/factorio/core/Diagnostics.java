@@ -80,39 +80,46 @@ public class Diagnostics {
         boolean adreno = GPUHelper.isAdreno(context);
 
         if (!longMode) {
-            list.add(new Variant("01-zink-bcn-cpu", "Vortek + Zink 22.2.5, BCn: CPU decode", zink, "bcnMode=0", null));
-            list.add(new Variant("02-zink-bcn-gpu-new", "Vortek + Zink 22.2.5, BCn: GPU layer (new build)", zink, "bcnMode=1", null));
-            list.add(new Variant("03-zink-bcn-gpu-astc", "Vortek + Zink 22.2.5, BCn: GPU layer legacy ASTC", zink, "bcnMode=2", null));
-            list.add(new Variant("04-zink-bcn-gpu-etc2", "Vortek + Zink 22.2.5, BCn: GPU layer legacy ETC2", zink, "bcnMode=3", null));
-            list.add(new Variant("05-gladio-bcn-cpu", "Vortek + Gladio, BCn: CPU decode", gladio, "bcnMode=0", null));
-            list.add(new Variant("06-gladio-bcn-gpu-new", "Vortek + Gladio, BCn: GPU layer (new build)", gladio, "bcnMode=1", null));
-            list.add(new Variant("07-zink-mem-opaquefd", "Zink, BCn new, Resource Memory: Opaque FD", zink, "bcnMode=1,resourceMemoryType=1", null));
-            list.add(new Variant("08-zink-mem-dmabuf", "Zink, BCn new, Resource Memory: DMA Buffer", zink, "bcnMode=1,resourceMemoryType=2", null));
-            list.add(new Variant("09-zink-mem-ahb", "Zink, BCn new, Resource Memory: Native Hardware Buffer", zink, "bcnMode=1,resourceMemoryType=3", null));
-            list.add(new Variant("10-zink-vk11", "Zink, BCn new, Vulkan 1.1", zink, "bcnMode=1,vkMaxVersion=1.1", null));
-            list.add(new Variant("11-zink-vk12", "Zink, BCn new, Vulkan 1.2", zink, "bcnMode=1,vkMaxVersion=1.2", null));
-            list.add(new Variant("12-zink-mem4g", "Zink, BCn new, Max device memory 4096 MB", zink, "bcnMode=1,maxDeviceMemory=4096", null));
-            list.add(new Variant("13-zink-nocompr", "Zink, BCn new, game: texture compression none", zink, "bcnMode=1", noCompression));
-            list.add(new Variant("14-zink-nocompr-cpu", "Zink, BCn CPU, game: texture compression none", zink, "bcnMode=0", noCompression));
-            list.add(new Variant("15-zink-tex4096", "Zink, BCn new, game: compression none + max texture 4096", zink, "bcnMode=1", noCompression+";max-texture-size=4096"));
-            list.add(new Variant("16-zink-vram-high", "Zink, BCn new, game: video memory usage high", zink, "bcnMode=1", "video-memory-usage=high"));
-            list.add(new Variant("17-gladio-nocompr", "Gladio, BCn new, game: texture compression none", gladio, "bcnMode=1", noCompression));
+            // start-up matrix (15 s each): does the driver start at all. Variants known to crash or hang come last.
+            list.add(new Variant("01-zink-bcn-gpu-new", "Vortek + Zink 22.2.5, BCn: GPU layer (new build)", zink, "bcnMode=1", null));
+            list.add(new Variant("02-zink-sync1", "Zink, BCn new, CPU cache sync: flush/invalidate", zink, "bcnMode=1,memorySync=1", null));
+            list.add(new Variant("03-zink-sync2", "Zink, BCn new, CPU cache sync: also before every submit", zink, "bcnMode=1,memorySync=2", null));
+            list.add(new Variant("04-zink-dmabuf-sync2", "Zink, BCn new, DMA Buffer + cache sync 2", zink, "bcnMode=1,memorySync=2,resourceMemoryType=2", null));
+            list.add(new Variant("05-zink-bcn-gpu-astc", "Vortek + Zink 22.2.5, BCn: GPU layer legacy ASTC", zink, "bcnMode=2", null));
+            list.add(new Variant("06-zink-bcn-gpu-etc2", "Vortek + Zink 22.2.5, BCn: GPU layer legacy ETC2", zink, "bcnMode=3", null));
+            list.add(new Variant("07-gladio-bcn-gpu-new", "Vortek + Gladio, BCn: GPU layer (new build)", gladio, "bcnMode=1", null));
+            list.add(new Variant("08-gladio-bcn-cpu", "Vortek + Gladio, BCn: CPU decode", gladio, "bcnMode=0", null));
+            list.add(new Variant("09-zink-vk11", "Zink, BCn new, Vulkan 1.1", zink, "bcnMode=1,vkMaxVersion=1.1", null));
+            list.add(new Variant("10-zink-vk12", "Zink, BCn new, Vulkan 1.2", zink, "bcnMode=1,vkMaxVersion=1.2", null));
+            list.add(new Variant("11-zink-mem4g", "Zink, BCn new, Max device memory 4096 MB", zink, "bcnMode=1,maxDeviceMemory=4096", null));
+            list.add(new Variant("12-zink-nocompr", "Zink, BCn new, game: texture compression none", zink, "bcnMode=1", noCompression));
+            list.add(new Variant("13-zink-tex4096", "Zink, BCn new, game: compression none + max texture 4096", zink, "bcnMode=1", noCompression+";max-texture-size=4096"));
+            list.add(new Variant("14-zink-vram-high", "Zink, BCn new, game: video memory usage high", zink, "bcnMode=1", "video-memory-usage=high"));
+            list.add(new Variant("15-gladio-nocompr", "Gladio, BCn new, game: texture compression none", gladio, "bcnMode=1", noCompression));
+            list.add(new Variant("16-zink-bcn-cpu", "Vortek + Zink 22.2.5, BCn: CPU decode (hangs on Mali-G610)", zink, "bcnMode=0", null));
+            list.add(new Variant("17-zink-mem-dmabuf", "Zink, BCn new, Resource Memory: DMA Buffer", zink, "bcnMode=1,resourceMemoryType=2", null));
+            list.add(new Variant("18-zink-mem-opaquefd", "Zink, BCn new, Resource Memory: Opaque FD (no GL context on Mali-G610)", zink, "bcnMode=1,resourceMemoryType=1", null));
+            list.add(new Variant("19-zink-mem-ahb", "Zink, BCn new, Resource Memory: Native Hardware Buffer (crashes on Mali-G610)", zink, "bcnMode=1,resourceMemoryType=3", null));
             if (adreno) {
                 list.add(new Variant("20-turnip-zink", "Turnip + Zink (current block)", "turnip,zink", null, null));
                 list.add(new Variant("21-turnip-opengl", "Turnip + OpenGL native (current block)", "turnip,opengl", null, null));
             }
         }
         else {
-            list.add(new Variant("L1-zink-bcn-gpu-new", "Vortek + Zink 22.2.5, BCn: GPU layer (new build)", zink, "bcnMode=1", null));
-            list.add(new Variant("L2-zink-bcn-cpu", "Vortek + Zink 22.2.5, BCn: CPU decode", zink, "bcnMode=0", null));
-            list.add(new Variant("L3-zink-bcn-gpu-astc", "Vortek + Zink 22.2.5, BCn: GPU layer legacy ASTC", zink, "bcnMode=2", null));
-            list.add(new Variant("L4-zink-nocompr", "Zink, BCn new, game: texture compression none", zink, "bcnMode=1", noCompression));
-            list.add(new Variant("L5-zink-mem-ahb", "Zink, BCn new, Resource Memory: Native Hardware Buffer", zink, "bcnMode=1,resourceMemoryType=3", null));
-            list.add(new Variant("L6-zink-vk11-mem4g", "Zink, BCn new, Vulkan 1.1 + max memory 4096 MB", zink, "bcnMode=1,vkMaxVersion=1.1,maxDeviceMemory=4096", null));
-            list.add(new Variant("L7-gladio-bcn-gpu-new", "Vortek + Gladio, BCn: GPU layer (new build)", gladio, "bcnMode=1", null));
+            // visual comparison (5 min each, screenshots every minute with a stripe score). The first three differ only in CPU cache sync.
+            list.add(new Variant("L1-sync0-control", "Zink, BCn new, no CPU cache sync (control)", zink, "bcnMode=1,memorySync=0", null));
+            list.add(new Variant("L2-sync1", "Zink, BCn new, CPU cache sync: flush/invalidate", zink, "bcnMode=1,memorySync=1", null));
+            list.add(new Variant("L3-sync2", "Zink, BCn new, CPU cache sync: also before every submit", zink, "bcnMode=1,memorySync=2", null));
+            list.add(new Variant("L4-dmabuf-sync2", "Zink, BCn new, DMA Buffer + cache sync 2", zink, "bcnMode=1,memorySync=2,resourceMemoryType=2", null));
+            list.add(new Variant("L5-astc-sync1", "Zink, BCn legacy ASTC + cache sync 1", zink, "bcnMode=2,memorySync=1", null));
+            list.add(new Variant("L6-nocompr-sync2", "Zink, BCn new, texture compression none + cache sync 2", zink, "bcnMode=1,memorySync=2", noCompression));
+            for (MaliPresets.Preset preset : MaliPresets.all()) {
+                if (preset.vortekConfig != null && preset.id.equals("mali-lowmem")) list.add(new Variant("L7-preset-"+preset.id, "Preset: "+preset.title, zink, preset.vortekConfig, preset.nativeGfx));
+            }
+            list.add(new Variant("L8-gladio-bcn-gpu-new", "Vortek + Gladio, BCn: GPU layer (new build), libX11 preload", gladio, "bcnMode=1,memorySync=1", null));
             if (adreno) {
-                list.add(new Variant("L8-turnip-zink", "Turnip + Zink (current block)", "turnip,zink", null, null));
-                list.add(new Variant("L9-turnip-opengl", "Turnip + OpenGL native (current block)", "turnip,opengl", null, null));
+                list.add(new Variant("L9-turnip-zink", "Turnip + Zink (current block)", "turnip,zink", null, null));
+                list.add(new Variant("L10-turnip-opengl", "Turnip + OpenGL native (current block)", "turnip,opengl", null, null));
             }
         }
         return list;
@@ -346,6 +353,62 @@ public class Diagnostics {
             handler.postDelayed(() -> finish("timeout: game environment did not start within "+(seconds + 120)+" s"), (seconds + 120) * 1000);
         }
 
+
+        // ---- automatic picture analysis: stripe score + "frozen picture" detection -------------------------------------
+        private long lastSignature = 0;
+        private String pictureNote = "";
+        private int frozenCount = 0;
+
+        /**
+         * stripe score = mean |pixel - pixel below| / mean |pixel - pixel to the right| on sampled rows. A normal picture is about 1
+         * (a bit more for pipes and rails), horizontal tearing / stale-cache stripes give clearly more than 1.5.
+         * signature: a hash of sampled pixels; the same value in consecutive screenshots means the picture does not change (game hung or loading).
+         */
+        private void analyzeScreenshot(String name, Bitmap bitmap) {
+            try {
+                int width = bitmap.getWidth(), height = bitmap.getHeight();
+                if (width < 64 || height < 64) return;
+
+                int[] row = new int[width];
+                int[] below = new int[width];
+                double vSum = 0, hSum = 0;
+                long vCount = 0, hCount = 0, signature = 1469598103934665603L;
+                int yStart = height / 8, yEnd = height - height / 8;
+                for (int y = yStart; y < yEnd - 1; y += 7) {
+                    bitmap.getPixels(row, 0, width, 0, y, width, 1);
+                    bitmap.getPixels(below, 0, width, 0, y + 1, width, 1);
+                    for (int x = width / 8; x < width - width / 8 - 1; x += 3) {
+                        int a = luma(row[x]);
+                        vSum += Math.abs(a - luma(below[x]));
+                        hSum += Math.abs(a - luma(row[x + 1]));
+                        vCount++;
+                        hCount++;
+                        signature = (signature ^ row[x]) * 1099511628211L;
+                    }
+                }
+
+                double v = vCount > 0 ? vSum / vCount : 0, h = hCount > 0 ? hSum / hCount : 0;
+                double score = h > 0.01 ? v / h : 0;
+                boolean frozen = lastSignature != 0 && signature == lastSignature;
+                if (frozen) frozenCount++;
+                lastSignature = signature;
+
+                appendLine(new File(variantDir, "result.txt"), String.format(Locale.US,
+                    "picture %-9s stripe score %.2f (vertical %.1f / horizontal %.1f)%s", name, score, v, h,
+                    frozen ? "   SAME AS THE PREVIOUS SCREENSHOT (game hung or still loading)" : ""));
+                if (name.equals("final")) {
+                    pictureNote = String.format(Locale.US, "      picture: stripe score %.2f%s\n", score, frozenCount > 0 ? ", frozen picture "+frozenCount+"x" : "");
+                }
+            }
+            catch (Throwable e) {
+                appendLine(new File(variantDir, "result.txt"), "picture analysis failed: "+e);
+            }
+        }
+
+        private int luma(int color) {
+            return ((color >> 16 & 0xFF) * 3 + (color >> 8 & 0xFF) * 6 + (color & 0xFF)) / 10;
+        }
+
         /** The game process was started: the timer of this setup starts now. */
         public void onEnvironmentStarted(XServerView view) {
             this.xServerView = view;
@@ -375,6 +438,7 @@ public class Diagnostics {
                 handler.postDelayed(once, 2500); // PixelCopy sometimes never answers
                 PixelCopy.request(xServerView, bitmap, (result) -> {
                     if (result == PixelCopy.SUCCESS) {
+                        analyzeScreenshot(name, bitmap);
                         try (FileOutputStream out = new FileOutputStream(new File(variantDir, name+".png"))) {
                             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
                         }
@@ -424,7 +488,7 @@ public class Diagnostics {
                 result.append("key lines of the game log:\n").append(extractKeyLines(new File(variantDir, "log.txt")));
                 appendLine(new File(variantDir, "result.txt"), result.toString());
 
-                appendSummary(runDir, String.format(Locale.US, "[%d/%d] %-26s %-48s -> %s (%d s)\n", index + 1, total, variant.id, variant.title, status, elapsed));
+                appendSummary(runDir, String.format(Locale.US, "[%d/%d] %-26s %-48s -> %s (%d s)\n", index + 1, total, variant.id, variant.title, status, elapsed)+pictureNote);
                 state.put("index", index + 1);
                 writeState(activity, state);
             }

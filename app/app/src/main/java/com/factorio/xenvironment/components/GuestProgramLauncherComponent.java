@@ -262,6 +262,17 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         // --preload is used instead of LD_PRELOAD because LD_PRELOAD would also hit Android's /system/bin/sh
         // (factorio-start.sh) and break it.
         String nativePreload = envVars.get("NATIVE_PRELOAD");
+        // Gladio's libGL.so.1 uses libX11 functions (XGetVisualInfo ...) but is not linked against libX11, and SDL opens libX11 privately,
+        // so without this SDL fails with "Failed loading libGL.so.1: undefined symbol: XGetVisualInfo". Preloading libX11 makes the symbols global.
+        if (envVars.get("GLADIO_NO_ERROR") != null) {
+            for (String dir : libPath.split(":")) {
+                File x11 = new File(dir, "libX11.so.6");
+                if (x11.isFile()) {
+                    nativePreload = x11.getPath()+(nativePreload != null && !nativePreload.isEmpty() ? ":"+nativePreload : "");
+                    break;
+                }
+            }
+        }
         String preloadArg = nativePreload != null && !nativePreload.isEmpty() ? " --preload "+nativePreload : "";
         command = loader+preloadArg+" --library-path "+libPath+" "+nativeFile.getPath()+extraArgs;
         File workDir = nativeFile.getParentFile();

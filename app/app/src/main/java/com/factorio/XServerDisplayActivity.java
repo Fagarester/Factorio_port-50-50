@@ -861,6 +861,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
         }
 
+        // Mali preset: game graphics keys of the preset, unless the container sets NATIVE_GFX itself
+        com.factorio.core.MaliPresets.Preset maliPreset = com.factorio.core.MaliPresets.find(graphicsDriverConfig[0].get("preset", ""));
+        if (maliPreset != null && maliPreset.nativeGfx != null) {
+            String ownGfx = envVars.get("NATIVE_GFX");
+            if (ownGfx == null || ownGfx.isEmpty()) envVars.put("NATIVE_GFX", maliPreset.nativeGfx);
+        }
+
         switch (graphicsDriver[1]) {
             case GraphicsDrivers.GLADIO:
                 envVars.put("GLADIO_NO_ERROR", "1");
