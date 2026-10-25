@@ -58,9 +58,15 @@ public class Diagnostics {
         public final String title;
         public final String driver;       // "vortek,zinkold", "turnip,zink", ...
         public final String vortekConfig; // "bcnMode=1,resourceMemoryType=3" (only for Vortek setups)
-        public final String nativeGfx;    // value for NATIVE_GFX or null (= variable removed)
+        public final String nativeGfx;    // value for NATIVE_GFX or null (= game settings are reset to the defaults)
+        public final String extraEnv;     // "A=1;B=2" additional container variables or null
 
         Variant(String id, String title, String driver, String vortekConfig, String nativeGfx) {
+            this(id, title, driver, vortekConfig, nativeGfx, null);
+        }
+
+        Variant(String id, String title, String driver, String vortekConfig, String nativeGfx, String extraEnv) {
+            this.extraEnv = extraEnv;
             this.id = id;
             this.title = title;
             this.driver = driver;
@@ -93,7 +99,7 @@ public class Diagnostics {
             list.add(new Variant("10-zink-vk12", "Zink, BCn new, Vulkan 1.2", zink, "bcnMode=1,vkMaxVersion=1.2", null));
             list.add(new Variant("11-zink-mem4g", "Zink, BCn new, Max device memory 4096 MB", zink, "bcnMode=1,maxDeviceMemory=4096", null));
             list.add(new Variant("12-zink-nocompr", "Zink, BCn new, game: texture compression none", zink, "bcnMode=1", noCompression));
-            list.add(new Variant("13-zink-tex4096", "Zink, BCn new, game: compression none + max texture 4096", zink, "bcnMode=1", noCompression+";max-texture-size=4096"));
+            list.add(new Variant("13-zink-unthreaded", "Zink, BCn new, ZINK_CONTEXT_THREADED=0", zink, "bcnMode=1", null, "ZINK_CONTEXT_THREADED=0"));
             list.add(new Variant("14-zink-vram-high", "Zink, BCn new, game: video memory usage high", zink, "bcnMode=1", "video-memory-usage=high"));
             list.add(new Variant("15-gladio-nocompr", "Gladio, BCn new, game: texture compression none", gladio, "bcnMode=1", noCompression));
             list.add(new Variant("16-zink-bcn-cpu", "Vortek + Zink 22.2.5, BCn: CPU decode (hangs on Mali-G610)", zink, "bcnMode=0", null));
@@ -106,17 +112,15 @@ public class Diagnostics {
             }
         }
         else {
-            // visual comparison (5 min each, screenshots every minute with a stripe score). The first three differ only in CPU cache sync.
-            list.add(new Variant("L1-sync0-control", "Zink, BCn new, no CPU cache sync (control)", zink, "bcnMode=1,memorySync=0", null));
-            list.add(new Variant("L2-sync1", "Zink, BCn new, CPU cache sync: flush/invalidate", zink, "bcnMode=1,memorySync=1", null));
-            list.add(new Variant("L3-sync2", "Zink, BCn new, CPU cache sync: also before every submit", zink, "bcnMode=1,memorySync=2", null));
-            list.add(new Variant("L4-dmabuf-sync2", "Zink, BCn new, DMA Buffer + cache sync 2", zink, "bcnMode=1,memorySync=2,resourceMemoryType=2", null));
-            list.add(new Variant("L5-astc-sync1", "Zink, BCn legacy ASTC + cache sync 1", zink, "bcnMode=2,memorySync=1", null));
-            list.add(new Variant("L6-nocompr-sync2", "Zink, BCn new, texture compression none + cache sync 2", zink, "bcnMode=1,memorySync=2", noCompression));
-            for (MaliPresets.Preset preset : MaliPresets.all()) {
-                if (preset.vortekConfig != null && preset.id.equals("mali-lowmem")) list.add(new Variant("L7-preset-"+preset.id, "Preset: "+preset.title, zink, preset.vortekConfig, preset.nativeGfx));
-            }
-            list.add(new Variant("L8-gladio-bcn-gpu-new", "Vortek + Gladio, BCn: GPU layer (new build), libX11 preload", gladio, "bcnMode=1,memorySync=1", null));
+            // Mali stripes: what is left after the CPU cache sync hypothesis failed (5 min each, screenshots every minute).
+            // Every setup starts with the default game settings (see beginVariant).
+            list.add(new Variant("L1-control-layer", "Zink, BCn GPU layer (control)", zink, "bcnMode=1", null));
+            list.add(new Variant("L2-nolayer-nocompr", "Zink, NO BCn layer, game: texture compression none (no BC textures at all)", zink, "bcnMode=0", noCompression));
+            list.add(new Variant("L3-layer-nocompr", "Zink, BCn GPU layer, game: texture compression none", zink, "bcnMode=1", noCompression));
+            list.add(new Variant("L4-layer-zink-unthreaded", "Zink, BCn GPU layer, ZINK_CONTEXT_THREADED=0", zink, "bcnMode=1", null, "ZINK_CONTEXT_THREADED=0"));
+            list.add(new Variant("L5-nolayer-nocompr-unthreaded", "Zink, NO layer, compression none, ZINK_CONTEXT_THREADED=0", zink, "bcnMode=0", noCompression, "ZINK_CONTEXT_THREADED=0"));
+            list.add(new Variant("L6-dmabuf-sync2-unthreaded", "Zink, BCn layer, DMA Buffer + cache sync 2, ZINK_CONTEXT_THREADED=0", zink, "bcnMode=1,memorySync=2,resourceMemoryType=2", null, "ZINK_CONTEXT_THREADED=0"));
+            list.add(new Variant("L7-gladio", "Vortek + Gladio (fixed glXQueryExtension)", gladio, "bcnMode=1", null));
             if (adreno) {
                 list.add(new Variant("L9-turnip-zink", "Turnip + Zink (current block)", "turnip,zink", null, null));
                 list.add(new Variant("L10-turnip-opengl", "Turnip + OpenGL native (current block)", "turnip,opengl", null, null));
@@ -225,6 +229,31 @@ public class Diagnostics {
         context.startActivity(intent);
     }
 
+    /** Called by the launcher before it (re)writes the game config: the user's own file is kept and given back after the run. */
+    public static void backupConfig(Context context, File configFile) {
+        try {
+            File backup = new File(context.getFilesDir(), "diagnostics-config-backup.ini");
+            if (!isActive(context) || backup.exists() || !configFile.isFile()) return;
+            copy(configFile, backup);
+            FileUtils.writeString(new File(context.getFilesDir(), "diagnostics-config-path.txt"), configFile.getPath());
+        }
+        catch (Exception e) {
+            Log.w(TAG, "config backup failed", e);
+        }
+    }
+
+    private static void restoreConfig(Context context) {
+        File backup = new File(context.getFilesDir(), "diagnostics-config-backup.ini");
+        File pathFile = new File(context.getFilesDir(), "diagnostics-config-path.txt");
+        try {
+            String path = FileUtils.readString(pathFile);
+            if (backup.isFile() && path != null && !path.trim().isEmpty()) copy(backup, new File(path.trim()));
+        }
+        catch (Exception e) {}
+        backup.delete();
+        pathFile.delete();
+    }
+
     /** Puts the user's own settings back and removes the state. Returns the run folder (or null). */
     public static File restoreSnapshot(Context context) {
         JSONObject state = readState(context);
@@ -248,6 +277,7 @@ public class Diagnostics {
         catch (Exception e) {
             Log.e(TAG, "restore failed", e);
         }
+        restoreConfig(context);
         stateFile(context).delete();
         return runDir;
     }
@@ -287,8 +317,16 @@ public class Diagnostics {
             container.setGraphicsDriver(variant.driver);
             if (variant.vortekConfig != null) container.putExtra(GraphicsDrivers.EXTRA_CONFIG_VORTEK, variant.vortekConfig+"|");
             EnvVars envVars = new EnvVars(snapshot.optString("envVars"));
+            // the game config file is kept between launches: every setup starts from the defaults, otherwise the keys of the
+            // previous setup would leak into this one ("reset" rewrites the file)
             envVars.remove("NATIVE_GFX");
-            if (variant.nativeGfx != null) envVars.put("NATIVE_GFX", variant.nativeGfx);
+            envVars.put("NATIVE_GFX", variant.nativeGfx != null ? variant.nativeGfx : "reset");
+            if (variant.extraEnv != null) {
+                for (String item : variant.extraEnv.split(";")) {
+                    int eq = item.indexOf('=');
+                    if (eq > 0) envVars.put(item.substring(0, eq).trim(), item.substring(eq + 1).trim());
+                }
+            }
             container.setEnvVars(envVars.toString());
             container.saveData();
 
@@ -298,6 +336,16 @@ public class Diagnostics {
             Log.e(TAG, "beginVariant failed", e);
             return null;
         }
+    }
+
+    private static android.os.HandlerThread workerThread;
+
+    private static synchronized Handler workerHandler() {
+        if (workerThread == null) {
+            workerThread = new android.os.HandlerThread("diagnostics-worker");
+            workerThread.start();
+        }
+        return new Handler(workerThread.getLooper());
     }
 
     public static class Session {
@@ -328,7 +376,7 @@ public class Diagnostics {
 
             FileUtils.writeString(new File(variantDir, "variant.txt"),
                 "id: "+variant.id+"\ntitle: "+variant.title+"\ndriver: "+variant.driver+"\nvortek config: "+variant.vortekConfig+
-                "\nNATIVE_GFX: "+variant.nativeGfx+"\nstarted: "+new Date()+"\n");
+                "\nNATIVE_GFX: "+variant.nativeGfx+"\nextra env: "+variant.extraEnv+"\nstarted: "+new Date()+"\n");
 
             // everything the game prints goes to this variant's log (replaces the optional debug log of the app)
             logWriter = new BufferedWriter(new FileWriter(new File(variantDir, "log.txt")));
@@ -435,18 +483,21 @@ public class Diagnostics {
                     return;
                 }
                 final Bitmap bitmap = Bitmap.createBitmap(xServerView.getWidth(), xServerView.getHeight(), Bitmap.Config.ARGB_8888);
-                handler.postDelayed(once, 2500); // PixelCopy sometimes never answers
+                handler.postDelayed(once, 20000); // PixelCopy sometimes never answers
+                // The copy result, the picture analysis and the compression run on a worker thread: doing this on the main thread
+                // for a few seconds makes MIUI (and others) treat the app as hung and kill it.
                 PixelCopy.request(xServerView, bitmap, (result) -> {
                     if (result == PixelCopy.SUCCESS) {
                         analyzeScreenshot(name, bitmap);
-                        try (FileOutputStream out = new FileOutputStream(new File(variantDir, name+".png"))) {
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        try (FileOutputStream out = new FileOutputStream(new File(variantDir, name+".jpg"))) {
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out);
                         }
                         catch (Exception e) {}
                     }
                     else appendLine(new File(variantDir, "result.txt"), "screenshot "+name+": PixelCopy result "+result);
-                    once.run();
-                }, handler);
+                    bitmap.recycle();
+                    handler.post(once);
+                }, workerHandler());
             }
             catch (Throwable e) {
                 appendLine(new File(variantDir, "result.txt"), "screenshot "+name+" failed: "+e);

@@ -935,7 +935,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         switch (graphicsDriver[1]) {
             case GraphicsDrivers.ZINK:
                 envVars.put("GALLIUM_DRIVER", "zink");
-                envVars.put("ZINK_CONTEXT_THREADED", "1");
+                if (!envVars.has("ZINK_CONTEXT_THREADED")) envVars.put("ZINK_CONTEXT_THREADED", "1");
 
                 if (changed) GeneralComponents.extractFile(GeneralComponents.Type.ZINK, this, zinkVersion, DefaultVersion.ZINK);
                 break;

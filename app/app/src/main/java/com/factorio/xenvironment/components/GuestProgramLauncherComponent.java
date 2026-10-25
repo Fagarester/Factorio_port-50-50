@@ -173,6 +173,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             }
 
             if (!keepExisting) {
+                com.factorio.core.Diagnostics.backupConfig(environment.getContext(), configFile);
                 java.util.LinkedHashMap<String, String> gfx = new java.util.LinkedHashMap<>();
                 gfx.put("max-sprite-loading-threads", "2");
                 gfx.put("texture-compression-level", "low-quality");
