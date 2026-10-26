@@ -13,6 +13,11 @@ typedef struct RingBuffer {
     void* buffer;
     void* sharedData;
     uint32_t bufferSize;
+    // --- client-side command batching (see gl_send in gladio.h) ---
+    uint8_t* batch;             // pending, not yet published requests
+    uint32_t batchSize;
+    uint32_t batchCount;
+    struct RingBuffer* peer;    // for a clientRing: the serverRing of the same context (flushed before waiting for a reply)
 } RingBuffer;
 
 #define RING_STATUS_IDLE (1u<<0)

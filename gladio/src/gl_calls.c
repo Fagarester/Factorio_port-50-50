@@ -1783,7 +1783,7 @@ void glEnd() {
         
         gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_END, outputBuffer.buffer, outputBuffer.size);
         if (commandBuffer->data.size > 0) {
-            RingBuffer_write(currentGLContext->serverRing, commandBuffer->data.buffer, commandBuffer->data.size);
+            gl_write_raw(currentGLContext->serverRing, commandBuffer->data.buffer, commandBuffer->data.size);
         }
     }
     else gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_END, NULL, 0);
@@ -1932,6 +1932,7 @@ void glFinish() {
 void glFlush() {
     GL_CALL_LOCK();
     gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_FLUSH, NULL, 0);
+    gl_flush(currentGLContext->serverRing);
     GL_CALL_UNLOCK();
 }
 

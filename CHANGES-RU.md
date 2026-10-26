@@ -233,3 +233,11 @@ L1 контроль со слоем BCn · L2 без слоя + без сжат�
 - Сжатие больше не трогает меню и GUI: PNG из `data/core/graphics/` (GUI-атласы, курсоры, `color_luts`), любые файлы с «gui», «lut», «menu», «background», «logo» в названии, а также `graphics/icons` и `graphics/technology` копируются без изменений (`GameCompression.isProtected`). В отчёте они считаются отдельно («protected»).
 - Копия `compression-report.txt` кладётся ещё и в `home/xuser` (корень «Игра» в файловом менеджере).
 - Файловый менеджер: пункт «Свойства» (имя, тип, путь, размер в байтах, для папки — число файлов и папок, дата, права доступа); жест «назад» поднимает на папку выше и выходит из менеджера только из корня «Игра»/«Download»; редактор текстовых файлов — на весь экран и с многострочным текстом (общий стиль `EditText` был однострочным), с подтверждением при выходе с несохранёнными изменениями.
+
+## Gladio клиент: пакетная отправка GL-вызовов (v7)
+- `gl_send` копит мелкие запросы в буфере (до 256 КБ) и отправляет одной записью в кольцо вместо двух на каждый вызов. Формат потока тот же — сервер (`gladiolegacy`) не менялся.
+- Отправка пачки: каждые N вызовов (по умолчанию 32, env `GLADIO_BATCH`, `0` = выключить), при переполнении, перед большим payload (текстуры, `glEnd`), перед любым ожиданием ответа (`gl_recv`), на `glFlush`/`glFinish`/`SwapBuffers`, при уничтожении контекста.
+- Файлы: `gladio/include/gladio.h`, `ring_buffer.h/.c`, `gl_context.h`, `src/main.c`, `src/gl_calls.c`. Нужна пересборка клиента в CI (версию `1.3` не меняли).
+
+## Gladio клиент: падение в `RingBuffer_write` внутри Vortek (v7)
+Лог: после `Initialised OpenGL: Gladio` SIGSEGV в `RingBuffer_write` ← `vt_call_vkEnumerateInstanceExtensionProperties`. `libGL.so.1` (Gladio) и `libvulkan_vortek.so` экспортируют одинаковые `RingBuffer_*` / `ArrayBuffer_*`; загрузчик может связать вызовы Vortek с копией Gladio (другие структуры). Теперь `gladio/gladio.map` экспортирует только `gl*` / `glX*` / `__glX*`, остальное скрыто (+ `-Bsymbolic-functions`).

@@ -133,6 +133,7 @@ bool setupRingBuffers(GLContext* context) {
     
     context->clientRing = RingBuffer_create(shmFds[1], CLIENT_RING_BUFFER_SIZE);
     if (!context->clientRing) goto error;
+    context->clientRing->peer = context->serverRing;
     
     CLOSEFD(shmFds[0]);
     CLOSEFD(shmFds[1]);
@@ -197,8 +198,16 @@ static bool sendX11AuthRequest() {
     return true;
 }
 
+int gl_batch_ops = 32;
+
 bool gladioInitOnce() {
     if (serverFd == -1) {
+        const char* batchEnv = getenv("GLADIO_BATCH");
+        if (batchEnv && *batchEnv) {
+            gl_batch_ops = atoi(batchEnv);
+            if (gl_batch_ops < 0) gl_batch_ops = 0;
+            if (gl_batch_ops > 4096) gl_batch_ops = 4096;
+        }
         serverFd = gladioServerConnect();
         
         if (!sendX11AuthRequest()) {

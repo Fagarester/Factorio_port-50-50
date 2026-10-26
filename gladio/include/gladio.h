@@ -112,11 +112,46 @@ typedef struct JMethods {
 #include "gl_dsa.h"
 #endif
 
+// ---- Command batching -------------------------------------------------------------------------------------------------
+// Instead of two ring writes (+ two atomic tail updates) per GL call, small requests are collected in a per-ring buffer and
+// published with ONE ring write. The byte stream the server reads is identical (header, payload, header, payload ...), so the
+// server needs no changes. The batch is published when: N requests are queued (GLADIO_BATCH, default 32, 0 = off), the buffer
+// is full, a big payload follows, the client waits for a reply (gl_recv), or on glFlush / glFinish / SwapBuffers.
+#define GL_BATCH_CAPACITY (256 * 1024)
+#define GL_BATCH_MAX_ITEM (32 * 1024)
+extern int gl_batch_ops;
+
+static inline bool gl_flush(RingBuffer* ring) {
+    if (!ring || ring->batchSize == 0) return true;
+    uint32_t size = ring->batchSize;
+    ring->batchSize = 0;
+    ring->batchCount = 0;
+    return RingBuffer_write(ring, ring->batch, size);
+}
+
+static inline bool gl_batch_append(RingBuffer* ring, const void* data, uint32_t size) {
+    if (ring->batchSize + size > GL_BATCH_CAPACITY && !gl_flush(ring)) return false;
+    memcpy(ring->batch + ring->batchSize, data, size);
+    ring->batchSize += size;
+    return true;
+}
+
 static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int size) {
     char header[HEADER_SIZE];
     *(short*)(header + 0) = requestCode;
     *(int*)(header + 2) = size;
 
+    if (gl_batch_ops > 0 && size >= 0 && size <= GL_BATCH_MAX_ITEM) {
+        if (!ring->batch) ring->batch = malloc(GL_BATCH_CAPACITY);
+        if (ring->batch) {
+            if (!gl_batch_append(ring, header, HEADER_SIZE)) return false;
+            if (size > 0 && !gl_batch_append(ring, data, size)) return false;
+            if (++ring->batchCount >= (uint32_t)gl_batch_ops) return gl_flush(ring);
+            return true;
+        }
+    }
+
+    if (!gl_flush(ring)) return false;
     bool result = RingBuffer_write(ring, header, HEADER_SIZE);
     if (!result) return false;
 
@@ -127,7 +162,16 @@ static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int 
     return true;
 }
 
+// Raw bytes that follow a request header (texture pixels, glEnd command data ...). Keeps the order with batched requests.
+static inline bool gl_write_raw(RingBuffer* ring, const void* data, uint32_t size) {
+    if (size == 0) return true;
+    if (ring->batch && size <= GL_BATCH_MAX_ITEM) return gl_batch_append(ring, data, size);
+    if (!gl_flush(ring)) return false;
+    return RingBuffer_write(ring, data, size);
+}
+
 static inline bool gl_recv(RingBuffer* ring, short* outRequestCode, ArrayBuffer* data) {
+    if (ring->peer && !gl_flush(ring->peer)) return false; // the reply belongs to requests that may still be queued
     char header[HEADER_SIZE] = {0};
     bool result = RingBuffer_read(ring, header, HEADER_SIZE);
     if (!result) return false;
@@ -237,7 +281,7 @@ static inline int getGLCallParamsCount(GLenum pname, bool* isColor) {
         if (pixelUnpackBuffer) { \
             GL_RECV_CHECKED(); \
         } \
-        else if (dataSize > 0) RingBuffer_write(currentGLContext->serverRing, imageData, dataSize); \
+        else if (dataSize > 0) gl_write_raw(currentGLContext->serverRing, imageData, dataSize); \
     } \
     while (0)
 

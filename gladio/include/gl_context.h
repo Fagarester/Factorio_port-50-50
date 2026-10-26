@@ -92,6 +92,7 @@ static inline void createGLContextForCallingThread() {
 
 static inline void destroyGLContextForCallingThread() {
     if (!currentGLContext) return;
+    gl_flush(currentGLContext->serverRing);
     if (!glx_send(serverFd, GLX_OPCODE_DESTROY_GL_CONTEXT, &currentGLContext->id, sizeof(int))) return;
 
     ArrayBuffer replyData = {0};

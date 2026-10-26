@@ -144,6 +144,7 @@ void RingBuffer_free(RingBuffer* ring) {
         ring->sharedData = NULL;
     }
 
+    free(ring->batch);
     free(ring);
 }
 
