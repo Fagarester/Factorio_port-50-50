@@ -1,3 +1,8 @@
+# v38 — Gladio: «Failed to load glad»
+Лог с телефона: окно создаётся, GLX-запросы проходят, дальше `Error Util.cpp:81: Failed to load glad`.
+Причина: `glXGetProcAddressARB` в клиенте Gladio знал только имена `glX*` и для остальных возвращал NULL (Wine берёт GL-функции прямо из библиотеки через dlsym, SDL и glad игры запрашивают через glXGetProcAddress все, включая `glGetString`). Теперь для имён `gl*` функция ищется в самой библиотеке (`dladdr` + `dlopen(RTLD_NOLOAD)` + `dlsym`).
+**Версия клиента 1.3**: запустить workflow *Build Gladio client* (version = 1.3, по умолчанию уже так), положить `gladio-1.3.tzst` в `assets/graphics_driver/` вместо файла-заглушки. Новая версия сбрасывает кэш драйвера, перекладывать ничего вручную не нужно.
+
 # v37 — Gladio: исходники клиента в репозитории + сборка через CI
 - Исходники клиента Gladio лежат в `gladio/` (из `gladio-116c0d1`), сборка — `.github/workflows/build-gladio.yml` (ARM-раннер, как gamepad-libs). Артефакт `gladio-<версия>.tzst` кладётся в `assets/graphics_driver/`, версия — в `DefaultVersion.GLADIO` (сейчас 1.2).
 - Клиент теперь линкуется с libX11 (в старой сборке `XGetVisualInfo` оставался неразрешённым, поэтому понадобился preload).

@@ -1,3 +1,7 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <dlfcn.h>
 #include "gladio.h"
 #include "gl_context.h"
 
@@ -269,6 +273,17 @@ __GLXextFuncPtr glXGetProcAddressARB(const GLubyte* procName) {
     else if (strcmp(name, "glXUseXFont") == 0) return (__GLXextFuncPtr)glXUseXFont;
     else if (strcmp(name, "glXWaitGL") == 0) return (__GLXextFuncPtr)glXWaitGL;
     else if (strcmp(name, "glXWaitX") == 0) return (__GLXextFuncPtr)glXWaitX;
+
+    // Wine takes the GL functions straight from this library, but SDL / glad (Factorio and most native games) ask for EVERY
+    // function, "glGetString" and friends included, through glXGetProcAddress. NULL here = "Failed to load glad".
+    if (name[0] == 'g' && name[1] == 'l' && name[2] != 'X') {
+        static void* selfHandle = NULL;
+        if (!selfHandle) {
+            Dl_info info;
+            if (dladdr((void*)glXGetProcAddressARB, &info) && info.dli_fname) selfHandle = dlopen(info.dli_fname, RTLD_NOW | RTLD_NOLOAD);
+        }
+        if (selfHandle) return (__GLXextFuncPtr)dlsym(selfHandle, name);
+    }
     return NULL;
 }
 
