@@ -7282,8 +7282,13 @@ void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean norm
     if (index < VERTEX_ATTRIB_COUNT) {
         if (clientState->arbProgram[0]) index += GENERIC_VERTEX_ARRAY_INDEX;
         if (!arrayBuffer || size == GL_BGRA) {
-            clientState->vao->attribs[index].stride = stride > 0 ? stride : MIN(4, size) * sizeofGLType(type);
-            clientState->vao->attribs[index].pointer = arrayBuffer ? arrayBuffer->mappedData : pointer;
+            GLVertexAttrib* attrib = &clientState->vao->attribs[index];
+            attrib->stride = stride > 0 ? stride : MIN(4, size) * sizeofGLType(type);
+            attrib->elemBytes = MIN(4, size) * sizeofGLType(type);
+            attrib->bufferId = arrayBuffer ? arrayBuffer->id : 0;
+            attrib->bufferOffset = arrayBuffer ? (uint64_t)pointer : 0;   // only GL_BGRA can get here with a VBO bound
+            attrib->offsetOnServer = arrayBuffer != NULL;
+            attrib->pointer = arrayBuffer ? arrayBuffer->mappedData : pointer;
             GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_ENABLED, false);
             if (!arrayBuffer) pointer = (void*)0;
         }

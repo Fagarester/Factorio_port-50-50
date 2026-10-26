@@ -33,12 +33,18 @@ GLenum GLBuffer_getType(GLuint id) {
     return buffer ? buffer->type : GL_NONE;
 }
 
-static void unmapBuffer(GLBuffer* buffer) {
+static void unmapBufferRaw(GLBuffer* buffer) {
     if (buffer->mappedData) {
         munmap(buffer->mappedData, buffer->size);
         buffer->mappedData = NULL;
         buffer->size = 0;
     }
+}
+
+// vertex attributes cache pointers into mappedData: refresh them right after it changes (use-after-munmap otherwise)
+static void unmapBuffer(GLBuffer* buffer) {
+    unmapBufferRaw(buffer);
+    if (currentGLContext) GLVertexArrayObject_refreshBufferPointers(currentGLContext->clientState, buffer);
 }
 
 bool GLBuffer_mapMemory(GLBuffer* buffer, int fd, int size) {
@@ -51,6 +57,7 @@ bool GLBuffer_mapMemory(GLBuffer* buffer, int fd, int size) {
     CLOSEFD(fd);
     buffer->mappedData = mappedData;
     buffer->size = size;
+    if (currentGLContext) GLVertexArrayObject_refreshBufferPointers(currentGLContext->clientState, buffer);
     return true;
 }
 
@@ -76,7 +83,7 @@ void GLBuffer_delete(GLuint id) {
 void GLBuffer_onDestroy(GLClientState* clientState) {
     for (int i = clientState->buffers->size-1; i >= 0; i--) {
         GLBuffer* buffer = clientState->buffers->entries[i].value;
-        unmapBuffer(buffer);
+        unmapBufferRaw(buffer);
         MEMFREE(buffer);
         SparseArray_removeAt(clientState->buffers, i);
     }

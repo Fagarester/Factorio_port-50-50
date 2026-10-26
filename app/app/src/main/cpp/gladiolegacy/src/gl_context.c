@@ -498,6 +498,8 @@ bool readUnboundVertexArrays(GLContext* context, GLenum drawMode, int drawCount,
             int size = MIN(4, vertexAttrib->size);
 
             int byteCount = ArrayBuffer_getInt(&context->inputBuffer);
+            // 0 = the client had no readable data for this attribute (see writeUnboundVertexArrays in gladio/src/main.c)
+            if (byteCount <= 0) continue;
             void* pointer = ArrayBuffer_getBytes(&context->inputBuffer, byteCount);
 
             GLBuffer* oldArrayBuffer = NULL;

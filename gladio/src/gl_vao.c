@@ -34,6 +34,11 @@ void GLVertexArrayObject_setAttribState(GLClientState* clientState, GLuint index
             vertexAttrib->type = 0;
             vertexAttrib->size = 0;
             vertexAttrib->boundArrayBuffer = 0;
+#else
+            vertexAttrib->bufferId = 0;
+            vertexAttrib->bufferOffset = 0;
+            vertexAttrib->elemBytes = 0;
+            vertexAttrib->offsetOnServer = false;
 #endif
             vertexAttrib->pointer = NULL;
             vertexAttrib->stride = 0;
@@ -80,3 +85,23 @@ void GLVertexArrayObject_delete(GLClientState* clientState, GLuint id) {
         SparseArray_remove(&clientState->vertexArrays, id);
     }
 }
+
+#ifndef GL_SERVER
+static void refreshVAOBufferPointers(GLVertexArrayObject* vao, GLBuffer* buffer) {
+    for (int i = 0; i < VERTEX_ATTRIB_COUNT; i++) {
+        GLVertexAttrib* attrib = &vao->attribs[i];
+        if (attrib->bufferId != buffer->id) continue;
+        attrib->pointer = buffer->mappedData ? (void*)((char*)buffer->mappedData + (attrib->offsetOnServer ? 0 : attrib->bufferOffset)) : NULL;
+    }
+}
+
+// Called whenever buffer->mappedData changes (re-mapped, unmapped, deleted): attributes must never keep the old address.
+void GLVertexArrayObject_refreshBufferPointers(GLClientState* clientState, GLBuffer* buffer) {
+    if (!clientState || !buffer || buffer->id == 0) return;
+    refreshVAOBufferPointers(&clientState->defaultVAO, buffer);
+    for (int i = 0; i < clientState->vertexArrays.size; i++) {
+        GLVertexArrayObject* vao = clientState->vertexArrays.entries[i].value;
+        if (vao) refreshVAOBufferPointers(vao, buffer);
+    }
+}
+#endif
