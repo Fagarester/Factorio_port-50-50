@@ -621,7 +621,7 @@ public class Diagnostics {
             String l = line.toLowerCase(Locale.US);
             if (l.contains("initialised opengl") || l.contains("graphics options") || l.contains("texture processor") || l.contains("factorio initialised") ||
                 l.contains("sprites loaded") || l.contains("error") || l.contains("zink:") || l.contains("mesa:") || l.contains("warning") ||
-                l.contains("vortek") || l.contains("segmentation") || l.contains("signal") || l.contains("cannot") || l.contains("failed") || l.contains("dedicated video memory")) {
+                l.contains("vortek") || l.contains("gladio") || l.contains("unimplemented") || l.contains("segmentation") || l.contains("signal") || l.contains("cannot") || l.contains("failed") || l.contains("dedicated video memory")) {
                 sb.append(line.length() > 260 ? line.substring(0, 260) : line).append('\n');
                 if (++count >= 80) break;
             }

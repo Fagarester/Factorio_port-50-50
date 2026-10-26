@@ -344,15 +344,33 @@ void gd_handle_glClearBufferfi(GLContext* context) {
 }
 
 void gd_handle_glClearBufferfv(GLContext* context) {
-    println(MSG_DEBUG_UNIMPLEMENTED_FUNC, "glClearBufferfv");
+    GLenum buffer = ArrayBuffer_getInt(&context->inputBuffer);
+    GLint drawbuffer = ArrayBuffer_getInt(&context->inputBuffer);
+    GLfloat value[4] = {0, 0, 0, 0};
+    int count = buffer == GL_COLOR ? 4 : 1;
+    for (int i = 0; i < count; i++) value[i] = ArrayBuffer_getFloat(&context->inputBuffer);
+
+    glClearBufferfv(buffer, drawbuffer, value);
 }
 
 void gd_handle_glClearBufferiv(GLContext* context) {
-    println(MSG_DEBUG_UNIMPLEMENTED_FUNC, "glClearBufferiv");
+    GLenum buffer = ArrayBuffer_getInt(&context->inputBuffer);
+    GLint drawbuffer = ArrayBuffer_getInt(&context->inputBuffer);
+    GLint value[4] = {0, 0, 0, 0};
+    int count = buffer == GL_COLOR ? 4 : 1;
+    for (int i = 0; i < count; i++) value[i] = ArrayBuffer_getInt(&context->inputBuffer);
+
+    glClearBufferiv(buffer, drawbuffer, value);
 }
 
 void gd_handle_glClearBufferuiv(GLContext* context) {
-    println(MSG_DEBUG_UNIMPLEMENTED_FUNC, "glClearBufferuiv");
+    GLenum buffer = ArrayBuffer_getInt(&context->inputBuffer);
+    GLint drawbuffer = ArrayBuffer_getInt(&context->inputBuffer);
+    GLuint value[4] = {0, 0, 0, 0};
+    int count = buffer == GL_COLOR ? 4 : 1;
+    for (int i = 0; i < count; i++) value[i] = ArrayBuffer_getInt(&context->inputBuffer);
+
+    glClearBufferuiv(buffer, drawbuffer, value);
 }
 
 void gd_handle_glClearColor(GLContext* context) {

@@ -1,3 +1,11 @@
+# v37 — Gladio: исходники клиента в репозитории + сборка через CI
+- Исходники клиента Gladio лежат в `gladio/` (из `gladio-116c0d1`), сборка — `.github/workflows/build-gladio.yml` (ARM-раннер, как gamepad-libs). Артефакт `gladio-<версия>.tzst` кладётся в `assets/graphics_driver/`, версия — в `DefaultVersion.GLADIO` (сейчас 1.2).
+- Клиент теперь линкуется с libX11 (в старой сборке `XGetVisualInfo` оставался неразрешённым, поэтому понадобился preload).
+- Реализовано: `glXQueryExtension` (возвращает True; SDL иначе писал «GLX is not supported»), `glClearBufferfv/iv/uiv` (клиент + серверный обработчик).
+- Пока лежит запасной ассет `gladio-1.2.tzst` = старый 1.1 с бинарным патчем `glXQueryExtension` (без `glClearBuffer*`). После сборки в CI заменить его на собранный.
+- Диагностика выносит строки `gladio:` / `unimplemented` в `result.txt`.
+- Что ещё в Gladio не реализовано и может понадобиться Factorio: `glCopyImageSubData`, `glTexStorage2D/3D`, `glInvalidateFramebuffer`, `glVertexAttribIPointer`, `glGetIntegeri_v`, `glGetInteger64v`, `glGetUniform*v`, функции KHR_debug. Точный список даст анализ бинарника игры или лог первого запуска.
+
 # v36 — разбор прогона на Mali-G610 (Xiaomi, MT6886)
 
 ## Что показали логи

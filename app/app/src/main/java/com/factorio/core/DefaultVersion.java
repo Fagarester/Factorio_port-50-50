@@ -8,7 +8,7 @@ public abstract class DefaultVersion {
     public static final String OPENGL = "1.0";
     // legacy block (original Winlator stack)
     public static final String VORTEK = "2.1";
-    public static final String GLADIO = "1.1.1"; // 1.1 + glXQueryExtension returns True (SDL: "GLX is not supported")
+    public static final String GLADIO = "1.2"; // asset graphics_driver/gladio-1.2.tzst (CI: build-gladio.yml; the first file is the old 1.1 with a patched glXQueryExtension)
     public static final String ZINK_LEGACY = "22.2.5";
 
     public static String valueOf(String name) {
