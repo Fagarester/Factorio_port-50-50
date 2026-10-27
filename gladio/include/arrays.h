@@ -140,7 +140,7 @@ extern void ArrayDeque_free(ArrayDeque* arrayDeque, bool freeValues);
 #define ENSURE_ARRAY_CAPACITY(targetSize, capacity, elements, elementSize) \
     do { \
         if (targetSize > capacity) { \
-            int newCapacity = elementSize > 1 ? (capacity < DEFAULT_ARRAY_CAPACITY ? DEFAULT_ARRAY_CAPACITY : capacity + (capacity >> 1)) : 0; \
+            int newCapacity = capacity < DEFAULT_ARRAY_CAPACITY ? DEFAULT_ARRAY_CAPACITY : capacity + (capacity >> 1); \
             if (newCapacity < targetSize) newCapacity = targetSize; \
             elements = realloc(elements, newCapacity * elementSize); \
             memset((char*)elements + capacity * elementSize, 0, (newCapacity - capacity) * elementSize); \

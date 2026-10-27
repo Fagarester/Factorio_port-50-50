@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include "gl_context.h"
 #include "gl_vao.h"
 #include "gl_client_state.h"
@@ -17,6 +18,25 @@ void* GLVertexAttrib_resolve(GLClientState* clientState, GLVertexAttrib* attrib,
     return attrib->pointer;
 }
 
+// A client array pointer comes straight from the game: if it is not mapped (stale pointer, wrong first/count, attribute the game
+// has already disabled) the memcpy would kill the whole process. mincore() tells whether the pages are mapped without touching them.
+// GLADIO_SAFE_ARRAYS=0 turns the check off.
+static int safeArrays = -1;
+
+static bool isReadable(const void* address, int64_t size) {
+    uintptr_t start = (uintptr_t)address & ~(uintptr_t)4095;
+    uintptr_t end = ((uintptr_t)address + size + 4095) & ~(uintptr_t)4095;
+    if ((uintptr_t)address < 65536 || end < start) return false;
+    unsigned char vec[256];
+    while (start < end) {
+        size_t length = end - start;
+        if (length > sizeof(vec) * 4096) length = sizeof(vec) * 4096;
+        if (mincore((void*)start, length, vec) != 0) return false;
+        start += length;
+    }
+    return true;
+}
+
 /** Copies size bytes at base+offset, never reading past limit; the missing tail is zero so the stream layout stays the same. */
 void GLVertexAttrib_putBytes(ArrayBuffer* out, const void* base, int64_t offset, int64_t size, int64_t limit) {
     if (size <= 0) return;
@@ -24,6 +44,20 @@ void GLVertexAttrib_putBytes(ArrayBuffer* out, const void* base, int64_t offset,
     if (!base) available = 0;
     else if (limit >= 0) available = MAX(0, MIN(size, limit - offset));
     if (offset < 0) available = 0;
+
+    if (available > 0 && limit < 0) {
+        if (safeArrays == -1) safeArrays = !(getenv("GLADIO_SAFE_ARRAYS") && atoi(getenv("GLADIO_SAFE_ARRAYS")) == 0);
+        if (safeArrays && !isReadable((const uint8_t*)base + offset, available)) {
+            static int reported = 0;
+            if (reported++ < 30) println("gladio: unreadable client vertex array base=%p offset=%lld size=%lld (zero filled)", base, (long long)offset, (long long)available);
+            available = 0;
+        }
+    }
+    else if (available < size && limit >= 0) {
+        static int reportedLimit = 0;
+        if (reportedLimit++ < 30) println("gladio: vertex array larger than its buffer: wanted %lld+%lld, buffer has %lld (zero filled)", (long long)offset, (long long)size, (long long)limit);
+    }
+
     if (available > 0) ArrayBuffer_putBytes(out, (const uint8_t*)base + offset, (int)available);
     if (available < size) ArrayBuffer_putBytes(out, NULL, (int)(size - available));
 }
