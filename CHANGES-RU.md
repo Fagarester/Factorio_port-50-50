@@ -255,3 +255,6 @@ L1 контроль со слоем BCn · L2 без слоя + без сжат�
 - Клиентские массивы вершин проверяются через `mincore()` перед копированием: нечитаемый указатель больше не роняет игру, массив заполняется нулями, а в лог пишется `gladio: unreadable client vertex array base=... offset=... size=...` (первые 30 раз). `GLADIO_SAFE_ARRAYS=0` — выключить проверку.
 - Если массив вершин больше своего буфера: `gladio: vertex array larger than its buffer ...`.
 - `ENSURE_ARRAY_CAPACITY`: для байтовых массивов (`ArrayBuffer`) рост был «ровно под размер» (realloc на каждую запись) — теперь ×1.5.
+
+## Gladio клиент: GL_ARRAY_BUFFER привязан к контексту, а не к VAO (v9)
+Лог v8: `gladio: unreadable client vertex array base=0xc size=280` — смещение VBO принималось за клиентский указатель. Причина: клиент хранил привязки всех буферов внутри VAO, а в OpenGL внутри VAO живёт только `GL_ELEMENT_ARRAY_BUFFER`; `GL_ARRAY_BUFFER` и остальные — состояние контекста. Factorio привязывает VBO до `glBindVertexArray`, после чего `glVertexAttribPointer` не видел буфер. Теперь все цели, кроме element array, хранятся контекстно (`gladio/src/gl_buffer.c`).

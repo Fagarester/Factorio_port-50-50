@@ -6,9 +6,17 @@
 
 extern void getRangeIndices(const void* indices, GLsizei count, GLenum indexType, GLint basevertex, GLuint* range);
 
+// In OpenGL only the GL_ELEMENT_ARRAY_BUFFER binding belongs to the VAO. GL_ARRAY_BUFFER (and the pixel / uniform ... targets) is
+// context state: a VBO bound before glBindVertexArray is still the one glVertexAttribPointer uses afterwards.
+// The context-wide bindings are kept in defaultVAO.buffer[], the element array binding in the current VAO.
+static GLBuffer** boundSlot(GLClientState* clientState, GLenum target) {
+    GLVertexArrayObject* owner = target == GL_ELEMENT_ARRAY_BUFFER ? clientState->vao : &clientState->defaultVAO;
+    return &owner->buffer[indexOfGLTarget(target)];
+}
+
 GLBuffer* GLBuffer_getBound(GLenum target) {
     GLClientState* clientState = currentGLContext->clientState;
-    return clientState->vao->buffer[indexOfGLTarget(target)];
+    return *boundSlot(clientState, target);
 }
 
 void GLBuffer_setBound(GLenum target, GLuint id) {
@@ -25,7 +33,7 @@ void GLBuffer_setBound(GLenum target, GLuint id) {
         }
     }
     
-    clientState->vao->buffer[indexOfGLTarget(target)] = buffer;
+    *boundSlot(clientState, target) = buffer;
 }
 
 GLenum GLBuffer_getType(GLuint id) {
