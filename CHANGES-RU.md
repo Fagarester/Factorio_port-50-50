@@ -265,3 +265,6 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 ## Gladio сервер + клиент: общий GL_ARRAY_BUFFER, трассировка (v11)
 - Сервер (`gladiolegacy/src/gl_buffer.c`, `gl_renderer.c`, `gl_context.c`): привязки всех буферов, кроме `GL_ELEMENT_ARRAY_BUFFER`, теперь общие на контекст (как в OpenGL и как в клиенте с v9). Раньше `gd_handle_glVertexAttribPointer` считал массив клиентским, если VBO был привязан до `glBindVertexArray`, и не вызывал настоящий `glVertexAttribPointer`. **Требует пересборки APK** (нативная библиотека сервера).
 - Клиент: `GLADIO_TRACE=N` (по умолчанию 600) пишет в лог первые N буферных вызовов: `gladio-trace: glBindBuffer/glBufferData/glBufferStorage/glMapBufferRange/glUnmapBuffer/glFlushMappedBufferRange/glVertexAttribPointer/glBindVertexArray ...`. `0` — выключить.
+
+## Gladio клиент: зависание 107 с из-за пакетной отправки (v12)
+Лог v11: между `glBufferStorage` и следующим вызовом пауза 107 с. `glBufferStorage` ждал ответ напрямую по сокету (`recv_fds`), а сам запрос лежал в пачке. Исправлено: сброс пачки перед `recv_fds` и перед любой отправкой GLX-запроса по сокету (`glXSwapBuffers` и др. иначе могли опередить команды рисования). Пакетная отправка теперь выключена по умолчанию (`GLADIO_BATCH=32` включает).

@@ -509,6 +509,7 @@ void glBufferStorage(GLenum target, GLsizeiptr size, const void* data, GLbitfiel
     
     int fd, numFds;
     bool success = false;
+    gl_flush(currentGLContext->serverRing); // the reply comes over the socket, the request must have left the batch
     recv_fds(serverFd, &fd, &numFds, &success, sizeof(bool));
     if (numFds != 1 || !success || !GLBuffer_mapMemory(buffer, fd, size)) {
         GL_CALL_UNLOCK();

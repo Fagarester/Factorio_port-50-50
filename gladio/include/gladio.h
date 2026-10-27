@@ -115,7 +115,7 @@ typedef struct JMethods {
 // ---- Command batching -------------------------------------------------------------------------------------------------
 // Instead of two ring writes (+ two atomic tail updates) per GL call, small requests are collected in a per-ring buffer and
 // published with ONE ring write. The byte stream the server reads is identical (header, payload, header, payload ...), so the
-// server needs no changes. The batch is published when: N requests are queued (GLADIO_BATCH, default 32, 0 = off), the buffer
+// server needs no changes. The batch is published when: N requests are queued (GLADIO_BATCH, default 0 = off, e.g. 32), the buffer
 // is full, a big payload follows, the client waits for a reply (gl_recv), or on glFlush / glFinish / SwapBuffers.
 #define GL_BATCH_CAPACITY (256 * 1024)
 #define GL_BATCH_MAX_ITEM (32 * 1024)
@@ -193,7 +193,11 @@ static inline bool gl_recv(RingBuffer* ring, short* outRequestCode, ArrayBuffer*
     return true;
 }
 
+// GLX requests travel over the socket, GL requests over the ring: publish the queued GL requests first so the server sees them in order
+extern void gl_flush_current(void);
+
 static inline bool glx_send(int fd, char opcode, void* data, int size) {
+    gl_flush_current();
     char header[4];
     header[0] = GLX_EXT_MAJOR_OPCODE;
     header[1] = opcode;

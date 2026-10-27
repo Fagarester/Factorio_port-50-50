@@ -204,7 +204,11 @@ static bool sendX11AuthRequest() {
     return true;
 }
 
-int gl_batch_ops = 32;
+void gl_flush_current(void) {
+    if (currentGLContext && currentGLContext->serverRing) gl_flush(currentGLContext->serverRing);
+}
+
+int gl_batch_ops = 0; // batching is opt-in for now: GLADIO_BATCH=32
 int gl_trace_budget = 600;
 
 bool gladioInitOnce() {
