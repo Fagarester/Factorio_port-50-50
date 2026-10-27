@@ -1505,6 +1505,12 @@ void gd_handle_glGetProgramInfoLog(GLContext* context) {
     GLchar infoLog[bufSize];
     GLsizei length = 0;
     glGetProgramInfoLog(program, bufSize, &length, infoLog);
+    if (ShaderConverter_lastError[0] && bufSize > 1) {
+        // the real GLES error of the converted shader (compilation is lazy, the plain log is empty)
+        snprintf(infoLog, bufSize, "%s", ShaderConverter_lastError);
+        length = strlen(infoLog);
+        ShaderConverter_lastError[0] = 0;
+    }
 
     ArrayBuffer_rewind(&context->outputBuffer);
     ArrayBuffer_putInt(&context->outputBuffer, length);
@@ -1577,6 +1583,12 @@ void gd_handle_glGetShaderInfoLog(GLContext* context) {
     GLchar infoLog[bufSize];
     GLsizei length = 0;
     glGetShaderInfoLog(shader, bufSize, &length, infoLog);
+    if (ShaderConverter_lastError[0] && bufSize > 1) {
+        // the real GLES error of the converted shader (compilation is lazy, the plain log is empty)
+        snprintf(infoLog, bufSize, "%s", ShaderConverter_lastError);
+        length = strlen(infoLog);
+        ShaderConverter_lastError[0] = 0;
+    }
 
     ArrayBuffer_rewind(&context->outputBuffer);
     ArrayBuffer_putInt(&context->outputBuffer, length);

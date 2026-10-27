@@ -1650,6 +1650,8 @@ void ShaderConverter_detachShader(GLuint programId, GLuint shaderId) {
     GLX_CONTEXT_UNLOCK();
 }
 
+char ShaderConverter_lastError[1536] = {0};
+
 static void compileShaderObject(ShaderProgram* program, ShaderObject* shader) {
     ArrayBuffer shaderSource = {0};
     ShaderConverter_getShaderSource(shader, &shaderSource);
@@ -1665,6 +1667,12 @@ static void compileShaderObject(ShaderProgram* program, ShaderObject* shader) {
     GLint compileStatus;
     glGetShaderiv(shader->id, GL_COMPILE_STATUS, &compileStatus);
     shader->compileStatus = compileStatus ? COMPILE_STATUS_SUCCESS : COMPILE_STATUS_ERROR;
+    if (!compileStatus) {
+        GLchar log[1024] = {0};
+        glGetShaderInfoLog(shader->id, sizeof(log) - 1, NULL, log);
+        snprintf(ShaderConverter_lastError, sizeof(ShaderConverter_lastError), "%s shader %u (converted for OpenGL ES): %s", shader->type == GL_VERTEX_SHADER ? "vertex" : "fragment", shader->id, log);
+        println("gladio: %s", ShaderConverter_lastError);
+    }
 
 #if IS_DEBUG_ENABLED(DEBUG_MODE_SHADER_INFO)
     if (!compileStatus) {
@@ -1723,6 +1731,17 @@ static void mergeSeparateShaders(ShaderProgram* program, ShaderObject* mainShade
 
 static void linkShaderProgram(ShaderProgram* program) {
     glLinkProgram(program->id);
+
+    {
+        GLint status = 1;
+        glGetProgramiv(program->id, GL_LINK_STATUS, &status);
+        if (!status && !ShaderConverter_lastError[0]) {
+            GLchar log[1024] = {0};
+            glGetProgramInfoLog(program->id, sizeof(log) - 1, NULL, log);
+            snprintf(ShaderConverter_lastError, sizeof(ShaderConverter_lastError), "program %u link error: %s", program->id, log);
+            println("gladio: %s", ShaderConverter_lastError);
+        }
+    }
 
 #if IS_DEBUG_ENABLED(DEBUG_MODE_SHADER_INFO)
     GLint linkStatus;

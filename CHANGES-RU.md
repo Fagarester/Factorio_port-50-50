@@ -272,3 +272,6 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 ## glVertexAttribIPointer + трассировка с хвостом (v13)
 - Лог v12: игра вызывает `glVertexAttribIPointer`, он был заглушкой и на клиенте, и на сервере. Теперь реализован (клиент отправляет `REQUEST_CODE_GL_VERTEX_ATTRIB_IPOINTER`, сервер вызывает настоящий `glVertexAttribIPointer`). **Серверная часть → нужна пересборка APK.**
 - Трассировка: `GLADIO_TRACE=N` печатает первые N (по умолчанию 120) вызовов сразу, а последние 400 хранит в памяти и печатает как `gladio-tail:` при завершении процесса (например после `XIO fatal IO error`). В трассу добавлены draw-вызовы и `glXSwapBuffers`.
+
+## Ошибки шейдеров видны в logs.txt (v14)
+Лог v13: игра дошла до экрана загрузки (Loading mods), затем `Failed to compile program 'pass-through-pos-uv.vert, mipmap-gen.frag'` без причины. Сервер конвертирует GLSL при линковке, а текст ошибки печатал только в отладочной сборке. Теперь `compileShaderObject` / `linkShaderProgram` всегда запоминают лог GLES (`ShaderConverter_lastError`), `glGetShaderInfoLog` / `glGetProgramInfoLog` отдают его игре, а клиент печатает `gladio: glGetProgramInfoLog: ...`. **Серверная часть → пересборка APK.**

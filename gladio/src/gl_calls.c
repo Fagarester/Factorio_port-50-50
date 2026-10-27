@@ -2803,6 +2803,7 @@ void glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei* length, GLcha
     memcpy(infoLog, inputBuffer.buffer + inputBuffer.position, strSize);
     infoLog[strSize] = '\0';
     if (length) *length = strSize;
+    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetProgramInfoLog: %s", infoLog); }
     GL_CALL_UNLOCK();
 }
 
@@ -2963,6 +2964,7 @@ void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei* length, GLchar*
     memcpy(infoLog, inputBuffer.buffer + inputBuffer.position, strSize);
     infoLog[strSize] = '\0';
     if (length) *length = strSize;
+    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetShaderInfoLog: %s", infoLog); }
     GL_CALL_UNLOCK();
 }
 
