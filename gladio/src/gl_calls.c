@@ -150,6 +150,7 @@ static GLuint lastArrayBufferBind = 0;
 static void* lastArrayBufferBindContext = NULL;
 
 void glBindBuffer(GLenum target, GLuint buffer) {
+    GL_TRACE("gladio-trace: glBindBuffer target=0x%x id=%u vao=%p", target, buffer, (void*)currentGLContext->clientState->vao);
     GL_CALL_LOCK();
     GLBuffer_setBound(target, buffer);
     if (target == GL_ARRAY_BUFFER) {
@@ -291,6 +292,7 @@ void glBindTextureEXT(GLenum target, GLuint texture) {
 }
 
 void glBindVertexArray(GLuint array) {
+    GL_TRACE("gladio-trace: glBindVertexArray %u", array);
     GL_CALL_LOCK();
     GLVertexArrayObject_setBound(currentGLContext->clientState, array);
     gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_BIND_VERTEX_ARRAY, &array, sizeof(GLuint));
@@ -458,6 +460,7 @@ void glBlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GL
 }
 
 void glBufferData(GLenum target, GLsizeiptr size, const void* data, GLenum usage) {
+    GL_TRACE("gladio-trace: glBufferData target=0x%x size=%lld data=%p usage=0x%x bound=%u", target, (long long)size, data, usage, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->id : 0);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer) {
@@ -490,6 +493,7 @@ void glBufferDataARB(GLenum target, GLsizeiptrARB size, const void* data, GLenum
 }
 
 void glBufferStorage(GLenum target, GLsizeiptr size, const void* data, GLbitfield flags) {
+    GL_TRACE("gladio-trace: glBufferStorage target=0x%x size=%lld flags=0x%x bound=%u", target, (long long)size, flags, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->id : 0);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer) {
@@ -1249,6 +1253,7 @@ void glCullFace(GLenum mode) {
 }
 
 void glDeleteBuffers(GLsizei n, const GLuint* buffers) {
+    GL_TRACE("gladio-trace: glDeleteBuffers %d first=%u", n, n > 0 ? buffers[0] : 0);
     GL_CALL_LOCK();
     for (int i = 0; i < n; i++) GLBuffer_delete(buffers[i]);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1948,6 +1953,7 @@ void glFlush() {
 }
 
 void glFlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length) {
+    GL_TRACE("gladio-trace: glFlushMappedBufferRange target=0x%x offset=%lld length=%lld", target, (long long)offset, (long long)length);
     if (target == GL_PIXEL_UNPACK_BUFFER || length == 0) return;
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
@@ -2162,6 +2168,7 @@ void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLd
 }
 
 void glGenBuffers(GLsizei n, GLuint* buffers) {
+    GL_TRACE("gladio-trace: glGenBuffers %d", n);
     GL_CALL_LOCK();
     GL_SEND_CHECKED(REQUEST_CODE_GL_GEN_BUFFERS, &n, sizeof(GLsizei));
     GL_RECV_CHECKED();
@@ -3631,6 +3638,7 @@ void* glMapBufferARB(GLenum target, GLenum access) {
 }
 
 void* glMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) {
+    GL_TRACE("gladio-trace: glMapBufferRange target=0x%x offset=%lld length=%lld access=0x%x bound=%u mapped=%d data=%p", target, (long long)offset, (long long)length, access, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->id : 0, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->mapped : -1, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->mappedData : NULL);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer || buffer->mapped) {
@@ -6425,6 +6433,7 @@ void glUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose, co
 }
 
 GLboolean glUnmapBuffer(GLenum target) {
+    GL_TRACE("gladio-trace: glUnmapBuffer target=0x%x", target);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer) {
@@ -7290,6 +7299,7 @@ void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean norm
     GL_CALL_LOCK();
     GLClientState* clientState = currentGLContext->clientState;
     GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER);
+    GL_TRACE("gladio-trace: glVertexAttribPointer index=%u size=%d type=0x%x stride=%d pointer=%p arrayBuffer=%u vao=%p", index, size, type, stride, pointer, arrayBuffer ? arrayBuffer->id : 0, (void*)clientState->vao);
     // An address below 64 KB is never real memory: it is an offset into a VBO that the server has bound, even if this client lost track of the binding
     bool bufferOffset = !arrayBuffer && pointer && (uintptr_t)pointer < 65536;
     if (bufferOffset) {

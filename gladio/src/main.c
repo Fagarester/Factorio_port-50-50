@@ -205,9 +205,12 @@ static bool sendX11AuthRequest() {
 }
 
 int gl_batch_ops = 32;
+int gl_trace_budget = 600;
 
 bool gladioInitOnce() {
     if (serverFd == -1) {
+        const char* traceEnv = getenv("GLADIO_TRACE");
+        if (traceEnv && *traceEnv) gl_trace_budget = MAX(0, atoi(traceEnv));
         const char* batchEnv = getenv("GLADIO_BATCH");
         if (batchEnv && *batchEnv) {
             gl_batch_ops = atoi(batchEnv);

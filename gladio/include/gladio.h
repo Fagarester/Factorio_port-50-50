@@ -120,6 +120,9 @@ typedef struct JMethods {
 #define GL_BATCH_CAPACITY (256 * 1024)
 #define GL_BATCH_MAX_ITEM (32 * 1024)
 extern int gl_batch_ops;
+// GLADIO_TRACE=N: log the first N buffer / vertex-array related calls (default 600, 0 = off)
+extern int gl_trace_budget;
+#define GL_TRACE(...) do { if (gl_trace_budget > 0) { gl_trace_budget--; println(__VA_ARGS__); } } while (0)
 
 static inline bool gl_flush(RingBuffer* ring) {
     if (!ring || ring->batchSize == 0) return true;

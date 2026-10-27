@@ -261,3 +261,7 @@ L1 контроль со слоем BCn · L2 без слоя + без сжат�
 
 ## Gladio клиент: диагностика/обход «указателя» < 64 КБ (v10)
 v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAttribPointer` с адресом < 65536 без привязанного GL_ARRAY_BUFFER считается смещением в VBO (клиентские данные не читаются) и пишет в лог `gladio: glVertexAttribPointer index=… but no GL_ARRAY_BUFFER bound (ctx=… vao=… program=… last glBindBuffer(ARRAY)=… in ctx …)`. Такой же лог для fixed-function массивов (`gladio: fixed-function array …`).
+
+## Gladio сервер + клиент: общий GL_ARRAY_BUFFER, трассировка (v11)
+- Сервер (`gladiolegacy/src/gl_buffer.c`, `gl_renderer.c`, `gl_context.c`): привязки всех буферов, кроме `GL_ELEMENT_ARRAY_BUFFER`, теперь общие на контекст (как в OpenGL и как в клиенте с v9). Раньше `gd_handle_glVertexAttribPointer` считал массив клиентским, если VBO был привязан до `glBindVertexArray`, и не вызывал настоящий `glVertexAttribPointer`. **Требует пересборки APK** (нативная библиотека сервера).
+- Клиент: `GLADIO_TRACE=N` (по умолчанию 600) пишет в лог первые N буферных вызовов: `gladio-trace: glBindBuffer/glBufferData/glBufferStorage/glMapBufferRange/glUnmapBuffer/glFlushMappedBufferRange/glVertexAttribPointer/glBindVertexArray ...`. `0` — выключить.

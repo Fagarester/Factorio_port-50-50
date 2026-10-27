@@ -2,15 +2,21 @@
 #include "gl_context.h"
 #include "sysvshared_memory.h"
 
+// Only the GL_ELEMENT_ARRAY_BUFFER binding belongs to the VAO (real OpenGL semantics); everything else is context state, kept in defaultVAO.buffer[]
+static GLBuffer** boundSlot(GLClientState* clientState, GLenum target) {
+    GLVertexArrayObject* owner = target == GL_ELEMENT_ARRAY_BUFFER ? clientState->vao : &clientState->defaultVAO;
+    return &owner->buffer[indexOfGLTarget(target)];
+}
+
 GLBuffer* GLBuffer_getBound(GLenum target) {
     GLClientState* clientState = &currentRenderer->clientState;
-    return clientState->vao->buffer[indexOfGLTarget(target)];
+    return *boundSlot(clientState, target);
 }
 
 void GLBuffer_bind(GLenum target, GLuint id) {
     GLClientState* clientState = &currentRenderer->clientState;
     if (id == 0) {
-        clientState->vao->buffer[indexOfGLTarget(target)] = NULL;
+        *boundSlot(clientState, target) = NULL;
         if (target != GL_PIXEL_UNPACK_BUFFER) glBindBuffer(target, id);
         return;
     }
@@ -22,7 +28,7 @@ void GLBuffer_bind(GLenum target, GLuint id) {
         SparseArray_put(clientState->buffers, id, buffer);
     }
     GLX_CONTEXT_UNLOCK();
-    clientState->vao->buffer[indexOfGLTarget(target)] = buffer;
+    *boundSlot(clientState, target) = buffer;
     if (target != GL_PIXEL_UNPACK_BUFFER) glBindBuffer(target, id);
 }
 

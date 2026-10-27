@@ -313,7 +313,7 @@ void GLRenderer_drawImmediate(GLRenderer* renderer) {
         }
     }
 
-    GLBuffer* arrayBuffer = clientState->vao->buffer[indexOfGLTarget(GL_ARRAY_BUFFER)];
+    GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER);
     GLBuffer* elementArrayBuffer = clientState->vao->buffer[indexOfGLTarget(GL_ELEMENT_ARRAY_BUFFER)];
     glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer ? arrayBuffer->id : 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementArrayBuffer ? elementArrayBuffer->id : 0);
