@@ -21,10 +21,11 @@ import java.util.regex.Pattern;
 
 /**
  * Installs a driver from a file picked by the user and decides what it IS by its content (not by its name):
- * a zstd tar (.tzst) with usr/lib/libvulkan_freedreno.so is Turnip, with usr/lib/libGL.so* it is Zink.
+ * a zstd tar (.tzst) with usr/lib/libvulkan_freedreno.so is Turnip, with usr/lib/libGL.so* it is Zink,
+ * or Gladio when that libGL contains the Gladio marker string.
  */
 public abstract class DriverPackages {
-    public enum Kind {TURNIP, ZINK}
+    public enum Kind {TURNIP, ZINK, GLADIO}
 
     public static class InstallResult {
         public final Kind kind;
@@ -75,29 +76,51 @@ public abstract class DriverPackages {
      * glibc packages for the rootfs are told apart by the files inside:
      *   usr/lib/libvulkan_freedreno.so -> Turnip,   usr/lib/libGL.so* -> Zink (OpenGL on top of Vulkan).
      */
+    // Gladio's libGL reads this variable (Mesa / Zink never has it)
+    private static final byte[] GLADIO_MARKER = "GLADIO_NO_ERROR".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+    /** Streams the current tar entry and looks for the marker bytes (works across read-buffer boundaries). */
+    private static boolean containsMarker(InputStream in, byte[] marker) throws IOException {
+        byte[] buffer = new byte[1 << 16];
+        int matched = 0, length;
+        while ((length = in.read(buffer)) > 0) {
+            for (int i = 0; i < length; i++) {
+                if (buffer[i] == marker[matched]) {
+                    if (++matched == marker.length) return true;
+                }
+                else matched = buffer[i] == marker[0] ? 1 : 0;
+            }
+        }
+        return false;
+    }
+
     private static Kind sniffGlibcArchive(Context context, Uri uri) throws IOException {
         try (InputStream raw = context.getContentResolver().openInputStream(uri)) {
             if (raw == null) throw new IOException("Cannot open the file");
             try (InputStream zstd = new ZstdCompressorInputStream(new BufferedInputStream(raw, 1 << 16));
                  TarArchiveInputStream tar = new TarArchiveInputStream(zstd)) {
                 TarArchiveEntry entry;
-                boolean hasGL = false;
+                boolean hasGL = false, isGladio = false;
                 while ((entry = (TarArchiveEntry)tar.getNextEntry()) != null) {
                     String name = entry.getName();
                     name = name.substring(name.lastIndexOf('/') + 1);
                     if (name.equals("libvulkan_freedreno.so")) return Kind.TURNIP;
-                    if (name.startsWith("libGL.so")) hasGL = true;
+                    if (name.startsWith("libGL.so") && entry.isFile()) {
+                        hasGL = true;
+                        if (containsMarker(tar, GLADIO_MARKER)) isGladio = true;
+                    }
                 }
+                if (isGladio) return Kind.GLADIO;
                 if (hasGL) return Kind.ZINK;
             }
         }
-        throw new IOException("The archive has neither libvulkan_freedreno.so (Turnip) nor libGL.so (Zink)");
+        throw new IOException("The archive has neither libvulkan_freedreno.so (Turnip) nor libGL.so (Zink / Gladio)");
     }
 
     private static InstallResult installGlibcArchive(Context context, Uri uri, InputStream in, String displayName) throws IOException {
         Kind kind = sniffGlibcArchive(context, uri);
-        GeneralComponents.Type type = kind == Kind.ZINK ? GeneralComponents.Type.ZINK : GeneralComponents.Type.TURNIP;
-        String prefix = type == GeneralComponents.Type.ZINK ? "zink" : "turnip";
+        GeneralComponents.Type type = GeneralComponents.typeOf(kind);
+        String prefix = type.name().toLowerCase(java.util.Locale.ENGLISH);
 
         String base = displayName != null ? displayName : "";
         base = base.replaceAll("(?i)(\\.tar)?\\.(tzst|zst)$", "");

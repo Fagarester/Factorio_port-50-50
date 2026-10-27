@@ -27,7 +27,7 @@ public abstract class GeneralComponents {
     // so archives built for any package name work.
 
     public enum Type {
-        TURNIP, ZINK;
+        TURNIP, ZINK, GLADIO;
 
         private String lowerName() {
             return name().toLowerCase(Locale.ENGLISH);
@@ -39,6 +39,8 @@ public abstract class GeneralComponents {
                     return "Turnip";
                 case ZINK:
                     return "Zink";
+                case GLADIO:
+                    return "Gladio";
             }
 
             return "";
@@ -68,6 +70,9 @@ public abstract class GeneralComponents {
                 break;
             case ZINK:
                 items = new String[]{DefaultVersion.ZINK};
+                break;
+            case GLADIO:
+                items = new String[]{DefaultVersion.GLADIO};
                 break;
         }
 
@@ -150,12 +155,14 @@ public abstract class GeneralComponents {
     public static Type typeOf(DriverPackages.Kind kind) {
         switch (kind) {
             case TURNIP: return Type.TURNIP;
+            case GLADIO: return Type.GLADIO;
             default: return Type.ZINK;
         }
     }
 
     public static String describe(Context context, DriverPackages.InstallResult result) {
         if (result.kind == DriverPackages.Kind.TURNIP) return context.getString(R.string.driver_installed_as_turnip, result.id);
+        if (result.kind == DriverPackages.Kind.GLADIO) return context.getString(R.string.driver_installed_as_gladio, result.id);
         return context.getString(R.string.driver_installed_as_zink, result.id);
     }
 

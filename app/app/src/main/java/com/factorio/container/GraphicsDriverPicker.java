@@ -7,6 +7,7 @@ import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
 import com.factorio.R;
+import com.factorio.contentdialog.GladioConfigDialog;
 import com.factorio.contentdialog.TurnipConfigDialog;
 import com.factorio.contentdialog.VortekConfigDialog;
 import com.factorio.contentdialog.ZinkConfigDialog;
@@ -70,7 +71,10 @@ public class GraphicsDriverPicker {
         glBoxB.setItems(GraphicsDrivers.getLegacyItems("OpenGL"));
         glBoxB.setSelectedItem(GraphicsDrivers.getName(idsB[1]));
         glBoxB.setTag(configsB[1].toString());
-        // Gladio and Zink 22.2.5 have no settings
+        glBoxB.setOnButtonClickListener(() -> {
+            // Gladio: choose / import a build (.tzst); Zink 22.2.5 has no settings
+            if (StringUtils.parseIdentifier(glBoxB.getSelectedItem()).equals(GraphicsDrivers.GLADIO)) (new GladioConfigDialog(glBoxB)).show();
+        });
 
         cbTurnip = new CheckBox(context);
         cbTurnip.setText(R.string.graphics_block_turnip);

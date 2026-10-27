@@ -130,6 +130,7 @@
     <string name="game_exited_early">The game stopped before its window opened</string>
     <string name="game_exited_early_message">Exit code: %1$d. Most often the graphics driver is the cause: choose another one in Settings → Graphics driver.\n\nLast lines of the game log:</string>
     <string name="driver_installed_as_zink">Zink build %1$s installed</string>
+    <string name="driver_installed_as_gladio">Gladio build %1$s installed</string>
     <string name="driver_pick_in_its_list">choose it in its own list</string>
     <string name="choose_resolution">Choose game resolution (can be changed later in settings)</string>
     <string name="choose_resolution_waiting">Files are ready. Choose the game resolution to continue</string>

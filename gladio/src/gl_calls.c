@@ -56,9 +56,11 @@ void glArrayElement(GLint i) {
         GLClientState* clientState = currentGLContext->clientState;
 
         for (int j = 0; j < clientState->vao->maxEnabledAttribs; j++) {
-            if (clientState->vao->attribs[j].state && clientState->vao->attribs[j].pointer) {
-                void* values = clientState->vao->attribs[j].pointer + i * clientState->vao->attribs[j].stride;
-                ArrayBuffer_putBytes(&outputBuffer, values, clientState->vao->attribs[j].stride);
+            GLVertexAttrib* attrib = &clientState->vao->attribs[j];
+            int64_t limit;
+            void* data = attrib->state ? GLVertexAttrib_resolve(clientState, attrib, &limit) : NULL;
+            if (attrib->state && (data || attrib->bufferId)) {
+                GLVertexAttrib_putBytes(&outputBuffer, data, (int64_t)i * attrib->stride, attrib->stride, limit);
             }
         }
 
@@ -1774,9 +1776,11 @@ void glEnd() {
         if (indexCount > 0) {
             GLClientState* clientState = currentGLContext->clientState;
             for (int i = 0; i < clientState->vao->maxEnabledAttribs; i++) {
-                if (clientState->vao->attribs[i].state && clientState->vao->attribs[i].pointer) {
-                    void* values = clientState->vao->attribs[i].pointer + commandBuffer->minIndex * clientState->vao->attribs[i].stride;
-                    ArrayBuffer_putBytes(&outputBuffer, values, indexCount * clientState->vao->attribs[i].stride);
+                GLVertexAttrib* attrib = &clientState->vao->attribs[i];
+                int64_t limit;
+                void* data = attrib->state ? GLVertexAttrib_resolve(clientState, attrib, &limit) : NULL;
+                if (attrib->state && (data || attrib->bufferId)) {
+                    GLVertexAttrib_putBytes(&outputBuffer, data, (int64_t)commandBuffer->minIndex * attrib->stride, (int64_t)indexCount * attrib->stride, limit);
                 }
             }
         }
@@ -7282,13 +7286,11 @@ void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean norm
     if (index < VERTEX_ATTRIB_COUNT) {
         if (clientState->arbProgram[0]) index += GENERIC_VERTEX_ARRAY_INDEX;
         if (!arrayBuffer || size == GL_BGRA) {
-            GLVertexAttrib* attrib = &clientState->vao->attribs[index];
-            attrib->stride = stride > 0 ? stride : MIN(4, size) * sizeofGLType(type);
-            attrib->elemBytes = MIN(4, size) * sizeofGLType(type);
-            attrib->bufferId = arrayBuffer ? arrayBuffer->id : 0;
-            attrib->bufferOffset = arrayBuffer ? (uint64_t)pointer : 0;   // only GL_BGRA can get here with a VBO bound
-            attrib->offsetOnServer = arrayBuffer != NULL;
-            attrib->pointer = arrayBuffer ? arrayBuffer->mappedData : pointer;
+            clientState->vao->attribs[index].stride = stride > 0 ? stride : MIN(4, size) * sizeofGLType(type);
+            clientState->vao->attribs[index].pointer = arrayBuffer ? arrayBuffer->mappedData : pointer;
+            // the address is resolved when drawing (the buffer can be re-mapped by glBufferData in between)
+            clientState->vao->attribs[index].bufferId = arrayBuffer ? arrayBuffer->id : 0;
+            clientState->vao->attribs[index].bufferOffset = 0;
             GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_ENABLED, false);
             if (!arrayBuffer) pointer = (void*)0;
         }

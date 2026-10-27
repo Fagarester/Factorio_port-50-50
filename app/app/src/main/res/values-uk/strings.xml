@@ -127,5 +127,6 @@
     <string name="game_exited_early">Гра зупинилась до відкриття вікна</string>
     <string name="game_exited_early_message">Код виходу: %1$d. Найчастіше винен графічний драйвер: оберіть інший у Налаштуваннях → Графічний драйвер.\n\nОстанні рядки логу гри:</string>
     <string name="driver_installed_as_zink">Збірку Zink %1$s встановлено</string>
+    <string name="driver_installed_as_gladio">Збірку Gladio %1$s встановлено</string>
     <string name="driver_pick_in_its_list">оберіть її у власному списку</string>
 </resources>

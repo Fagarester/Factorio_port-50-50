@@ -357,6 +357,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             if (GraphicsDrivers.isLegacyMode(graphicsDriver)) {
                 sb.append("BLOCK: Vortek + ").append(GraphicsDrivers.getName(graphicsDriver[1])).append(" (original Winlator stack)\n");
                 sb.append("  Vortek config: ").append(graphicsDriverConfig[0]).append("\n");
+                if (graphicsDriver[1].equals(GraphicsDrivers.GLADIO)) {
+                    String gladioVersion = graphicsDriverConfig[1].get("version", DefaultVersion.GLADIO);
+                    sb.append("  Gladio version: '").append(gladioVersion).append("'");
+                    if (GeneralComponents.isBuiltinComponent(GeneralComponents.Type.GLADIO, gladioVersion)) sb.append(" (built-in)\n");
+                    else {
+                        File gladioFile = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.GLADIO, this), "gladio-"+gladioVersion+".tzst");
+                        sb.append(" (imported file ").append(gladioFile.length()).append(" bytes, ").append(new java.util.Date(gladioFile.lastModified())).append(")\n");
+                    }
+                }
                 sb.append("  cacheId: ").append(container.getExtra("graphicsDriver")).append("\n");
                 sb.append(DriverReport.describe(new File(libDir, "libvulkan_vortek.so"))).append("\n");
                 String icd = FileUtils.readString(new File(rootDir, "usr/share/vulkan/icd.d/vortek_icd.aarch64.json"));
@@ -829,7 +838,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private void extractLegacyGraphicsDriverFiles() {
         envVars.put("vblank_mode", "0");
 
-        String cacheId = "legacy-"+GraphicsDrivers.VORTEK+"-"+DefaultVersion.VORTEK+"-"+graphicsDriver[1]+"-"+DefaultVersion.valueOf(graphicsDriver[1]);
+        // Gladio is versioned like Turnip / Zink: the built-in build is the known-good one, builds imported from a file live next to it
+        String gladioVersion = graphicsDriverConfig[1].get("version", DefaultVersion.GLADIO);
+        String glVersion = graphicsDriver[1].equals(GraphicsDrivers.GLADIO) ? gladioVersion : DefaultVersion.valueOf(graphicsDriver[1]);
+        String cacheId = "legacy-"+GraphicsDrivers.VORTEK+"-"+DefaultVersion.VORTEK+"-"+graphicsDriver[1]+"-"+glVersion;
+        if (graphicsDriver[1].equals(GraphicsDrivers.GLADIO)) {
+            // an imported build re-installed under the same name must be extracted again
+            File gladioFile = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.GLADIO, this), "gladio-"+gladioVersion+".tzst");
+            if (gladioFile.isFile() && !GeneralComponents.isBuiltinComponent(GeneralComponents.Type.GLADIO, gladioVersion)) cacheId += "-"+gladioFile.lastModified();
+        }
         boolean changed = !cacheId.equals(container.getExtra("graphicsDriver"));
         File rootDir = rootFS.getRootDir();
         File libDir = rootFS.getLibDir();
@@ -850,11 +867,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
             TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/vortek-"+DefaultVersion.VORTEK+".tzst", rootDir);
 
-            String glPackage = null;
-            if (graphicsDriver[1].equals(GraphicsDrivers.GLADIO)) glPackage = "gladio-"+DefaultVersion.GLADIO;
-            else if (graphicsDriver[1].equals(GraphicsDrivers.ZINK_LEGACY)) glPackage = "zink-"+DefaultVersion.ZINK_LEGACY;
-            if (glPackage != null) {
-                TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/"+glPackage+".tzst", rootDir);
+            boolean hasGLPackage = false;
+            if (graphicsDriver[1].equals(GraphicsDrivers.GLADIO)) {
+                GeneralComponents.extractFile(GeneralComponents.Type.GLADIO, this, gladioVersion, DefaultVersion.GLADIO);
+                hasGLPackage = true;
+            }
+            else if (graphicsDriver[1].equals(GraphicsDrivers.ZINK_LEGACY)) {
+                TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/zink-"+DefaultVersion.ZINK_LEGACY+".tzst", rootDir);
+                hasGLPackage = true;
+            }
+            if (hasGLPackage) {
                 // these packages only carry libGL.so.1.7.0: the links that the rootfs loader needs are created here
                 FileUtils.symlink("libGL.so.1.7.0", new File(libDir, "libGL.so.1").getPath());
                 FileUtils.symlink("libGL.so.1", new File(libDir, "libGL.so").getPath());

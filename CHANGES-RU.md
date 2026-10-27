@@ -241,3 +241,12 @@ L1 контроль со слоем BCn · L2 без слоя + без сжат�
 
 ## Gladio клиент: падение в `RingBuffer_write` внутри Vortek (v7)
 Лог: после `Initialised OpenGL: Gladio` SIGSEGV в `RingBuffer_write` ← `vt_call_vkEnumerateInstanceExtensionProperties`. `libGL.so.1` (Gladio) и `libvulkan_vortek.so` экспортируют одинаковые `RingBuffer_*` / `ArrayBuffer_*`; загрузчик может связать вызовы Vortek с копией Gladio (другие структуры). Теперь `gladio/gladio.map` экспортирует только `gl*` / `glX*` / `__glX*`, остальное скрыто (+ `-Bsymbolic-functions`).
+
+## Gladio: выбор версии и импорт .tzst прямо в приложении (v7)
+- Рядом с «Gladio» в настройках графики кнопка теперь активна: окно «Gladio Конфигурация» как у Turnip/Zink — список версий, кнопки «установить» (выбрать .tzst) и «удалить».
+- Встроенная версия — `gladio-1.3` (из assets). Импортированные лежат в `files/installed_components/gladio/`. Тип файла определяется по содержимому: libGL с маркером `GLADIO_NO_ERROR` = Gladio, иначе Zink. Файл `gladio-1.4.tzst` импортируется как версия `1.4`.
+- Повторный импорт под тем же именем распаковывается заново (в cacheId добавляется время файла). Версия Gladio пишется в `driver-report.txt` (`Gladio version`).
+- APK пересобирать нужно один раз (ради этой кнопки), дальше новые сборки Gladio добавляются без пересборки APK.
+
+## Gladio клиент: SIGSEGV в `glDrawArrays` → `writeUnboundVertexArrays` → `memcpy` (v7)
+Причина: `glVertexAttribPointer` запоминал сырой адрес отображённого VBO. Когда `glBufferData` увеличивал буфер, он перемапливался (`munmap` старого), адрес в атрибуте оставался висячим. Теперь атрибут хранит id буфера и смещение, адрес берётся при отрисовке; чтение ограничено размером буфера (хвост добивается нулями, формат потока не меняется).

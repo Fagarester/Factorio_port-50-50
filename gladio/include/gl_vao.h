@@ -22,15 +22,10 @@ typedef struct GLVertexAttrib {
     int type;
     GLuint boundArrayBuffer;
     int size;
-#else
-    // client only: where the pointer came from. A cached pointer into a mapped VBO goes stale when the buffer
-    // is re-created (glBufferData growing it -> munmap + mmap), so the VBO id and offset are kept to refresh it.
-    GLuint bufferId;
-    uint32_t bufferOffset;
-    uint16_t elemBytes;      // size * sizeof(type) of ONE element, 0 = unknown
-    bool offsetOnServer;     // GL_BGRA: pointer = VBO start, the server adds bufferOffset itself
 #endif
     void* pointer;
+    GLuint bufferId;      // client side: attribute data lives in this (client-mapped) buffer; the address is resolved at draw time
+    int bufferOffset;
     short stride;
     uint8_t state;
 } GLVertexAttrib;
@@ -47,7 +42,6 @@ typedef struct GLVertexArrayObject {
     GLClientState* clientState = currentGLContext->clientState; \
     GLuint index = arrayIdx == TEXCOORD_ARRAY_INDEX ? arrayIdx + clientState->activeTexCoord : arrayIdx; \
     GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER); \
-    uint64_t bufferOffset = (uint64_t)pointer; \
     if (arrayBuffer) { \
         if (clientState->program || clientState->arbProgram[0]) { \
             GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_DISABLED, true); \
@@ -55,15 +49,13 @@ typedef struct GLVertexArrayObject {
             glVertexAttribPointer(INT32_MAX + index, size, type, normalized, stride, pointer); \
             goto unlock; \
         } \
-        pointer = arrayBuffer->mappedData ? (void*)((char*)arrayBuffer->mappedData + bufferOffset) : NULL; \
+        pointer = arrayBuffer->mappedData + (uint64_t)pointer; \
     } \
     GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_LEGACY_ENABLED, false); \
     clientState->vao->attribs[index].stride = stride > 0 ? stride : (size * sizeofGLType(type)); \
-    clientState->vao->attribs[index].elemBytes = size * sizeofGLType(type); \
-    clientState->vao->attribs[index].bufferId = arrayBuffer ? arrayBuffer->id : 0; \
-    clientState->vao->attribs[index].bufferOffset = bufferOffset; \
-    clientState->vao->attribs[index].offsetOnServer = false; \
     clientState->vao->attribs[index].pointer = pointer; \
+    clientState->vao->attribs[index].bufferId = arrayBuffer ? arrayBuffer->id : 0; \
+    clientState->vao->attribs[index].bufferOffset = arrayBuffer ? (int)((uint64_t)pointer - (uint64_t)arrayBuffer->mappedData) : 0; \
     ArrayBuffer_rewind(&outputBuffer); \
     ArrayBuffer_put(&outputBuffer, size); \
     ArrayBuffer_putInt(&outputBuffer, type); \
@@ -87,11 +79,11 @@ typedef struct GLVertexArrayObject {
     } \
     while (0)
 
+/** Address of the attribute data. limit = bytes that can be read from it (-1 = unknown, a plain client pointer). */
+extern void* GLVertexAttrib_resolve(GLClientState* clientState, GLVertexAttrib* attrib, int64_t* limit);
+extern void GLVertexAttrib_putBytes(ArrayBuffer* out, const void* base, int64_t offset, int64_t size, int64_t limit);
 extern void GLVertexArrayObject_setAttribState(GLClientState* clientState, GLuint index, uint8_t state, bool clear);
 extern void GLVertexArrayObject_setBound(GLClientState* clientState, GLuint id);
 extern void GLVertexArrayObject_delete(GLClientState* clientState, GLuint id);
-#ifndef GL_SERVER
-extern void GLVertexArrayObject_refreshBufferPointers(GLClientState* clientState, GLBuffer* buffer);
-#endif
 
 #endif
