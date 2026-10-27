@@ -21,6 +21,6 @@ add_library(GL SHARED
 find_library(X11_LIB X11)
 # Export ONLY the GL / GLX API. Everything else (RingBuffer_*, ArrayBuffer_*, ...) has the same names as in libvulkan_vortek.so;
 # with exported names the dynamic linker can bind Vortek's calls to Gladio's copies (crash inside RingBuffer_write).
-set_target_properties(GL PROPERTIES LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/gladio.map -Wl,-Bsymbolic-functions")
+set_target_properties(GL PROPERTIES LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/gladio.map -Wl,-Bsymbolic-functions -Wl,-z,defs")
 target_link_libraries(GL pthread dl m ${X11_LIB})
 set_target_properties(GL PROPERTIES VERSION 1.7.0 SOVERSION 1)
