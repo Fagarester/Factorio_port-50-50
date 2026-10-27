@@ -51,6 +51,10 @@ typedef struct GLVertexArrayObject {
         } \
         pointer = arrayBuffer->mappedData + (uint64_t)pointer; \
     } \
+    else if (pointer && (uintptr_t)pointer < 65536) { \
+        static int reportedSmallPointer = 0; \
+        if (reportedSmallPointer++ < 20) println("gladio: fixed-function array (request %d) offset=%p but no GL_ARRAY_BUFFER bound (vao=%p program=%u)", (int)requestCode, pointer, (void*)clientState->vao, clientState->program); \
+    } \
     GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_LEGACY_ENABLED, false); \
     clientState->vao->attribs[index].stride = stride > 0 ? stride : (size * sizeofGLType(type)); \
     clientState->vao->attribs[index].pointer = pointer; \

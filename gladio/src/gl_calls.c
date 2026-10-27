@@ -146,9 +146,16 @@ void glBindAttribLocationARB(GLhandleARB programObj, GLuint index, const GLcharA
     glBindAttribLocation(programObj, index, name);
 }
 
+static GLuint lastArrayBufferBind = 0;
+static void* lastArrayBufferBindContext = NULL;
+
 void glBindBuffer(GLenum target, GLuint buffer) {
     GL_CALL_LOCK();
     GLBuffer_setBound(target, buffer);
+    if (target == GL_ARRAY_BUFFER) {
+        lastArrayBufferBind = buffer;
+        lastArrayBufferBindContext = currentGLContext;
+    }
     ArrayBuffer_rewind(&outputBuffer);
     ArrayBuffer_putInt(&outputBuffer, target);
     ArrayBuffer_putInt(&outputBuffer, buffer);
@@ -7283,9 +7290,15 @@ void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean norm
     GL_CALL_LOCK();
     GLClientState* clientState = currentGLContext->clientState;
     GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER);
+    // An address below 64 KB is never real memory: it is an offset into a VBO that the server has bound, even if this client lost track of the binding
+    bool bufferOffset = !arrayBuffer && pointer && (uintptr_t)pointer < 65536;
+    if (bufferOffset) {
+        static int reported = 0;
+        if (reported++ < 20) println("gladio: glVertexAttribPointer index=%u size=%d type=0x%x stride=%d offset=%p but no GL_ARRAY_BUFFER bound (ctx=%p vao=%p program=%u; last glBindBuffer(ARRAY)=%u in ctx %p)", index, size, type, stride, pointer, (void*)currentGLContext, (void*)clientState->vao, clientState->program, lastArrayBufferBind, lastArrayBufferBindContext);
+    }
     if (index < VERTEX_ATTRIB_COUNT) {
         if (clientState->arbProgram[0]) index += GENERIC_VERTEX_ARRAY_INDEX;
-        if (!arrayBuffer || size == GL_BGRA) {
+        if ((!arrayBuffer && !bufferOffset) || (arrayBuffer && size == GL_BGRA)) {
             clientState->vao->attribs[index].stride = stride > 0 ? stride : MIN(4, size) * sizeofGLType(type);
             clientState->vao->attribs[index].pointer = arrayBuffer ? arrayBuffer->mappedData : pointer;
             // the address is resolved when drawing (the buffer can be re-mapped by glBufferData in between)

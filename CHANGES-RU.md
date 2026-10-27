@@ -258,3 +258,6 @@ L1 контроль со слоем BCn · L2 без слоя + без сжат�
 
 ## Gladio клиент: GL_ARRAY_BUFFER привязан к контексту, а не к VAO (v9)
 Лог v8: `gladio: unreadable client vertex array base=0xc size=280` — смещение VBO принималось за клиентский указатель. Причина: клиент хранил привязки всех буферов внутри VAO, а в OpenGL внутри VAO живёт только `GL_ELEMENT_ARRAY_BUFFER`; `GL_ARRAY_BUFFER` и остальные — состояние контекста. Factorio привязывает VBO до `glBindVertexArray`, после чего `glVertexAttribPointer` не видел буфер. Теперь все цели, кроме element array, хранятся контекстно (`gladio/src/gl_buffer.c`).
+
+## Gladio клиент: диагностика/обход «указателя» < 64 КБ (v10)
+v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAttribPointer` с адресом < 65536 без привязанного GL_ARRAY_BUFFER считается смещением в VBO (клиентские данные не читаются) и пишет в лог `gladio: glVertexAttribPointer index=… but no GL_ARRAY_BUFFER bound (ctx=… vao=… program=… last glBindBuffer(ARRAY)=… in ctx …)`. Такой же лог для fixed-function массивов (`gladio: fixed-function array …`).
