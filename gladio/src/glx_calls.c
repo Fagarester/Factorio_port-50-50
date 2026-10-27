@@ -446,6 +446,7 @@ void glXSelectEvent(Display* dpy, GLXDrawable draw, unsigned long event_mask) {
 }
 
 void glXSwapBuffers(Display* dpy, GLXDrawable drawable) {
+    GL_TRACE("glXSwapBuffers"); 
     GL_CALL_LOCK();
     int drawableId = (int)drawable;
     GL_SEND_CHECKED(REQUEST_CODE_SWAP_DISPLAY_BUFFERS, &drawableId, sizeof(int));

@@ -3304,7 +3304,19 @@ void gd_handle_glVertexAttribI4usv(GLContext* context) {
 }
 
 void gd_handle_glVertexAttribIPointer(GLContext* context) {
-    println(MSG_DEBUG_UNIMPLEMENTED_FUNC, "glVertexAttribIPointer");
+    GLuint index = ArrayBuffer_getInt(&context->inputBuffer);
+    GLint size = ArrayBuffer_getInt(&context->inputBuffer);
+    GLenum type = ArrayBuffer_getInt(&context->inputBuffer);
+    GLsizei stride = ArrayBuffer_getInt(&context->inputBuffer);
+    uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
+
+    // integer attributes always read from the bound VBO
+    GLClientState* clientState = &currentRenderer->clientState;
+    if (index < VERTEX_ATTRIB_COUNT) {
+        GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_DISABLED, true);
+        if (GLRenderer_useARBProgram(currentRenderer, false)) index = clientState->arbProgram[0]->material->location.attributes[index];
+    }
+    glVertexAttribIPointer(index, size, type, stride, (const void*)pointer);
 }
 
 void gd_handle_glVertexAttribPointer(GLContext* context) {

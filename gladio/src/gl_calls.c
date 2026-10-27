@@ -1514,6 +1514,7 @@ void glDispatchComputeIndirect(GLintptr indirect) {
 }
 
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
+    GL_TRACE("glDrawArrays mode=0x%x first=%d count=%d vao=%p", mode, first, count, (void*)currentGLContext->clientState->vao);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(first, count, NULL, GL_NONE, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1530,6 +1531,7 @@ void glDrawArraysEXT(GLenum mode, GLint first, GLsizei count) {
 }
 
 void glDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount) {
+    GL_TRACE("glDrawArraysInstanced mode=0x%x first=%d count=%d inst=%d", mode, first, count, instancecount);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(first, count, NULL, GL_NONE, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1574,6 +1576,7 @@ void glDrawBuffersEXT(GLsizei n, const GLenum* bufs) {
 }
 
 void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices) {
+    GL_TRACE("glDrawElements mode=0x%x count=%d type=0x%x indices=%p vao=%p", mode, count, type, indices, (void*)currentGLContext->clientState->vao);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1586,6 +1589,7 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices
 }
 
 void glDrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type, const void* indices, GLint basevertex) {
+    GL_TRACE("glDrawElementsBaseVertex mode=0x%x count=%d type=0x%x indices=%p base=%d", mode, count, type, indices, basevertex);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, basevertex);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1603,6 +1607,7 @@ void glDrawElementsBaseVertexEXT(GLenum mode, GLsizei count, GLenum type, const 
 }
 
 void glDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const void* indices, GLsizei instancecount) {
+    GL_TRACE("glDrawElementsInstanced mode=0x%x count=%d type=0x%x inst=%d", mode, count, type, instancecount);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1653,6 +1658,7 @@ void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, con
 }
 
 void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void* indices) {
+    GL_TRACE("glDrawRangeElements mode=0x%x count=%d type=0x%x indices=%p", mode, count, type, indices);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -7289,7 +7295,21 @@ void glVertexAttribI4usvEXT(GLuint index, const GLushort* v) {
 }
 
 void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void* pointer) {
-    println(MSG_DEBUG_UNIMPLEMENTED_GLCALL, "glVertexAttribIPointer");
+    GL_CALL_LOCK();
+    GLClientState* clientState = currentGLContext->clientState;
+    GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER);
+    GL_TRACE("glVertexAttribIPointer index=%u size=%d type=0x%x stride=%d pointer=%p arrayBuffer=%u", index, size, type, stride, pointer, arrayBuffer ? arrayBuffer->id : 0);
+    // Integer attributes only make sense with a VBO (data stays on the server side); a client array is not supported
+    if (index < VERTEX_ATTRIB_COUNT) GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_DISABLED, true);
+
+    ArrayBuffer_rewind(&outputBuffer);
+    ArrayBuffer_putInt(&outputBuffer, index);
+    ArrayBuffer_putInt(&outputBuffer, size);
+    ArrayBuffer_putInt(&outputBuffer, type);
+    ArrayBuffer_putInt(&outputBuffer, stride);
+    ArrayBuffer_putInt(&outputBuffer, (uint64_t)pointer);
+    gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_VERTEX_ATTRIB_IPOINTER, outputBuffer.buffer, outputBuffer.size);
+    GL_CALL_UNLOCK();
 }
 
 void glVertexAttribIPointerEXT(GLuint index, GLint size, GLenum type, GLsizei stride, const void* pointer) {

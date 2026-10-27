@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 
+#include <stdarg.h>
 #include "gladio.h"
 #include "gl_context.h"
 
@@ -209,12 +210,38 @@ void gl_flush_current(void) {
 }
 
 int gl_batch_ops = 0; // batching is opt-in for now: GLADIO_BATCH=32
-int gl_trace_budget = 600;
+int gl_trace_live = 120;
+#define GL_TRACE_RING 400
+#define GL_TRACE_LINE 230
+static char traceRing[GL_TRACE_RING][GL_TRACE_LINE];
+static unsigned traceHead = 0;
+static bool traceDumped = false;
+
+void gl_trace_write(const char* fmt, ...) {
+    if (gl_trace_live <= 0) return;
+    unsigned slot = __atomic_fetch_add(&traceHead, 1, __ATOMIC_RELAXED);
+    char* line = traceRing[slot % GL_TRACE_RING];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(line, GL_TRACE_LINE, fmt, args);
+    va_end(args);
+    if (slot < (unsigned)gl_trace_live) println("%s", line);
+}
+
+static void gl_trace_dump(void) {
+    if (gl_trace_live <= 0 || traceDumped) return;
+    traceDumped = true;
+    unsigned head = traceHead;
+    unsigned count = head < GL_TRACE_RING ? head : GL_TRACE_RING;
+    println("gladio-tail: last %u of %u calls before exit", count, head);
+    for (unsigned i = head - count; i < head; i++) println("gladio-tail: #%u %s", i, traceRing[i % GL_TRACE_RING]);
+}
 
 bool gladioInitOnce() {
     if (serverFd == -1) {
         const char* traceEnv = getenv("GLADIO_TRACE");
-        if (traceEnv && *traceEnv) gl_trace_budget = MAX(0, atoi(traceEnv));
+        if (traceEnv && *traceEnv) gl_trace_live = MAX(0, atoi(traceEnv));
+        if (gl_trace_live > 0) atexit(gl_trace_dump);
         const char* batchEnv = getenv("GLADIO_BATCH");
         if (batchEnv && *batchEnv) {
             gl_batch_ops = atoi(batchEnv);
