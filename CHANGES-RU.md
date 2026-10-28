@@ -288,3 +288,8 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 ## Конвертер шейдеров: GLSL 330+ без угадывания типов, точность для samplerBuffer (v17)
 - Лог v16: `compress-rygDXT.frag` — `float(akku >> 16)` превращалось в `float(akku) >> 16.0`. Теперь `implicitConvertIntToFloat` не применяется к шейдерам `#version >= 330` вообще, а для старых пропускает строки с `ivec/uvec/texelFetch/textureSize/>>/<</uint(/int(/float(`.
 - Лог v16: `sprite-treeGrowth.vert` — `uniform samplerBuffer ...: either a default precision should be defined`. Точности `precision highp <sampler>` теперь добавляются в оба типа шейдеров и для всех sampler-типов ES 3.2 (включая `samplerBuffer`, `sampler2DMS`, cube-массивы). **Серверная часть → пересборка APK.**
+
+## Конвертер шейдеров: gl_VertexID и разбор всех 111 шейдеров Factorio (v18)
+Разобран архив шейдеров игры: 111 GLSL-шейдеров (73 .frag + 38 .vert), все `#version 330`.
+- `gl_VertexID` (22 использования в 17 вершинных шейдерах) ловился как префикс старого `gl_Vertex` и превращался в несуществующий `gd_VertexID` (лог v16: `'gd_VertexID' : undeclared identifier`). Теперь `gl_VertexID` и `gl_InstanceID` не трогаются (`isModernBuiltinName`).
+- Для шейдеров `#version >= 330` отключено и угадывание параметров функций (`implicitConvertFunctionParams`: texture/textureLod/textureProj/min/max/pow/mod/clamp/smoothstep), как раньше `implicitConvertIntToFloat`. **Серверная часть → пересборка APK.**

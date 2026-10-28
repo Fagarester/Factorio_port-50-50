@@ -1091,6 +1091,11 @@ static char* implicitConvertFunctionParams(ShaderCode* shaderCode, char* line) {
     return line;
 }
 
+// Builtins that exist in modern GLSL / ES but start with the name of a legacy one (gl_Vertex -> gl_VertexID): they must stay untouched
+static bool isModernBuiltinName(const char* name, int len) {
+    return (len == 11 && strncmp(name, "gl_VertexID", 11) == 0) || (len == 13 && strncmp(name, "gl_InstanceID", 13) == 0);
+}
+
 static char* replaceReservedWords(ShaderObject* shader, char* line) {
     ArrayList subwords = {0};
     int i = 0;
@@ -1110,7 +1115,7 @@ static char* replaceReservedWords(ShaderObject* shader, char* line) {
             int len = i - nameStart;
             char* replace = NULL;
 
-            if (len > 3 && name[0] == 'g' && name[1] == 'l' && name[2] == '_') {
+            if (len > 3 && name[0] == 'g' && name[1] == 'l' && name[2] == '_' && !isModernBuiltinName(name, len)) {
                 for (j = 0; j < ARRAY_SIZE(reservedBuiltinWords); j++) {
                     if ((reservedBuiltinWords[j].shaderType == GL_NONE || reservedBuiltinWords[j].shaderType == shader->type) && cstartswith(reservedBuiltinWords[j].name, name)) {
                         if (len < strlen(reservedBuiltinWords[j].name)) i = nameStart + strlen(reservedBuiltinWords[j].name);
@@ -1246,7 +1251,7 @@ static void iterateShaderSource(ShaderObject* shader, char* code, int size) {
             extractShaderDataTypes(&shader->code, newLine);
             newLine = replaceReservedWords(shader, newLine);
 
-            newLine = implicitConvertFunctionParams(&shader->code, newLine);
+            if (shader->code.version < 330) newLine = implicitConvertFunctionParams(&shader->code, newLine);
             // GLSL 330+ shaders (SPIRV-Cross / glslang output) are strictly typed: implicit int->float guessing only breaks them
             if ((shader->code.flags & FLAG_HAS_OPERATORS) && shader->code.version < 330 && !lineUsesIntegerTypes(newLine)) newLine = implicitConvertIntToFloat(&shader->code, newLine);
             if (shader->code.flags & FLAG_SHADER_EXTENSIONS) newLine = replaceShaderExtensions(newLine);
