@@ -284,3 +284,7 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 
 ## Конвертер шейдеров: не трогать строки с ivec/uvec/texelFetch (v16)
 Лог v15 показал исходник `mipmap-gen.frag` (GLSL 330, вывод SPIRV-Cross). `implicitConvertIntToFloat` видел float-переменную в строке (`gl_FragCoord`, `t1`) и превращал целые: `2`→`2.0`, `_27.offset`→`vec2(_27.offset)`, `0`→`0.0` в `texelFetch`. В GLES это `ivec2 + vec2` и `texelFetch(..., 0.0)`. Теперь строки с `ivec`, `uvec`, `texelFetch`, `textureSize` не конвертируются (`gladiolegacy/src/shader_converter.c`, `lineUsesIntegerTypes`). **Серверная часть → пересборка APK.**
+
+## Конвертер шейдеров: GLSL 330+ без угадывания типов, точность для samplerBuffer (v17)
+- Лог v16: `compress-rygDXT.frag` — `float(akku >> 16)` превращалось в `float(akku) >> 16.0`. Теперь `implicitConvertIntToFloat` не применяется к шейдерам `#version >= 330` вообще, а для старых пропускает строки с `ivec/uvec/texelFetch/textureSize/>>/<</uint(/int(/float(`.
+- Лог v16: `sprite-treeGrowth.vert` — `uniform samplerBuffer ...: either a default precision should be defined`. Точности `precision highp <sampler>` теперь добавляются в оба типа шейдеров и для всех sampler-типов ES 3.2 (включая `samplerBuffer`, `sampler2DMS`, cube-массивы). **Серверная часть → пересборка APK.**

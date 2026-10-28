@@ -631,7 +631,8 @@ static void extractShaderDataTypes(ShaderCode* shaderCode, char* line) {
 // Lines that explicitly work with integer vectors / integer texel fetches are already correctly typed (typical for generated GLSL 330 shaders).
 // implicitConvertIntToFloat would turn their ints into floats (ivec2 + vec2, texelFetch(..., 0.0)) and GLES rejects that.
 static bool lineUsesIntegerTypes(const char* line) {
-    return strstr(line, "ivec") || strstr(line, "uvec") || strstr(line, "texelFetch") || strstr(line, "textureSize");
+    return strstr(line, "ivec") || strstr(line, "uvec") || strstr(line, "texelFetch") || strstr(line, "textureSize") ||
+           strstr(line, ">>") || strstr(line, "<<") || strstr(line, "uint(") || strstr(line, "int(") || strstr(line, "float(");
 }
 
 static char* implicitConvertIntToFloat(ShaderCode* shaderCode, char* line) {
@@ -1246,7 +1247,8 @@ static void iterateShaderSource(ShaderObject* shader, char* code, int size) {
             newLine = replaceReservedWords(shader, newLine);
 
             newLine = implicitConvertFunctionParams(&shader->code, newLine);
-            if ((shader->code.flags & FLAG_HAS_OPERATORS) && !lineUsesIntegerTypes(newLine)) newLine = implicitConvertIntToFloat(&shader->code, newLine);
+            // GLSL 330+ shaders (SPIRV-Cross / glslang output) are strictly typed: implicit int->float guessing only breaks them
+            if ((shader->code.flags & FLAG_HAS_OPERATORS) && shader->code.version < 330 && !lineUsesIntegerTypes(newLine)) newLine = implicitConvertIntToFloat(&shader->code, newLine);
             if (shader->code.flags & FLAG_SHADER_EXTENSIONS) newLine = replaceShaderExtensions(newLine);
 
             removeVariablesOutOfScope(&shader->code);
@@ -1353,19 +1355,18 @@ static void injectBuiltinVariables(ShaderProgram* program, ShaderObject* shader)
     insertCodeLine(shader, head++, strdup("#version 320 es"));
     insertCodeLine(shader, head++, strdup("precision highp float;"));
     insertCodeLine(shader, head++, strdup("precision highp int;"));
-    if (shader->type == GL_FRAGMENT_SHADER) {
-        insertCodeLine(shader, head++, strdup("precision highp sampler2D;"));
-        insertCodeLine(shader, head++, strdup("precision highp sampler2DArray;"));
-        insertCodeLine(shader, head++, strdup("precision highp samplerCube;"));
-        insertCodeLine(shader, head++, strdup("precision highp sampler2DShadow;"));
-        insertCodeLine(shader, head++, strdup("precision highp sampler2DArrayShadow;"));
-        insertCodeLine(shader, head++, strdup("precision highp sampler3D;"));
-        insertCodeLine(shader, head++, strdup("precision highp isampler2D;"));
-        insertCodeLine(shader, head++, strdup("precision highp usampler2D;"));
-        insertCodeLine(shader, head++, strdup("precision highp isampler2DArray;"));
-        insertCodeLine(shader, head++, strdup("precision highp usampler2DArray;"));
-        insertCodeLine(shader, head++, strdup("precision highp isampler3D;"));
-        insertCodeLine(shader, head++, strdup("precision highp usampler3D;"));
+    {
+        // ES has no default precision for most sampler types (and none at all for samplerBuffer, 2DMS, ... in either stage)
+        static const char* samplerTypes[] = {"sampler2D", "sampler2DArray", "samplerCube", "sampler2DShadow", "sampler2DArrayShadow", "sampler3D",
+                                             "isampler2D", "usampler2D", "isampler2DArray", "usampler2DArray", "isampler3D", "usampler3D",
+                                             "samplerCubeShadow", "isamplerCube", "usamplerCube", "samplerBuffer", "isamplerBuffer", "usamplerBuffer",
+                                             "samplerCubeArray", "isamplerCubeArray", "usamplerCubeArray", "samplerCubeArrayShadow",
+                                             "sampler2DMS", "isampler2DMS", "usampler2DMS", "sampler2DMSArray", "isampler2DMSArray", "usampler2DMSArray"};
+        for (int i = 0; i < (int)(sizeof(samplerTypes) / sizeof(samplerTypes[0])); i++) {
+            char text[64];
+            sprintf(text, "precision highp %s;", samplerTypes[i]);
+            insertCodeLine(shader, head++, strdup(text));
+        }
     }
 
     const char* prefix = shader->type == GL_VERTEX_SHADER ? "out" : "in";
