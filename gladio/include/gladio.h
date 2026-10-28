@@ -146,6 +146,7 @@ static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int 
     char header[HEADER_SIZE];
     *(short*)(header + 0) = requestCode;
     *(int*)(header + 2) = size;
+    ring->lastCode = requestCode;
 
     if (gl_batch_ops > 0 && size >= 0 && size <= GL_BATCH_MAX_ITEM) {
         if (!ring->batch) ring->batch = malloc(GL_BATCH_CAPACITY);
@@ -187,6 +188,15 @@ static inline bool gl_recv(RingBuffer* ring, short* outRequestCode, ArrayBuffer*
 
     if (outRequestCode != NULL) *outRequestCode = *(short*)(header + 0);
     int size = *(int*)(header + 2);
+
+    if (ring->peer && ring->peer->lastCode != *(short*)(header + 0)) {
+        // a reply that does not belong to the last request: the reply queue is out of sync (an earlier request got no reply read, or an extra one was sent)
+        static int mismatches = 0;
+        if (mismatches++ < 20) {
+            println("gladio: reply mismatch: last request %d, reply code %d (size %d)", (int)ring->peer->lastCode, (int)*(short*)(header + 0), size);
+            if (mismatches == 1) gl_trace_dump_recent(80);
+        }
+    }
 
     ArrayBuffer_rewind(data);
 

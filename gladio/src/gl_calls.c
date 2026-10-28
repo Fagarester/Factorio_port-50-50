@@ -2207,6 +2207,7 @@ void glGenBuffers(GLsizei n, GLuint* buffers) {
     GL_SEND_CHECKED(REQUEST_CODE_GL_GEN_BUFFERS, &n, sizeof(GLsizei));
     GL_RECV_CHECKED();
     memcpy(buffers, inputBuffer.buffer, inputBuffer.size);
+    if (n > 0 && inputBuffer.size != n * (int)sizeof(GLuint)) println("gladio: glGenBuffers(%d) got a reply of %d bytes", n, (int)inputBuffer.size);
     GL_CALL_UNLOCK();
 }
 

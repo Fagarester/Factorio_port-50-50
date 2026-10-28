@@ -303,3 +303,8 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 Лог v19: падения в `memcpy` нет; `gladio: texture upload (request 159) has unreadable data=(nil) size=32768/65536` (`glCompressedTexSubImage2D`, данные NULL при ненулевом размере — игра, видимо, грузит через PBO со смещением 0, а клиент его не видит), затем игра сама прерывается (`VideoBitmapOpenGL.cpp:267: data.size() == size_t(size) + offset was not true`).
 - В трассе каждая загрузка текстуры: `texupload req=… fmt=… WxHxD csize=… data=… pbo=…`.
 - При первой подозрительной загрузке в лог сразу печатаются последние 150 вызовов (`gladio-recent:`) и id привязанного `GL_PIXEL_UNPACK_BUFFER`. **APK пересобирать не нужно.**
+
+## Детектор рассинхронизации ответов (v21, только клиент Gladio)
+Лог v20 (`gladio-recent`): сначала `glGenBuffers`→87, PBO-загрузка DXT5 с `pbo=87` проходит; затем `glDeleteBuffers 87`, `glGenBuffers 1` и сразу `glBindBuffer ... id=0` — игра получила id 0 (ответ на `glGenBuffers` пустой/не тот: `memcpy(buffers, inputBuffer.buffer, inputBuffer.size)` с размером 0 оставляет 0). После этого загрузка текстуры идёт с `pbo=0`, `data=NULL`, и игра прерывается.
+- `gl_recv` сверяет код ответа с кодом последнего запроса (`RingBuffer.lastCode`) и при несовпадении печатает `gladio: reply mismatch: last request N, reply code M (size S)` + последние 80 вызовов.
+- `glGenBuffers` печатает `gladio: glGenBuffers(n) got a reply of K bytes`, если ответ не `n*4` байт. **APK пересобирать не нужно.**
