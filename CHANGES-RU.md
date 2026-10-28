@@ -288,9 +288,3 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 ## Конвертер шейдеров: GLSL 330+ без угадывания типов, точность для samplerBuffer (v17)
 - Лог v16: `compress-rygDXT.frag` — `float(akku >> 16)` превращалось в `float(akku) >> 16.0`. Теперь `implicitConvertIntToFloat` не применяется к шейдерам `#version >= 330` вообще, а для старых пропускает строки с `ivec/uvec/texelFetch/textureSize/>>/<</uint(/int(/float(`.
 - Лог v16: `sprite-treeGrowth.vert` — `uniform samplerBuffer ...: either a default precision should be defined`. Точности `precision highp <sampler>` теперь добавляются в оба типа шейдеров и для всех sampler-типов ES 3.2 (включая `samplerBuffer`, `sampler2DMS`, cube-массивы). **Серверная часть → пересборка APK.**
-
-
-## Конвертер шейдеров: `gl_VertexID` превращался в `gd_VertexID` (v18)
-- Лог v17: `sprite-treeGrowth.vert` — `'gd_VertexID' : undeclared identifier`. Причина: в `replaceReservedWords` слово `gl_*` сравнивалось с таблицей встроенных имён через `cstartswith` (чистая проверка префикса), поэтому `gl_VertexID` совпадало с записью `gl_Vertex` и у него заменялось `gl_` на `gd_`. Теперь более длинное слово считается тем же встроенным именем только если «хвост» состоит из цифр (`gl_MultiTexCoord3`). `gl_VertexID`, `gl_InstanceID`, `gl_NormalMatrix` и т.п. больше не затрагиваются.
-- Затронуто 22 шейдера Factorio, использующих `gl_VertexID` (проверено по `data/core/graphics/shaders`); остальные встроенные имена в шейдерах игры — только `gl_Position` и `gl_FragCoord`, их это не касалось.
-- Исправлено в обеих копиях конвертера: `gladiolegacy` (используется) и `gladiorenderer`. **Серверная часть → пересборка APK.**

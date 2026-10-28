@@ -1087,16 +1087,6 @@ static char* replaceReservedWords(ShaderObject* shader, char* line) {
             if (len > 3 && name[0] == 'g' && name[1] == 'l' && name[2] == '_') {
                 for (j = 0; j < ARRAY_SIZE(reservedBuiltinWords); j++) {
                     if ((reservedBuiltinWords[j].shaderType == GL_NONE || reservedBuiltinWords[j].shaderType == shader->type) && cstartswith(reservedBuiltinWords[j].name, name)) {
-                        // cstartswith() is a pure prefix test: "gl_VertexID" matched "gl_Vertex" and became "gd_VertexID" (undeclared),
-                        // "gl_NormalMatrix" matched "gl_Normal", etc. A longer word is only the same builtin if the tail is digits (gl_MultiTexCoord3).
-                        size_t builtinLen = strlen(reservedBuiltinWords[j].name);
-                        if (len > (int)builtinLen) {
-                            bool tailIsDigits = true;
-                            for (int k = (int)builtinLen; k < len; k++) {
-                                if (!isdigit((unsigned char)name[k])) { tailIsDigits = false; break; }
-                            }
-                            if (!tailIsDigits) continue;
-                        }
                         if (len < strlen(reservedBuiltinWords[j].name)) i = nameStart + strlen(reservedBuiltinWords[j].name);
                         if (reservedBuiltinWords[j].replace) {
                             replace = strdup(reservedBuiltinWords[j].replace);
