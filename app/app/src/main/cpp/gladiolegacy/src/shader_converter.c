@@ -628,6 +628,12 @@ static void extractShaderDataTypes(ShaderCode* shaderCode, char* line) {
     }
 }
 
+// Lines that explicitly work with integer vectors / integer texel fetches are already correctly typed (typical for generated GLSL 330 shaders).
+// implicitConvertIntToFloat would turn their ints into floats (ivec2 + vec2, texelFetch(..., 0.0)) and GLES rejects that.
+static bool lineUsesIntegerTypes(const char* line) {
+    return strstr(line, "ivec") || strstr(line, "uvec") || strstr(line, "texelFetch") || strstr(line, "textureSize");
+}
+
 static char* implicitConvertIntToFloat(ShaderCode* shaderCode, char* line) {
     int i;
     int wordStart = -1;
@@ -1240,7 +1246,7 @@ static void iterateShaderSource(ShaderObject* shader, char* code, int size) {
             newLine = replaceReservedWords(shader, newLine);
 
             newLine = implicitConvertFunctionParams(&shader->code, newLine);
-            if (shader->code.flags & FLAG_HAS_OPERATORS) newLine = implicitConvertIntToFloat(&shader->code, newLine);
+            if ((shader->code.flags & FLAG_HAS_OPERATORS) && !lineUsesIntegerTypes(newLine)) newLine = implicitConvertIntToFloat(&shader->code, newLine);
             if (shader->code.flags & FLAG_SHADER_EXTENSIONS) newLine = replaceShaderExtensions(newLine);
 
             removeVariablesOutOfScope(&shader->code);

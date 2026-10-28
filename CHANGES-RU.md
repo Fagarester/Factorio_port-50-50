@@ -281,3 +281,6 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 
 ## Исходник упавшего шейдера в logs.txt (v15, только клиент Gladio)
 Лог v14: `fragment shader 30 (converted for OpenGL ES): ERROR: 0:36: '+' wrong operand types vec2 and ivec2; 'texelFetch' no matching overloaded function; '=' cannot convert from const float to vec4` (`mipmap-gen.frag`). Клиент запоминает исходный GLSL (`glShaderSource`) и при ошибке печатает его построчно как `gladio-src: NN| ...` (до 6 шейдеров). **APK пересобирать не нужно** — только Gladio.
+
+## Конвертер шейдеров: не трогать строки с ivec/uvec/texelFetch (v16)
+Лог v15 показал исходник `mipmap-gen.frag` (GLSL 330, вывод SPIRV-Cross). `implicitConvertIntToFloat` видел float-переменную в строке (`gl_FragCoord`, `t1`) и превращал целые: `2`→`2.0`, `_27.offset`→`vec2(_27.offset)`, `0`→`0.0` в `texelFetch`. В GLES это `ivec2 + vec2` и `texelFetch(..., 0.0)`. Теперь строки с `ivec`, `uvec`, `texelFetch`, `textureSize` не конвертируются (`gladiolegacy/src/shader_converter.c`, `lineUsesIntegerTypes`). **Серверная часть → пересборка APK.**
