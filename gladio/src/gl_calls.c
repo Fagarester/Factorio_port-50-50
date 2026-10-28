@@ -2791,6 +2791,49 @@ void glGetProgramEnvParameterfvARB(GLenum target, GLuint index, GLfloat* params)
     println(MSG_DEBUG_UNIMPLEMENTED_GLCALL, "glGetProgramEnvParameterfvARB");
 }
 
+// Original GLSL of every shader (client side, for diagnostics): printed when the server reports a compile error for it
+#define SHADER_SOURCE_SLOTS 16384
+static char* shaderSources[SHADER_SOURCE_SLOTS];
+
+static void rememberShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, const GLint* length) {
+    if (shader >= SHADER_SOURCE_SLOTS || count <= 0) return;
+    size_t total = 1;
+    for (int i = 0; i < count; i++) total += length && length[i] >= 0 ? (size_t)length[i] : strlen(string[i]);
+    char* text = malloc(total);
+    if (!text) return;
+    size_t offset = 0;
+    for (int i = 0; i < count; i++) {
+        size_t size = length && length[i] >= 0 ? (size_t)length[i] : strlen(string[i]);
+        memcpy(text + offset, string[i], size);
+        offset += size;
+    }
+    text[offset] = 0;
+    free(shaderSources[shader]);
+    shaderSources[shader] = text;
+}
+
+static void dumpShaderSourceForLog(const char* infoLog) {
+    static int dumped = 0;
+    if (dumped >= 6) return;
+    const char* mark = strstr(infoLog, "shader ");
+    if (!mark) return;
+    GLuint shader = (GLuint)atoi(mark + 7);
+    if (shader == 0 || shader >= SHADER_SOURCE_SLOTS || !shaderSources[shader]) return;
+    dumped++;
+    println("gladio-src: ---- original source of shader %u ----", shader);
+    const char* line = shaderSources[shader];
+    int number = 1;
+    while (*line && number < 400) {
+        const char* end = strchr(line, '\n');
+        int size = end ? (int)(end - line) : (int)strlen(line);
+        if (size > 0 && line[size - 1] == '\r') size--;
+        println("gladio-src: %3d| %.*s", number++, size, line);
+        if (!end) break;
+        line = end + 1;
+    }
+    println("gladio-src: ---- end ----");
+}
+
 void glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei* length, GLchar* infoLog) {
     GL_CALL_LOCK();
     ArrayBuffer_rewind(&outputBuffer);
@@ -2803,7 +2846,7 @@ void glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei* length, GLcha
     memcpy(infoLog, inputBuffer.buffer + inputBuffer.position, strSize);
     infoLog[strSize] = '\0';
     if (length) *length = strSize;
-    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetProgramInfoLog: %s", infoLog); }
+    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetProgramInfoLog: %s", infoLog);  dumpShaderSourceForLog(infoLog); }
     GL_CALL_UNLOCK();
 }
 
@@ -2964,7 +3007,7 @@ void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei* length, GLchar*
     memcpy(infoLog, inputBuffer.buffer + inputBuffer.position, strSize);
     infoLog[strSize] = '\0';
     if (length) *length = strSize;
-    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetShaderInfoLog: %s", infoLog); }
+    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetShaderInfoLog: %s", infoLog);  dumpShaderSourceForLog(infoLog); }
     GL_CALL_UNLOCK();
 }
 
@@ -5433,6 +5476,7 @@ void glShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, c
         ArrayBuffer_putBytes(&outputBuffer, string[i], strSize);
     }
 
+    rememberShaderSource(shader, count, string, length);
     gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_SHADER_SOURCE, outputBuffer.buffer, outputBuffer.size);
     GL_CALL_UNLOCK();
 }

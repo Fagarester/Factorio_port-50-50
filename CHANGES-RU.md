@@ -275,3 +275,9 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 
 ## Ошибки шейдеров видны в logs.txt (v14)
 Лог v13: игра дошла до экрана загрузки (Loading mods), затем `Failed to compile program 'pass-through-pos-uv.vert, mipmap-gen.frag'` без причины. Сервер конвертирует GLSL при линковке, а текст ошибки печатал только в отладочной сборке. Теперь `compileShaderObject` / `linkShaderProgram` всегда запоминают лог GLES (`ShaderConverter_lastError`), `glGetShaderInfoLog` / `glGetProgramInfoLog` отдают его игре, а клиент печатает `gladio: glGetProgramInfoLog: ...`. **Серверная часть → пересборка APK.**
+
+## Клиент печатает исходник упавшего шейдера (v15)
+Лог v14 (серверный лог дошёл): `fragment shader 30 ... ERROR: 0:36: '+' wrong operand types vec2 + ivec2` / `texelFetch: no matching overloaded function` / `cannot convert const float to vec4` для `mipmap-gen.frag`. Клиент теперь запоминает исходник каждого шейдера и при ошибке печатает его построчно: `gladio-src: NNN| ...`. Только клиент Gladio, **APK пересобирать не нужно**.
+
+## Исходник упавшего шейдера в logs.txt (v15, только клиент Gladio)
+Лог v14: `fragment shader 30 (converted for OpenGL ES): ERROR: 0:36: '+' wrong operand types vec2 and ivec2; 'texelFetch' no matching overloaded function; '=' cannot convert from const float to vec4` (`mipmap-gen.frag`). Клиент запоминает исходный GLSL (`glShaderSource`) и при ошибке печатает его построчно как `gladio-src: NN| ...` (до 6 шейдеров). **APK пересобирать не нужно** — только Gladio.
