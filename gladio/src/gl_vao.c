@@ -151,7 +151,11 @@ void gl_write_raw_checked(RingBuffer* ring, const void* data, int size, int requ
         return;
     }
     static int reported = 0;
-    if (reported++ < 30) println("gladio: texture upload (request %d) has unreadable data=%p size=%d, sending zeros", requestCode, data, size);
+    if (reported++ < 30) {
+        GLBuffer* unpack = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER);
+        println("gladio: texture upload (request %d) has unreadable data=%p size=%d (GL_PIXEL_UNPACK_BUFFER bound: %u), sending zeros", requestCode, data, size, unpack ? unpack->id : 0);
+        if (reported == 1) gl_trace_dump_recent(150);
+    }
     static const char zeros[65536];
     for (int left = size; left > 0; ) {
         int chunk = left < (int)sizeof(zeros) ? left : (int)sizeof(zeros);

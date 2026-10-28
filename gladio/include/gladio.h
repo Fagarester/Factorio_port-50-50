@@ -124,6 +124,7 @@ extern int gl_batch_ops;
 // the last 400 are printed as 'gladio-tail:' when the process exits (e.g. after an X server IO error). 0 = off.
 extern int gl_trace_live;
 extern void gl_trace_write(const char* fmt, ...);
+extern void gl_trace_dump_recent(unsigned n);
 #define GL_TRACE(...) gl_trace_write(__VA_ARGS__)
 
 static inline bool gl_flush(RingBuffer* ring) {
@@ -280,6 +281,7 @@ static inline int getGLCallParamsCount(GLenum pname, bool* isColor) {
     do { \
         GLClientState* clientState = currentGLContext->clientState; \
         GLBuffer* pixelUnpackBuffer = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER); \
+        GL_TRACE("texupload req=%d fmt=0x%x %dx%dx%d csize=%d data=%p pbo=%u", (int)(requestCode), (unsigned)(format), (int)(width), (int)(height), (int)(depth), (int)(compressedSize), (const void*)(imageData), pixelUnpackBuffer ? pixelUnpackBuffer->id : 0); \
         int dataSize = compressedSize; \
         if (compressedSize == 0) { \
             if (clientState->pixelStore.unpackRowLength > 0) width = clientState->pixelStore.unpackRowLength; \

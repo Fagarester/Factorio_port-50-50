@@ -228,6 +228,16 @@ void gl_trace_write(const char* fmt, ...) {
     if (slot < (unsigned)gl_trace_live) println("%s", line);
 }
 
+// last n traced calls, printed right when something suspicious happens (the process may be killed before it exits normally)
+void gl_trace_dump_recent(unsigned n) {
+    if (gl_trace_live <= 0) return;
+    unsigned head = traceHead;
+    if (n > head) n = head;
+    if (n > GL_TRACE_RING) n = GL_TRACE_RING;
+    println("gladio-recent: last %u calls", n);
+    for (unsigned i = head - n; i < head; i++) println("gladio-recent: #%u %s", i, traceRing[i % GL_TRACE_RING]);
+}
+
 static void gl_trace_dump(void) {
     if (gl_trace_live <= 0 || traceDumped) return;
     traceDumped = true;

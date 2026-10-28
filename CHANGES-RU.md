@@ -298,3 +298,8 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 Лог v18: шейдеры компилируются, игра грузит моды, SIGSEGV на 50% в `glCompressedTexSubImage2D` → `RingBuffer_write` → `memcpy` (виртуальный атлас 4096x4096x18).
 - `glCompressedTexImage3D` / `glCompressedTexSubImage3D` на клиенте были подменой 2D-версий (терялись `depth` и `zoffset`). Теперь это настоящие запросы `TEX_IMAGE3D` / `TEX_SUB_IMAGE3D` с `type == 0` (маркер сжатого объёма); сервер (`request_handler.c`, `decompressTexVolume`) распаковывает каждый слой DXT в BGRA8 и вызывает `glTexImage3D` / `glTexSubImage3D`. **Серверная часть → пересборка APK.**
 - Клиент: данные текстуры с нечитаемым указателем больше не роняют процесс (`gl_write_raw_checked`): отправляются нули и пишется `gladio: texture upload (request N) has unreadable data=... size=...`.
+
+## Диагностика загрузки текстур (v20, только клиент Gladio)
+Лог v19: падения в `memcpy` нет; `gladio: texture upload (request 159) has unreadable data=(nil) size=32768/65536` (`glCompressedTexSubImage2D`, данные NULL при ненулевом размере — игра, видимо, грузит через PBO со смещением 0, а клиент его не видит), затем игра сама прерывается (`VideoBitmapOpenGL.cpp:267: data.size() == size_t(size) + offset was not true`).
+- В трассе каждая загрузка текстуры: `texupload req=… fmt=… WxHxD csize=… data=… pbo=…`.
+- При первой подозрительной загрузке в лог сразу печатаются последние 150 вызовов (`gladio-recent:`) и id привязанного `GL_PIXEL_UNPACK_BUFFER`. **APK пересобирать не нужно.**
