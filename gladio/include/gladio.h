@@ -167,6 +167,9 @@ static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int 
     return true;
 }
 
+extern bool gl_isReadable(const void* address, int64_t size);
+extern void gl_write_raw_checked(RingBuffer* ring, const void* data, int size, int requestCode);
+
 // Raw bytes that follow a request header (texture pixels, glEnd command data ...). Keeps the order with batched requests.
 static inline bool gl_write_raw(RingBuffer* ring, const void* data, uint32_t size) {
     if (size == 0) return true;
@@ -290,7 +293,7 @@ static inline int getGLCallParamsCount(GLenum pname, bool* isColor) {
         if (pixelUnpackBuffer) { \
             GL_RECV_CHECKED(); \
         } \
-        else if (dataSize > 0) gl_write_raw(currentGLContext->serverRing, imageData, dataSize); \
+        else if (dataSize > 0) gl_write_raw_checked(currentGLContext->serverRing, imageData, dataSize, requestCode); \
     } \
     while (0)
 

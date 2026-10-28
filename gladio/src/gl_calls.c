@@ -986,7 +986,20 @@ void glCompressedTexImage2DARB(GLenum target, GLint level, GLenum internalformat
 }
 
 void glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void* data) {
-    glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
+    // sent as a glTexImage3D request with type == 0 (never a valid pixel type): the server knows it is a compressed volume
+    GL_CALL_LOCK();
+    ArrayBuffer_rewind(&outputBuffer);
+    ArrayBuffer_putInt(&outputBuffer, target);
+    ArrayBuffer_putInt(&outputBuffer, level);
+    ArrayBuffer_putInt(&outputBuffer, internalformat);
+    ArrayBuffer_putInt(&outputBuffer, width);
+    ArrayBuffer_putInt(&outputBuffer, height);
+    ArrayBuffer_putInt(&outputBuffer, depth);
+    ArrayBuffer_putInt(&outputBuffer, border);
+    ArrayBuffer_putInt(&outputBuffer, internalformat);
+    ArrayBuffer_putInt(&outputBuffer, 0);
+    GL_SEND_TEXIMAGE(REQUEST_CODE_GL_TEX_IMAGE3D, internalformat, 0, width, height, depth, data, imageSize);
+    GL_CALL_UNLOCK();
 }
 
 void glCompressedTexImage3DARB(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void* data) {
@@ -1020,7 +1033,21 @@ void glCompressedTexSubImage2DARB(GLenum target, GLint level, GLint xoffset, GLi
 }
 
 void glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void* data) {
-    glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+    // same trick as glCompressedTexImage3D: a glTexSubImage3D request with type == 0
+    GL_CALL_LOCK();
+    ArrayBuffer_rewind(&outputBuffer);
+    ArrayBuffer_putInt(&outputBuffer, target);
+    ArrayBuffer_putInt(&outputBuffer, level);
+    ArrayBuffer_putInt(&outputBuffer, xoffset);
+    ArrayBuffer_putInt(&outputBuffer, yoffset);
+    ArrayBuffer_putInt(&outputBuffer, zoffset);
+    ArrayBuffer_putInt(&outputBuffer, width);
+    ArrayBuffer_putInt(&outputBuffer, height);
+    ArrayBuffer_putInt(&outputBuffer, depth);
+    ArrayBuffer_putInt(&outputBuffer, format);
+    ArrayBuffer_putInt(&outputBuffer, 0);
+    GL_SEND_TEXIMAGE(REQUEST_CODE_GL_TEX_SUB_IMAGE3D, format, 0, width, height, depth, data, imageSize);
+    GL_CALL_UNLOCK();
 }
 
 void glCompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void* data) {

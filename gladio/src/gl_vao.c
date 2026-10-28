@@ -23,7 +23,7 @@ void* GLVertexAttrib_resolve(GLClientState* clientState, GLVertexAttrib* attrib,
 // GLADIO_SAFE_ARRAYS=0 turns the check off.
 static int safeArrays = -1;
 
-static bool isReadable(const void* address, int64_t size) {
+bool gl_isReadable(const void* address, int64_t size) {
     uintptr_t start = (uintptr_t)address & ~(uintptr_t)4095;
     uintptr_t end = ((uintptr_t)address + size + 4095) & ~(uintptr_t)4095;
     if ((uintptr_t)address < 65536 || end < start) return false;
@@ -47,7 +47,7 @@ void GLVertexAttrib_putBytes(ArrayBuffer* out, const void* base, int64_t offset,
 
     if (available > 0 && limit < 0) {
         if (safeArrays == -1) safeArrays = !(getenv("GLADIO_SAFE_ARRAYS") && atoi(getenv("GLADIO_SAFE_ARRAYS")) == 0);
-        if (safeArrays && !isReadable((const uint8_t*)base + offset, available)) {
+        if (safeArrays && !gl_isReadable((const uint8_t*)base + offset, available)) {
             static int reported = 0;
             if (reported++ < 30) println("gladio: unreadable client vertex array base=%p offset=%lld size=%lld (zero filled)", base, (long long)offset, (long long)available);
             available = 0;
@@ -140,5 +140,22 @@ void GLVertexArrayObject_delete(GLClientState* clientState, GLuint id) {
     if (id > 0) {
         MEMFREE(vao);
         SparseArray_remove(&clientState->vertexArrays, id);
+    }
+}
+// Raw bytes after a texture upload request. The game's pointer can be bogus (e.g. a pixel unpack buffer offset the client lost track of):
+// the server still expects exactly `size` bytes, so send zeros instead of crashing.
+void gl_write_raw_checked(RingBuffer* ring, const void* data, int size, int requestCode) {
+    if (size <= 0) return;
+    if (data && gl_isReadable(data, size)) {
+        gl_write_raw(ring, data, size);
+        return;
+    }
+    static int reported = 0;
+    if (reported++ < 30) println("gladio: texture upload (request %d) has unreadable data=%p size=%d, sending zeros", requestCode, data, size);
+    static const char zeros[65536];
+    for (int left = size; left > 0; ) {
+        int chunk = left < (int)sizeof(zeros) ? left : (int)sizeof(zeros);
+        if (!gl_write_raw(ring, zeros, chunk)) return;
+        left -= chunk;
     }
 }

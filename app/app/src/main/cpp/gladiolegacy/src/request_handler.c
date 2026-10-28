@@ -2686,6 +2686,23 @@ void gd_handle_glTexImage2DMultisample(GLContext* context) {
     glTexStorage2DMultisample(target, samples, internalformat, width, height, fixedsamplelocations);
 }
 
+// A compressed volume (texture array / 3D texture) is stored slice after slice; the GPU side always gets BGRA8, like the 2D path
+static void* decompressTexVolume(uint32_t format, int width, int height, int depth, void* data, int imageSize, ThreadPool* threadPool) {
+    if (!data || width <= 0 || height <= 0 || depth <= 0) return NULL;
+    size_t sliceBytes = (size_t)width * height * 4;
+    uint8_t* result = calloc(depth, sliceBytes);
+    if (!result) return NULL;
+    size_t sliceSize = (size_t)imageSize / depth;
+    for (int z = 0; z < depth; z++) {
+        void* slice = decompressTexImage2D(format, width, height, (uint8_t*)data + z * sliceSize, threadPool);
+        if (slice) {
+            memcpy(result + z * sliceBytes, slice, sliceBytes);
+            MEMFREE(slice);
+        }
+    }
+    return result;
+}
+
 void gd_handle_glTexImage3D(GLContext* context) {
     GLenum target = ArrayBuffer_getInt(&context->inputBuffer);
     GLint level = ArrayBuffer_getInt(&context->inputBuffer);
@@ -2700,6 +2717,26 @@ void gd_handle_glTexImage3D(GLContext* context) {
 
     target = parseTexTarget(target);
     GLBuffer* pixelUnpackBuffer = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER);
+    if (type == GL_NONE) {
+        // glCompressedTexImage3D: decompress every slice, store as BGRA8
+        void* decompressedData = NULL;
+        if (imageSize > 0) {
+            if (pixelUnpackBuffer) {
+                uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
+                decompressedData = decompressTexVolume(format, width, height, depth, pixelUnpackBuffer->mappedData + pointer, imageSize, context->threadPool);
+                gl_send(context->clientRing, REQUEST_CODE_GL_TEX_IMAGE3D, NULL, 0);
+            }
+            else {
+                void* imageData = NULL;
+                RING_READ_BEGIN(context->serverRing, imageData, imageSize);
+                decompressedData = decompressTexVolume(format, width, height, depth, imageData, imageSize, context->threadPool);
+                RING_READ_END(context->serverRing);
+            }
+        }
+        glTexImage3D(target, level, GL_BGRA, width, height, depth, border, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
+        MEMFREE(decompressedData);
+        return;
+    }
     if (pixelUnpackBuffer) {
         uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
         convertTexImageFormat(target, &internalformat, &format, &type, NULL, 0);
@@ -2787,6 +2824,26 @@ void gd_handle_glTexSubImage3D(GLContext* context) {
 
     target = parseTexTarget(target);
     GLBuffer* pixelUnpackBuffer = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER);
+    if (type == GL_NONE) {
+        // glCompressedTexSubImage3D: decompress every slice, upload as BGRA8
+        void* decompressedData = NULL;
+        if (imageSize > 0) {
+            if (pixelUnpackBuffer) {
+                uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
+                decompressedData = decompressTexVolume(format, width, height, depth, pixelUnpackBuffer->mappedData + pointer, imageSize, context->threadPool);
+                gl_send(context->clientRing, REQUEST_CODE_GL_TEX_SUB_IMAGE3D, NULL, 0);
+            }
+            else {
+                void* imageData = NULL;
+                RING_READ_BEGIN(context->serverRing, imageData, imageSize);
+                decompressedData = decompressTexVolume(format, width, height, depth, imageData, imageSize, context->threadPool);
+                RING_READ_END(context->serverRing);
+            }
+        }
+        if (decompressedData) glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
+        MEMFREE(decompressedData);
+        return;
+    }
     if (pixelUnpackBuffer) {
         uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
         convertTexImageFormat(target, NULL, &format, &type, NULL, 0);
