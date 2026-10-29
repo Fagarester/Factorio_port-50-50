@@ -43,6 +43,7 @@ public class GLXExtension extends Extension {
     private final SparseArray<SparseLongArray> clientGLContexts = new SparseArray<>();
     private final String glxExtensions = "GLX_ARB_create_context GLX_ARB_get_proc_address";
     private final Callback<XClient> onDestroyClientListener = (client) -> {
+        xServer.debugPrint("GLX client destroyed fd="+client.fd);
         destroyAllGLContexts(client.fd);
         destroyAllGLXContexts(client.fd);
     };
@@ -94,6 +95,7 @@ public class GLXExtension extends Extension {
         }
 
         long context = createGLContext(client.fd);
+        xServer.debugPrint("GLX createGLContext fd="+client.fd+" contextId="+contextId+" ptr="+context);
         if (context != 0) contexts.put(contextId, context);
     }
 
@@ -105,7 +107,7 @@ public class GLXExtension extends Extension {
         if (contexts == null) throw new GLXBadContext();
 
         long context = contexts.get(contextId, 0L);
-        if (context != 0) destroyGLContext(context);
+        if (context != 0) destroyGLContextLogged(context, "request id="+contextId+" fd="+client.fd);
         contexts.delete(contextId);
 
         try (XStreamLock lock = outputStream.lock()) {
@@ -478,7 +480,7 @@ public class GLXExtension extends Extension {
             SparseLongArray contexts = clientGLContexts.get(clientFd);
             xServer.debugPrint("GLX destroyAllGLContexts fd="+clientFd+" contexts="+(contexts != null ? contexts.size() : 0));
             if (contexts != null) {
-                for (int i = 0; i < contexts.size(); i++) destroyGLContext(contexts.valueAt(i));
+                for (int i = 0; i < contexts.size(); i++) destroyGLContextLogged(contexts.valueAt(i), "client fd="+clientFd+" gone");
                 contexts.clear();
             }
             clientGLContexts.remove(clientFd);
@@ -497,6 +499,14 @@ public class GLXExtension extends Extension {
     }
 
     private native long createGLContext(int clientFd);
+
+    // every native destroy goes through here so that logs.txt shows who asked for it
+    private void destroyGLContextLogged(long contextPtr, String reason) {
+        String stack = android.util.Log.getStackTraceString(new Throwable()).replace('\n', ' ').replace('\t', ' ');
+        if (stack.length() > 700) stack = stack.substring(0, 700);
+        xServer.debugPrint("GLX native destroyGLContext ptr="+contextPtr+" reason: "+reason+" | "+stack);
+        destroyGLContext(contextPtr);
+    }
 
     private native void destroyGLContext(long contextPtr);
 

@@ -329,3 +329,7 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 ## Java: кто закрывает соединение / уничтожает GL-контекст (v26)
 Лог v25: все GL-вызовы идут из одного потока; контекст 1 (проба) создан и уничтожен штатно, контекст 2 создан, затем при `glCompressedTexSubImage2D` кольцо уже помечено `RING_STATUS_EXIT`. Клиентских `destroy` нет, GLX-запросов на соединении Gladio после 00:45:19 нет => контекст уничтожила Java-сторона.
 - В `logs.txt` теперь: `xserver:conn fd=N: connection shutdown / no more data from the peer, closing / request failed, closing: <IOException>` (`XConnectorEpoll`), `xserver:GLX destroyGLContext id=.. fd=..` и `xserver:GLX destroyAllGLContexts fd=.. contexts=..` (`GLXExtension`). **Только APK (Java), Gladio пересобирать не нужно.**
+
+## Java: стек при любом уничтожении GL-контекста (v27)
+Лог v26: между `Loading 3D bitmaps: 21` и ошибками чтения закрылись три X-соединения (`xserver:conn fd=196/197/124: connection shutdown`), но `destroyAllGLContexts` / `destroyGLContext` не печатались — Java-сторона контекст не уничтожала (или это делает другой путь).
+- `GLXExtension`: все нативные уничтожения идут через `destroyGLContextLogged`, который пишет в `logs.txt` причину и стек вызовов (`xserver:GLX native destroyGLContext ptr=.. reason: .. | ..`); создание: `xserver:GLX createGLContext fd=.. contextId=.. ptr=..`; закрытие клиента: `xserver:GLX client destroyed fd=..`. **Только APK.**
