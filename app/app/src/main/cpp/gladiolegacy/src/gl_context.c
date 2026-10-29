@@ -218,7 +218,7 @@ static void* requestHandlerThread(void* param) {
                 GLenum error = glGetError();
                 if (error != GL_NO_ERROR) {
                     errorsLeft--;
-                    gladioServerLog("glError 0x%x after %s", error, requestCodeToString(requestCode));
+                    gladioServerLog("glError 0x%x after request code %d", error, (int)requestCode);
                 }
             }
         }

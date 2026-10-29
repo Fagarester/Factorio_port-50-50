@@ -313,3 +313,6 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 Лог v21: `reply mismatch` / `got a reply of` не сработали — очередь ответов в порядке, а `glGenBuffers` после `glDeleteBuffers 87` всё равно вернул id 0 (то есть 0 вернул сервер; сообщения сервера уходили только в logcat).
 - Сервер (`gladio.h`, `request_handler.c`, `gl_context.c`): `gladioServerLog()` складывает текст, а `gl_send` прикрепляет его к ближайшему ответу (флаг `0x80000000` в размере, перед данными `[uint16 длина][текст]`). Клиент (`gl_recv`) печатает его как `gladio-server: ...`.
 - Сервер сообщает: `glGenBuffers(n) returned id 0 ... glError=0x..` (с повторной попыткой), а также первые 40 GL-ошибок после запросов (`glError 0x... after REQUEST_...`, проверяются первые 30000 запросов). **Нужна пересборка APK и Gladio.**
+
+## Исправление сборки v22 (v23)
+Сборка APK v22 упала на линковке `libgladiolegacy.so`: `undefined symbol: requestCodeToString` — функция определена только при `DEBUG_MODE` (`request_codes.h`), а я вызвал её в ветке без отладки (`gl_context.c`). Теперь пишется числовой код запроса: `glError 0x... after request code N`.
