@@ -1324,6 +1324,7 @@ void GLRenderer_disableUnusedVertexAttributes(GLRenderer* renderer) {
 static void freePixelReadCache(GLRenderer* renderer) {
     if (renderer->pixelReadCache) {
         if (renderer->pixelReadCache->data) free(renderer->pixelReadCache->data);
+        free(renderer->pixelReadCache);
         renderer->pixelReadCache = NULL;
     }
 }
@@ -1333,11 +1334,57 @@ void GLRenderer_resetFrameCount(GLRenderer* renderer) {
     renderer->frameCount = 0;
 }
 
+// v31: formats/types that GLRenderer_readPixels cannot convert from RGBA8 (integer and float readbacks, e.g. Factorio's GPU DXT/BC compression
+// renders into an RGBA32UI/RG32UI target and reads it back into a pixel pack buffer). They are read exactly as requested.
+bool GLRenderer_isRawReadFormat(GLenum format, GLenum type) {
+    switch (format) {
+        case GL_RGBA_INTEGER:
+        case GL_RGB_INTEGER:
+        case GL_RG_INTEGER:
+        case GL_RED_INTEGER:
+            return true;
+    }
+    switch (type) {
+        case GL_BYTE:
+        case GL_UNSIGNED_BYTE:
+            return false;
+        case GL_SHORT:
+        case GL_UNSIGNED_SHORT:
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+        case GL_FLOAT:
+        case GL_HALF_FLOAT:
+            return true;
+    }
+    return false;
+}
+
+// glReadPixels exactly as requested. With a pixel pack buffer bound, `pixels` is an offset into that buffer: the GPU writes into the real GLES
+// buffer, and afterwards the result is copied to the buffer's shared memory (mappedData), the only place the client and glTexSubImage*
+// from GL_PIXEL_UNPACK_BUFFER (which never touches the real buffer) can see it.
+void GLRenderer_readPixelsRaw(GLRenderer* renderer, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels) {
+    freePixelReadCache(renderer);
+    glReadPixels(x, y, width, height, format, type, pixels);
+
+    GLBuffer* pixelPackBuffer = GLBuffer_getBound(GL_PIXEL_PACK_BUFFER);
+    if (pixelPackBuffer && pixelPackBuffer->mappedData && pixelPackBuffer->size > 0) {
+        void* mapped = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, pixelPackBuffer->size, GL_MAP_READ_BIT);
+        if (mapped) {
+            memcpy(pixelPackBuffer->mappedData, mapped, pixelPackBuffer->size);
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        }
+        else println("gladio:readPixels: glMapBufferRange failed for pack buffer %u (glError 0x%x)", pixelPackBuffer->id, glGetError());
+    }
+}
+
 void GLRenderer_readPixels(GLRenderer* renderer, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels) {
     int srcDataSize = width * height * 4;
     GLuint framebuffer = renderer->clientState.framebuffer[indexOfGLTarget(GL_READ_FRAMEBUFFER)];
     PixelReadCache* pixelReadCache = renderer->pixelReadCache;
-    if (pixelReadCache && x == 0 && y == 0 &&
+    GLBuffer* pixelPackBuffer = GLBuffer_getBound(GL_PIXEL_PACK_BUFFER);
+    // v31: with a pixel pack buffer bound `pixels` is an OFFSET (usually NULL), not memory: never copy through it
+    // (crash: SIGSEGV in memmove, GLRenderer_readPixels, source = NULL, 64x64 RGBA read into a PBO)
+    if (!pixelPackBuffer && pixelReadCache && x == 0 && y == 0 &&
                           pixelReadCache->dataSize == srcDataSize &&
                           pixelReadCache->framebuffer == framebuffer &&
                          (renderer->frameCount-pixelReadCache->frameIndex) <= PIXEL_READ_CACHE_SKIP_FRAMES) {
@@ -1345,14 +1392,13 @@ void GLRenderer_readPixels(GLRenderer* renderer, GLint x, GLint y, GLsizei width
         return;
     }
 
-    GLBuffer* pixelPackBuffer = GLBuffer_getBound(GL_PIXEL_PACK_BUFFER);
     bool convert = format != GL_RGBA && format != GL_BGRA;
     if (pixelPackBuffer && convert) glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     char* srcData = convert ? malloc(srcDataSize) : pixels;
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, srcData);
 
-    if (x == 0 && y == 0 && width <= 256 && height <= 256 && !convert) {
+    if (x == 0 && y == 0 && width <= 256 && height <= 256 && !convert && !pixelPackBuffer) {
         if (!pixelReadCache) renderer->pixelReadCache = pixelReadCache = calloc(1, sizeof(PixelReadCache));
         if (srcDataSize != pixelReadCache->dataSize) {
             MEMFREE(pixelReadCache->data);
@@ -1367,9 +1413,14 @@ void GLRenderer_readPixels(GLRenderer* renderer, GLint x, GLint y, GLsizei width
 
     if (pixelPackBuffer) {
         if (!convert) {
-            srcData = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, pixelPackBuffer->size, GL_MAP_READ_BIT);
-            memcpy(pixelPackBuffer->mappedData, srcData, pixelPackBuffer->size);
-            glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+            void* mapped = glMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, pixelPackBuffer->size, GL_MAP_READ_BIT);
+            if (mapped && pixelPackBuffer->mappedData) {
+                memcpy(pixelPackBuffer->mappedData, mapped, pixelPackBuffer->size);
+                srcData = pixelPackBuffer->mappedData; // the GL mapping is gone after glUnmapBuffer; convert from the shared copy
+            }
+            else srcData = NULL;
+            if (mapped) glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+            if (!srcData) return;
         }
         else glBindBuffer(GL_PIXEL_PACK_BUFFER, pixelPackBuffer->id);
     }
@@ -1416,10 +1467,11 @@ void GLRenderer_readPixels(GLRenderer* renderer, GLint x, GLint y, GLsizei width
                 break;
             case GL_BGRA:
                 for (int i = 0; i < srcDataSize; i += 4) {
-                    dstData[i+0] = srcData[i+2];
-                    dstData[i+1] = srcData[i+1];
-                    dstData[i+2] = srcData[i+0];
-                    dstData[i+3] = srcData[i+3];
+                    char b0 = srcData[i+0], b1 = srcData[i+1], b2 = srcData[i+2], b3 = srcData[i+3];
+                    dstData[i+0] = b2;
+                    dstData[i+1] = b1;
+                    dstData[i+2] = b0;
+                    dstData[i+3] = b3;
                 }
                 break;
             case GL_RGBA:

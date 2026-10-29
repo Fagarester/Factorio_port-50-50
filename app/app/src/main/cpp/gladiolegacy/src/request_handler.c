@@ -2404,9 +2404,12 @@ void gd_handle_glReadPixels(GLContext* context) {
     GLenum type = ArrayBuffer_getInt(&context->inputBuffer);
 
     GLBuffer* pixelPackBuffer = GLBuffer_getBound(GL_PIXEL_PACK_BUFFER);
+    bool raw = GLRenderer_isRawReadFormat(format, type);
     if (pixelPackBuffer) {
         uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
-        GLRenderer_readPixels(currentRenderer, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (void*)pointer);
+        // v31: use the requested format/type (it used to be forced to GL_RGBA/GL_UNSIGNED_BYTE, which broke integer readbacks)
+        if (raw) GLRenderer_readPixelsRaw(currentRenderer, x, y, width, height, format, type, (void*)pointer);
+        else GLRenderer_readPixels(currentRenderer, x, y, width, height, format, type, (void*)pointer);
     }
     else {
         int imageSize = computeTexImageDataSize(format, type, width, height, 1);
@@ -2414,7 +2417,8 @@ void gd_handle_glReadPixels(GLContext* context) {
 
         if (imageSize > 0) {
             RING_WRITE_BEGIN(context->clientRing, imageSize);
-            GLRenderer_readPixels(currentRenderer, x, y, width, height, format, type, ringData);
+            if (raw) GLRenderer_readPixelsRaw(currentRenderer, x, y, width, height, format, type, ringData);
+            else GLRenderer_readPixels(currentRenderer, x, y, width, height, format, type, ringData);
             RING_WRITE_END(context->clientRing);
         }
     }
