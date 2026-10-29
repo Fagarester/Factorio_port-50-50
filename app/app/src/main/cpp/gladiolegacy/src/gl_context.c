@@ -345,11 +345,14 @@ GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
 }
 
 void destroyGLXContext(GLXContext* context) {
+    if (!context) return;
+    // The full teardown (GLClientState_destroy + GLRenderer_destroy) aborted the whole app with a Scudo "misaligned pointer when deallocating"
+    // from killAllConnections when the game was left. Only the GPU side is released here; the small CPU-side structures are left to the
+    // process (they are not shared with other contexts and the leak is bounded by the number of GL contexts a game session creates).
     GLX_CONTEXT_LOCK();
-    GLClientState_destroy(&context->renderer.clientState);
     EGLDisplay eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, context->eglContext);
-    GLRenderer_destroy(&context->renderer);
+    glDeleteBuffers(ARRAY_SIZE(context->renderer.bufferIds), context->renderer.bufferIds);
     eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     GLX_CONTEXT_UNLOCK();
     eglDestroyContext(eglDisplay, context->eglContext);

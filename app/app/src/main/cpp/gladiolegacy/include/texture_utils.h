@@ -228,8 +228,10 @@ static inline void convertTexImageFormat(uint32_t target, int* internalformat, u
     }
 
     if (isCompressedFormat(*internalformat) && imageSize == 0) {
-        *internalformat = GL_BGRA;
+        // storage for a texture that will be filled with decompressed BGRA data later: needs a SIZED internalformat in ES 3
+        *internalformat = GL_BGRA8_EXT;
         *format = GL_BGRA;
+        *type = GL_UNSIGNED_BYTE;
     }
     if (*type == GL_UNSIGNED_INT_8_8_8_8 || *type == GL_UNSIGNED_INT_8_8_8_8_REV) {
         *type = GL_UNSIGNED_BYTE;

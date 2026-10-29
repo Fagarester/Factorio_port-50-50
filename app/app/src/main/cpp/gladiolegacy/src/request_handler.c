@@ -521,7 +521,7 @@ void gd_handle_glCompressedTexImage2D(GLContext* context) {
     }
 
     target = parseTexTarget(target);
-    glTexImage2D(target, level, GL_BGRA, width, height, border, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
+    glTexImage2D(target, level, GL_BGRA8_EXT, width, height, border, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
     MEMFREE(decompressedData);
 
     GLTexture* texture = GLTexture_getBound(target);
@@ -2696,8 +2696,17 @@ void gd_handle_glTexImage2D(GLContext* context) {
     else {
         void* imageData = NULL;
         RING_READ_BEGIN(context->serverRing, imageData, imageSize);
+        GLint requestedInternalformat = internalformat;
+        GLenum requestedFormat = format, requestedType = type;
         convertTexImageFormat(target, &internalformat, &format, &type, &imageData, imageSize);
+        glGetError();
         glTexImage2D(target, level, internalformat, width, height, border, format, type, imageData);
+        GLenum texError = glGetError();
+        if (texError != GL_NO_ERROR) {
+            static int reported = 0;
+            if (reported++ < 12) gladioServerLog("glTexImage2D error 0x%x: target=0x%x level=%d %dx%d border=%d internalformat 0x%x->0x%x format 0x%x->0x%x type 0x%x->0x%x imageSize=%d",
+                texError, target, level, width, height, border, requestedInternalformat, internalformat, requestedFormat, format, requestedType, type, imageSize);
+        }
         RING_READ_END(context->serverRing);
     }
 
@@ -2768,7 +2777,7 @@ void gd_handle_glTexImage3D(GLContext* context) {
                 RING_READ_END(context->serverRing);
             }
         }
-        glTexImage3D(target, level, GL_BGRA, width, height, depth, border, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
+        glTexImage3D(target, level, GL_BGRA8_EXT, width, height, depth, border, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
         MEMFREE(decompressedData);
         return;
     }

@@ -648,6 +648,9 @@
 #define GL_BLEND_SRC_ALPHA 0x80CB
 #define GL_BGR 0x80E0
 #define GL_BGRA 0x80E1
+#ifndef GL_BGRA8_EXT
+#define GL_BGRA8_EXT 0x93A1 // sized BGRA internal format (EXT_texture_format_BGRA8888); the unsized GL_BGRA is INVALID_VALUE as an ES 3 internalformat
+#endif
 #define GL_MAX_ELEMENTS_VERTICES 0x80E8
 #define GL_MAX_ELEMENTS_INDICES 0x80E9
 #define GL_POINT_SIZE_MIN 0x8126
