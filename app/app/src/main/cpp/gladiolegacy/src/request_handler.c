@@ -1390,6 +1390,8 @@ void gd_handle_glGetCompressedTexImage(GLContext* context) {
 
     int compressedSize;
     void* compressedData = GLRenderer_getCompressedTexImage(currentRenderer, target, level, &compressedSize);
+    { static int rep = 0; GLTexture* t = GLTexture_getBound(parseTexTarget(target));
+      if (rep++ < 20) gladioServerLog("glGetCompressedTexImage target=0x%x level=%d tex=%dx%d originFormat=0x%x -> size=%d", target, level, t ? t->width : -1, t ? t->height : -1, t ? t->originFormat : 0, compressedSize); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_COMPRESSED_TEX_IMAGE, &compressedSize, sizeof(int));
 
     if (compressedSize > 0) {
@@ -1719,6 +1721,7 @@ void gd_handle_glGetTexImage(GLContext* context) {
 
     int imageSize;
     void* pixels = GLRenderer_getTexImage(currentRenderer, target, level, format, type, &imageSize);
+    { static int rep = 0; if (rep++ < 20) gladioServerLog("glGetTexImage target=0x%x level=%d format=0x%x type=0x%x -> size=%d", target, level, format, type, imageSize); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_TEX_IMAGE, &imageSize, sizeof(int));
 
     if (imageSize > 0) {
@@ -1734,6 +1737,7 @@ void gd_handle_glGetTexLevelParameterfv(GLContext* context) {
 
     GLfloat result;
     GLRenderer_getTexParameter(currentRenderer, target, level, pname, &result);
+    { static int rep = 0; if (rep++ < 40) gladioServerLog("glGetTexLevelParameter target=0x%x level=%d pname=0x%x -> %g", target, level, pname, (double)result); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_TEX_LEVEL_PARAMETERFV, &result, sizeof(GLfloat));
 }
 

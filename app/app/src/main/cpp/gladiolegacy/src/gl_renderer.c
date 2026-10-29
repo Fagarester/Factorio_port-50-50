@@ -1206,10 +1206,10 @@ void GLRenderer_getTexParameter(GLRenderer* renderer, GLenum target, GLint level
             *params = 0;
             break;
         case GL_TEXTURE_COMPRESSED:
-            *params = isCompressedFormat(texture->originFormat);
+            *params = isCompressedFormatForQuery(texture->originFormat);
             break;
         case GL_TEXTURE_COMPRESSED_IMAGE_SIZE:
-            if (isCompressedFormat(texture->originFormat)) {
+            if (isCompressedFormatForQuery(texture->originFormat)) {
                 *params = getCompressedImageSize(texture->originFormat, texture->width, texture->height, level);
             }
             else *params = texture->width * texture->height * 4;

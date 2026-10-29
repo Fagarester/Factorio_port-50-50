@@ -1,3 +1,11 @@
+# Порт v36 — Gladio: RGTC в запросах размера и обратном чтении
+В v35 `0x502` исчез, но игра падала на своей проверке `VideoBitmapOpenGL.cpp:267: data.size() == size + offset`. Для RGTC-текстур Gladio отвечал `GL_TEXTURE_COMPRESSED = 0` и `GL_TEXTURE_COMPRESSED_IMAGE_SIZE = w*h*4`, а `glGetCompressedTexImage` не умел RGTC.
+- `isCompressedFormatForQuery()` (DXT + RGTC) для `GL_TEXTURE_COMPRESSED` и `..._IMAGE_SIZE`; `isCompressedFormat()` не менялся, потому что от него зависит путь «BGRA8 для хранилища».
+- `getCompressedImageSize`: BC4 = 8 байт на блок, BC5 = 16.
+- `compressTexImage2D`: BC4/BC5 из RGBA-чтения через `stb_compress_bc4_block`/`bc5`.
+- Диагностика: в лог игры идут первые вызовы `glGetCompressedTexImage`, `glGetTexImage`, `glGetTexLevelParameter` (параметры и ответ).
+- Не проверено на устройстве.
+
 # Порт v35 — Gladio: BC4/BC5 в glCompressedTexImage2D/SubImage2D
 После v34 `glTexImage2D` с RGTC проходит, но дальше падало `glError 0x502 after request code 159` (glCompressedTexSubImage2D): текстура теперь R8/RG8, а обработчик всегда лил BGRA, и декодер считал BC4/BC5 как «bcN=0».
 - Добавлен декодер RGTC (беззнаковые 0x8DBB/0x8DBD) в `compressed_texture.c` → плотный R8/RG8.

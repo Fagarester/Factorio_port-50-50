@@ -5,6 +5,28 @@
 #include "bc_decoder.h"
 
 void compressTexImage2D(uint32_t format, int width, int height, void* imageData, void* compressedData) {
+    if (format == 0x8DBB || format == 0x8DBD) {
+        // source is RGBA8 (R8/RG8 texture read back as RGBA): BC4 uses R, BC5 uses R+G
+        bool two = format == 0x8DBD;
+        const uint8_t* rgba = imageData;
+        uint8_t* out = compressedData;
+        for (int y = 0; y < height; y += 4) {
+            for (int x = 0; x < width; x += 4) {
+                uint8_t blk[32];
+                for (int i = 0; i < 16; i++) {
+                    int px = x + (i & 3), py = y + (i >> 2);
+                    if (px >= width) px = width - 1;
+                    if (py >= height) py = height - 1;
+                    const uint8_t* sp = rgba + ((size_t)py * width + px) * 4;
+                    if (two) { blk[i * 2] = sp[0]; blk[i * 2 + 1] = sp[1]; }
+                    else blk[i] = sp[0];
+                }
+                if (two) { stb_compress_bc5_block(out, blk); out += 16; }
+                else { stb_compress_bc4_block(out, blk); out += 8; }
+            }
+        }
+        return;
+    }
     static const uint8_t offsets[16][2] = {{0, 0}, {1, 0}, {2, 0}, {3, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {0, 3}, {1, 3}, {2, 3}, {3, 3}};
     int blockSize = format == GL_COMPRESSED_RGB_S3TC_DXT1_EXT || format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ? 8 : 16;
     int alpha = (format != GL_COMPRESSED_RGB_S3TC_DXT1_EXT && blockSize == 16) ? 1 : 0;
