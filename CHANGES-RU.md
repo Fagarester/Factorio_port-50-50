@@ -1,3 +1,10 @@
+# Порт v34 — Gladio: glTexImage2D с RGTC (BC4/BC5) → INVALID_VALUE
+Лог Adreno 830: атласы создаются с internalformat `0x8dbd` (RG_RGTC2) и данными RG/UBYTE, `convertTexImageFormat` сбрасывал его в `GL_NONE` (в таблице каналов нет RGTC, а в fallback нет `GL_RG`), `glTexImage2D` давал `0x501`, затем `0x502` и abort в `VideoBitmapOpenGL.cpp:267`.
+- RGTC1/2 (и знаковые) для обычного хранилища отображаются в `R8`/`RG8`/`R8_SNORM`/`RG8_SNORM`.
+- В fallback добавлен `case GL_RG` → `GL_RG8`.
+- Файл: `app/app/src/main/cpp/gladiolegacy/include/texture_utils.h`.
+- Не проверено на устройстве. Следующий подозреваемый: `0x502` на request 159 (DXT5/RGTC через PBO).
+
 # v38 — Gladio: «Failed to load glad»
 Лог с телефона: окно создаётся, GLX-запросы проходят, дальше `Error Util.cpp:81: Failed to load glad`.
 Причина: `glXGetProcAddressARB` в клиенте Gladio знал только имена `glX*` и для остальных возвращал NULL (Wine берёт GL-функции прямо из библиотеки через dlsym, SDL и glad игры запрашивают через glXGetProcAddress все, включая `glGetString`). Теперь для имён `gl*` функция ищется в самой библиотеке (`dladdr` + `dlopen(RTLD_NOLOAD)` + `dlsym`).

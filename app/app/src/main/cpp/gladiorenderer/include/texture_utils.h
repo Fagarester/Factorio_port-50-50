@@ -231,6 +231,13 @@ static inline void convertTexImageFormat(uint32_t target, int* internalformat, u
         *internalformat = GL_BGRA;
         *format = GL_BGRA;
     }
+    // RGTC (BC4/BC5) as internalformat for plain data/storage: GLES has no such formats here, use sized R8/RG8
+    switch (*internalformat) {
+        case 0x8DBB: *internalformat = GL_R8;  if (*format == GL_RG) *format = GL_RED; break; /* RED_RGTC1 */
+        case 0x8DBC: *internalformat = GL_R8_SNORM;  break;                                    /* SIGNED_RED_RGTC1 */
+        case 0x8DBD: *internalformat = GL_RG8; break;                                          /* RG_RGTC2 */
+        case 0x8DBE: *internalformat = GL_RG8_SNORM; break;                                    /* SIGNED_RG_RGTC2 */
+    }
     if (*type == GL_UNSIGNED_INT_8_8_8_8 || *type == GL_UNSIGNED_INT_8_8_8_8_REV) {
         *type = GL_UNSIGNED_BYTE;
     }
@@ -339,6 +346,7 @@ static inline void convertTexImageFormat(uint32_t target, int* internalformat, u
                 *format = GL_RED;
                 break;
             case GL_LUMINANCE_ALPHA:
+            case GL_RG:
                 *internalformat = GL_RG8;
                 *format = GL_RG;
                 break;
