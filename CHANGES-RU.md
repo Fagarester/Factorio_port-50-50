@@ -321,3 +321,7 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 Лог v23: `gladio-server:` не появилось вообще, `glGenBuffers` после `glDeleteBuffers 87` снова дал id 0 без сообщений. `GL_RECV_CHECKED`/`GL_SEND_CHECKED` при неудаче молча выходят из функции (переменная игры остаётся нулём) — это совпадает с симптомом.
 - Клиент: `gladio: <функция>: the reply could not be read (ring exit flag: N)` и `... request N could not be sent ...` (до 10 раз каждое).
 - Сервер: при `glXMakeCurrent` присылает `server channel ok; GLES: <версия> / <GPU>` — проверка канала и настоящий драйвер. **Нужна пересборка APK и Gladio.**
+
+## Жизненный цикл GL-контекстов в логе (v25, только клиент Gladio)
+Лог v24: канал сервера работает (`server channel ok; GLES: OpenGL ES 3.2 ... / Adreno (TM) 830`, приветствие пришло дважды — два GL-потока). Сервер сообщил `glError 0x501` (INVALID_VALUE) после запроса 445 (`glTexImage2D`) несколько раз, а затем `glCompressedTexSubImage2D / glGenBuffers / glReadPixels / glGetTexImage: the reply could not be read (ring exit flag: 1)` — серверная нить контекста остановлена (`destroyGLContext` ставит `RING_STATUS_EXIT`), а клиент продолжает им пользоваться. Именно поэтому `glGenBuffers` «возвращает 0».
+- Клиент печатает: `create GL context for thread N`, `destroy GL context of thread N`, `glXMakeCurrent thread=N drawable=.. ctx=.. (id ..) threadContext=..`, `glXDestroyContext thread=N ctx=..`, а в ошибках чтения/отправки — `[thread N]`. **APK пересобирать не нужно.**
