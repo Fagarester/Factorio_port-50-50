@@ -1,3 +1,10 @@
+# Порт v35 — Gladio: BC4/BC5 в glCompressedTexImage2D/SubImage2D
+После v34 `glTexImage2D` с RGTC проходит, но дальше падало `glError 0x502 after request code 159` (glCompressedTexSubImage2D): текстура теперь R8/RG8, а обработчик всегда лил BGRA, и декодер считал BC4/BC5 как «bcN=0».
+- Добавлен декодер RGTC (беззнаковые 0x8DBB/0x8DBD) в `compressed_texture.c` → плотный R8/RG8.
+- `glCompressedTexImage2D`/`glCompressedTexSubImage2D` для RGTC грузят `GL_RED`/`GL_RG`, а не BGRA.
+- Знаковые RGTC (0x8DBC/0x8DBE) не декодируются. Не проверено на устройстве.
+- Диагностика: строка «Port build» в driver-report теперь v35, versionCode 35.
+
 # Порт v34 — Gladio: glTexImage2D с RGTC (BC4/BC5) → INVALID_VALUE
 Лог Adreno 830: атласы создаются с internalformat `0x8dbd` (RG_RGTC2) и данными RG/UBYTE, `convertTexImageFormat` сбрасывал его в `GL_NONE` (в таблице каналов нет RGTC, а в fallback нет `GL_RG`), `glTexImage2D` давал `0x501`, затем `0x502` и abort в `VideoBitmapOpenGL.cpp:267`.
 - RGTC1/2 (и знаковые) для обычного хранилища отображаются в `R8`/`RG8`/`R8_SNORM`/`RG8_SNORM`.

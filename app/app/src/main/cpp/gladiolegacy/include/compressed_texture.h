@@ -13,4 +13,8 @@ static inline int getCompressedImageSize(uint32_t format, int width, int height,
 extern void compressTexImage2D(uint32_t format, int width, int height, void* imageData, void* compressedData);
 extern void* decompressTexImage2D(uint32_t format, int width, int height, void* imageData, ThreadPool* threadPool);
 
+bool isRGTCFormat(uint32_t format);
+int rgtcChannels(uint32_t format);
+void* decompressRGTC(uint32_t format, int width, int height, const void* imageData);
+
 #endif

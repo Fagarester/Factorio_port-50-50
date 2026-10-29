@@ -504,23 +504,30 @@ void gd_handle_glCompressedTexImage2D(GLContext* context) {
     GLint border = ArrayBuffer_getInt(&context->inputBuffer);
     GLint imageSize = ArrayBuffer_getInt(&context->inputBuffer);
 
+    bool rgtc = isRGTCFormat(internalformat);
     void* decompressedData = NULL;
     if (imageSize > 0) {
         GLBuffer* pixelUnpackBuffer = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER);
         if (pixelUnpackBuffer) {
             uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
-            decompressedData = decompressTexImage2D(internalformat, width, height, pixelUnpackBuffer->mappedData + pointer, context->threadPool);
+            void* src = pixelUnpackBuffer->mappedData + pointer;
+            decompressedData = rgtc ? decompressRGTC(internalformat, width, height, src) : decompressTexImage2D(internalformat, width, height, src, context->threadPool);
             gl_send(context->clientRing, REQUEST_CODE_GL_COMPRESSED_TEX_IMAGE2D, NULL, 0);
         }
         else {
             void* imageData = NULL;
             RING_READ_BEGIN(context->serverRing, imageData, imageSize);
-            decompressedData = decompressTexImage2D(internalformat, width, height, imageData, context->threadPool);
+            decompressedData = rgtc ? decompressRGTC(internalformat, width, height, imageData) : decompressTexImage2D(internalformat, width, height, imageData, context->threadPool);
             RING_READ_END(context->serverRing);
         }
     }
 
     target = parseTexTarget(target);
+    if (rgtc) {
+        int ch = rgtcChannels(internalformat);
+        glTexImage2D(target, level, ch == 2 ? GL_RG8 : GL_R8, width, height, border, ch == 2 ? GL_RG : GL_RED, GL_UNSIGNED_BYTE, decompressedData);
+    }
+    else
     glTexImage2D(target, level, GL_BGRA8_EXT, width, height, border, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
     MEMFREE(decompressedData);
 
@@ -543,22 +550,28 @@ void gd_handle_glCompressedTexSubImage2D(GLContext* context) {
     GLenum format = ArrayBuffer_getInt(&context->inputBuffer);
     GLint imageSize = ArrayBuffer_getInt(&context->inputBuffer);
 
+    bool rgtc = isRGTCFormat(format);
     void* decompressedData = NULL;
     if (imageSize > 0) {
         GLBuffer* pixelUnpackBuffer = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER);
         if (pixelUnpackBuffer) {
             uint64_t pointer = ArrayBuffer_getInt(&context->inputBuffer);
-            decompressedData = decompressTexImage2D(format, width, height, pixelUnpackBuffer->mappedData + pointer, context->threadPool);
+            void* src = pixelUnpackBuffer->mappedData + pointer;
+            decompressedData = rgtc ? decompressRGTC(format, width, height, src) : decompressTexImage2D(format, width, height, src, context->threadPool);
             gl_send(context->clientRing, REQUEST_CODE_GL_COMPRESSED_TEX_SUB_IMAGE2D, NULL, 0);
         }
         else {
             void* imageData = NULL;
             RING_READ_BEGIN(context->serverRing, imageData, imageSize);
-            decompressedData = decompressTexImage2D(format, width, height, imageData, context->threadPool);
+            decompressedData = rgtc ? decompressRGTC(format, width, height, imageData) : decompressTexImage2D(format, width, height, imageData, context->threadPool);
             RING_READ_END(context->serverRing);
         }
     }
 
+    if (rgtc) {
+        glTexSubImage2D(parseTexTarget(target), level, xoffset, yoffset, width, height, rgtcChannels(format) == 2 ? GL_RG : GL_RED, GL_UNSIGNED_BYTE, decompressedData);
+    }
+    else
     glTexSubImage2D(parseTexTarget(target), level, xoffset, yoffset, width, height, GL_BGRA, GL_UNSIGNED_BYTE, decompressedData);
     MEMFREE(decompressedData);
 }
