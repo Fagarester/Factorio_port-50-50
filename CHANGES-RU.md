@@ -336,3 +336,6 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 
 ## Метка сборки в driver-report (v28)
 Лог v27: ни одной строки `xserver:GLX createGLContext ...` (она есть только в v27) — похоже, запускался APK без этих правок, а `versionCode 34` не меняется. В `driver-report.txt` добавлена строка `Port build: v28 (...)`. Содержимое Java-диагностики то же, что в v27.
+
+## Java-трассировка перенесена в LegacyGLXExtension (v29)
+Лог v28: метка `Port build: v28` есть, но `xserver:GLX ...` строк нет — в режиме Gladio X-сервер использует `LegacyGLXExtension` (своя нативная библиотека `gladiolegacy`), а не `GLXExtension`, куда я добавлял логи в v26/v27/v28. Теперь те же сообщения (`GLX createGLContext`, `GLX native destroyGLContext ... | <стек>`, `GLX client destroyed`) есть в `LegacyGLXExtension`. **Только APK.**

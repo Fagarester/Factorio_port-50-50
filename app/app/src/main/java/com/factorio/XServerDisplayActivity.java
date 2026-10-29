@@ -353,7 +353,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             StringBuilder sb = new StringBuilder();
             sb.append("Driver report ").append(new java.util.Date()).append("\n");
             sb.append("App version code: ").append(AppUtils.getVersionCode(this)).append("\n");
-            sb.append("Port build: v28 (java GLX destroy trace, xserver:conn log)\n\n");
+            sb.append("Port build: v29 (LegacyGLX destroy trace, xserver:conn log)\n\n");
 
             if (GraphicsDrivers.isLegacyMode(graphicsDriver)) {
                 sb.append("BLOCK: Vortek + ").append(GraphicsDrivers.getName(graphicsDriver[1])).append(" (original Winlator stack)\n");
