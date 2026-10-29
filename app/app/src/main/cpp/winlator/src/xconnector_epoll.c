@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <jni.h>
 #include <sys/epoll.h>
@@ -8,7 +9,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <string.h>
-#include <errno.h>
 #include <malloc.h>
 #include <jni.h>
 #include <android/log.h>
@@ -96,42 +96,22 @@ static void removeFdFromEpoll(int epollFd, int fd) {
     epoll_ctl(epollFd, EPOLL_CTL_DEL, fd, NULL);
 }
 
-// v30: poll() returns -1 with errno == EINTR whenever a signal handler runs on this thread.
-// Previously that was treated as a fatal error: the client thread ended and the X connection was
-// shut down (which destroyed the connection's GL contexts: "client fd=N gone" -> RING_STATUS_EXIT).
-// Now EINTR is simply retried; only real errors end the connection.
 static int waitForSocketRead(jint clientFd, jint shutdownFd) {
-    struct pollfd pfds[2];
+    struct pollfd pfds[2] = {0};
+    pfds[0].fd = clientFd;
+    pfds[0].events = POLLIN;
+
+    pfds[1].fd = shutdownFd;
+    pfds[1].events = POLLIN;
+
     int res;
-    int interrupted = 0;
-
-    for (;;) {
-        memset(pfds, 0, sizeof(pfds));
-        pfds[0].fd = clientFd;
-        pfds[0].events = POLLIN;
-
-        pfds[1].fd = shutdownFd;
-        pfds[1].events = POLLIN;
-
+    // a signal (EINTR) interrupts poll: that is not an error, retrying is the only correct reaction (otherwise the connection is dropped)
+    do {
         res = poll(pfds, 2, -1);
-        if (res >= 0) break;
-
-        if (errno == EINTR) {
-            if (interrupted++ < 3) __android_log_print(ANDROID_LOG_WARN, "XConnector", "poll(fd=%d) interrupted by a signal (EINTR), retrying", (int)clientFd);
-            continue;
-        }
-
-        __android_log_print(ANDROID_LOG_ERROR, "XConnector", "poll(fd=%d) failed: errno=%d (%s), closing the connection", (int)clientFd, errno, strerror(errno));
-        return -1;
     }
-
-    if (pfds[1].revents & POLLIN) return -1;
-    if (pfds[0].revents & POLLNVAL) {
-        __android_log_print(ANDROID_LOG_ERROR, "XConnector", "poll(fd=%d): POLLNVAL, closing the connection", (int)clientFd);
-        return -1;
-    }
-    // POLLHUP/POLLERR without POLLIN used to return 0 and spin; let the reader see EOF/error and close cleanly
-    return (pfds[0].revents & (POLLIN | POLLHUP | POLLERR)) ? 1 : 0;
+    while (res < 0 && errno == EINTR);
+    if (res < 0 || (pfds[1].revents & POLLIN)) return -1;
+    return (pfds[0].revents & POLLIN) ? 1 : 0;
 }
 
 static void requestShutdown(int fd) {
@@ -255,8 +235,8 @@ static void* epollThread(void* param) {
     while (connector->running) {
         int numFds = epoll_wait(connector->epollFd, events, MAX_EVENTS, -1);
         if (numFds < 0) {
-            if (errno == EINTR) continue; // v30: a signal must not stop the accept loop (it would kill every connection)
-            __android_log_print(ANDROID_LOG_ERROR, "XConnector", "epoll_wait failed: errno=%d (%s), stopping the X connector", errno, strerror(errno));
+            // EINTR is only a signal arriving: leaving the loop here kills ALL X connections (killAllConnections) and with them the GL contexts
+            if (errno == EINTR) continue;
             break;
         }
         for (int i = 0; i < numFds; i++) {

@@ -339,3 +339,10 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 
 ## Java-трассировка перенесена в LegacyGLXExtension (v29)
 Лог v28: метка `Port build: v28` есть, но `xserver:GLX ...` строк нет — в режиме Gladio X-сервер использует `LegacyGLXExtension` (своя нативная библиотека `gladiolegacy`), а не `GLXExtension`, куда я добавлял логи в v26/v27/v28. Теперь те же сообщения (`GLX createGLContext`, `GLX native destroyGLContext ... | <стек>`, `GLX client destroyed`) есть в `LegacyGLXExtension`. **Только APK.**
+
+## v32: EINTR в X-коннекторе + краш glReadPixels (объединение с работой из другого чата)
+**Корневые причины (подтверждены логами):**
+1. `xconnector_epoll.c`: `epoll_wait` / `poll` возвращали -1 при `EINTR` (просто пришёл сигнал), цикл выходил, вызывался `killAllConnections` — закрывались ВСЕ X-соединения разом, а с ними GL-контексты Gladio (в логе: три `xserver:conn ... connection shutdown` подряд, затем `GLX native destroyGLContext ... client fd=N gone`). Теперь `EINTR` повторяет вызов (`epollThread`, `waitForSocketRead`).
+2. `gl_renderer.c` / `request_handler.c` (патч v31 из другого чата): Factorio сжимает текстуры на GPU (RGBA32UI/RG32UI), читает результат `glReadPixels` в PBO и грузит через `glCompressedTexSubImage2D`. Сервер подменял формат на RGBA/UNSIGNED_BYTE, а при привязанном `GL_PIXEL_PACK_BUFFER` копировал из NULL (SIGSEGV в `memmove`, `GLRenderer_readPixels+508` — убивал процесс приложения). Теперь: кэш чтения не используется с pack-буфером, целочисленные/float-форматы читаются как запрошено (`GLRenderer_readPixelsRaw`) и копируются в общую память буфера, BGRA-перестановка безопасна, утечка кэша исправлена.
+- В `driver-report.txt`: `Port build: v32 (...)`. **Нужна пересборка APK (серверная часть + Java). Gladio клиент не менялся (2.9).**
+- Не проверено на устройстве: открытым остаётся `glError 0x502` после запроса 159 (`glCompressedTexSubImage2D`) из лога v29 — если после v32 он останется, смотреть путь загрузки из PBO.
