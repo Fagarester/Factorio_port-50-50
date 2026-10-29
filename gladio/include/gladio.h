@@ -187,7 +187,8 @@ static inline bool gl_recv(RingBuffer* ring, short* outRequestCode, ArrayBuffer*
     if (!result) return false;
 
     if (outRequestCode != NULL) *outRequestCode = *(short*)(header + 0);
-    int size = *(int*)(header + 2);
+    uint32_t rawSize = *(uint32_t*)(header + 2);
+    int size = (int)(rawSize & 0x7fffffffu);
 
     if (ring->peer && ring->peer->lastCode != *(short*)(header + 0)) {
         // a reply that does not belong to the last request: the reply queue is out of sync (an earlier request got no reply read, or an extra one was sent)
@@ -196,6 +197,19 @@ static inline bool gl_recv(RingBuffer* ring, short* outRequestCode, ArrayBuffer*
             println("gladio: reply mismatch: last request %d, reply code %d (size %d)", (int)ring->peer->lastCode, (int)*(short*)(header + 0), size);
             if (mismatches == 1) gl_trace_dump_recent(80);
         }
+    }
+
+    if (rawSize & 0x80000000u) {
+        // the server attached a text for the game's log: [uint16 length][text]
+        uint16_t textLength = 0;
+        if (!RingBuffer_read(ring, &textLength, 2)) return false;
+        char text[520] = {0};
+        uint16_t keep = textLength < sizeof(text) - 1 ? textLength : sizeof(text) - 1;
+        if (!RingBuffer_read(ring, text, keep)) return false;
+        for (int skip = textLength - keep; skip > 0; skip--) { char dummy; if (!RingBuffer_read(ring, &dummy, 1)) return false; }
+        println("gladio-server: %s", text);
+        size -= 2 + textLength;
+        if (size < 0) size = 0;
     }
 
     ArrayBuffer_rewind(data);

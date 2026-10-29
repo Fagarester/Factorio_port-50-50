@@ -308,3 +308,8 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 Лог v20 (`gladio-recent`): сначала `glGenBuffers`→87, PBO-загрузка DXT5 с `pbo=87` проходит; затем `glDeleteBuffers 87`, `glGenBuffers 1` и сразу `glBindBuffer ... id=0` — игра получила id 0 (ответ на `glGenBuffers` пустой/не тот: `memcpy(buffers, inputBuffer.buffer, inputBuffer.size)` с размером 0 оставляет 0). После этого загрузка текстуры идёт с `pbo=0`, `data=NULL`, и игра прерывается.
 - `gl_recv` сверяет код ответа с кодом последнего запроса (`RingBuffer.lastCode`) и при несовпадении печатает `gladio: reply mismatch: last request N, reply code M (size S)` + последние 80 вызовов.
 - `glGenBuffers` печатает `gladio: glGenBuffers(n) got a reply of K bytes`, если ответ не `n*4` байт. **APK пересобирать не нужно.**
+
+## Канал «сервер → logs.txt» (v22)
+Лог v21: `reply mismatch` / `got a reply of` не сработали — очередь ответов в порядке, а `glGenBuffers` после `glDeleteBuffers 87` всё равно вернул id 0 (то есть 0 вернул сервер; сообщения сервера уходили только в logcat).
+- Сервер (`gladio.h`, `request_handler.c`, `gl_context.c`): `gladioServerLog()` складывает текст, а `gl_send` прикрепляет его к ближайшему ответу (флаг `0x80000000` в размере, перед данными `[uint16 длина][текст]`). Клиент (`gl_recv`) печатает его как `gladio-server: ...`.
+- Сервер сообщает: `glGenBuffers(n) returned id 0 ... glError=0x..` (с повторной попыткой), а также первые 40 GL-ошибок после запросов (`glError 0x... after REQUEST_...`, проверяются первые 30000 запросов). **Нужна пересборка APK и Gladio.**

@@ -1,4 +1,24 @@
 #include "request_handler.h"
+#include <stdarg.h>
+
+__thread char gladioServerMessage[480];
+__thread int gladioServerMessageLen = 0;
+
+void gladioServerLog(const char* fmt, ...) {
+    int used = gladioServerMessageLen;
+    if (used >= (int)sizeof(gladioServerMessage) - 8) return;
+    va_list args;
+    va_start(args, fmt);
+    int written = vsnprintf(gladioServerMessage + used, sizeof(gladioServerMessage) - used - 2, fmt, args);
+    va_end(args);
+    if (written < 0) return;
+    used += written;
+    if (used > (int)sizeof(gladioServerMessage) - 3) used = sizeof(gladioServerMessage) - 3;
+    gladioServerMessage[used++] = ' ';
+    gladioServerMessage[used++] = '|';
+    gladioServerMessage[used++] = ' ';
+    gladioServerMessageLen = used;
+}
 #include "shader_converter.h"
 #include "gl_formats.h"
 #include "attrib_stack.h"
@@ -1185,7 +1205,18 @@ void gd_handle_glGenBuffers(GLContext* context) {
     GLsizei n = ArrayBuffer_getInt(&context->inputBuffer);
 
     GLuint buffers[n];
+    for (int i = 0; i < n; i++) buffers[i] = 0;
     glGenBuffers(n, buffers);
+    for (int i = 0; i < n; i++) {
+        if (buffers[i] == 0) {
+            // the driver generated nothing: report why, try once more
+            GLenum error = glGetError();
+            gladioServerLog("glGenBuffers(%d) returned id 0 at index %d, glError=0x%x", n, i, error);
+            glGenBuffers(n, buffers);
+            gladioServerLog("retry gave %u", buffers[0]);
+            break;
+        }
+    }
     gl_send(context->clientRing, REQUEST_CODE_GL_GEN_BUFFERS, buffers, sizeof(buffers));
 }
 
