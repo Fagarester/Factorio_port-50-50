@@ -99,6 +99,7 @@ public class GLXExtension extends Extension {
 
     private void destroyGLContext(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int contextId = inputStream.readInt();
+        client.xServer.debugPrint("GLX destroyGLContext id="+contextId+" fd="+client.fd);
 
         SparseLongArray contexts = clientGLContexts.get(client.fd);
         if (contexts == null) throw new GLXBadContext();
@@ -475,6 +476,7 @@ public class GLXExtension extends Extension {
     private void destroyAllGLContexts(int clientFd) {
         synchronized (clientGLContexts) {
             SparseLongArray contexts = clientGLContexts.get(clientFd);
+            xServer.debugPrint("GLX destroyAllGLContexts fd="+clientFd+" contexts="+(contexts != null ? contexts.size() : 0));
             if (contexts != null) {
                 for (int i = 0; i < contexts.size(); i++) destroyGLContext(contexts.valueAt(i));
                 contexts.clear();
