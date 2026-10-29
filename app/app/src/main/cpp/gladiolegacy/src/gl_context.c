@@ -179,6 +179,10 @@ static void* requestHandlerThread(void* param) {
                 }
 
                 setCurrentRenderWindow(context, windowId);
+                {
+                    static int helloSent = 0;
+                    if (helloSent++ < 2) gladioServerLog("server channel ok; GLES: %s / %s", (const char*)glGetString(GL_VERSION), (const char*)glGetString(GL_RENDERER));
+                }
                 gl_send(context->clientRing, REQUEST_CODE_SET_CURRENT_RENDER_WINDOW, NULL, 0);
                 break;
             }

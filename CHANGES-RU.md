@@ -316,3 +316,8 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 
 ## Исправление сборки v22 (v23)
 Сборка APK v22 упала на линковке `libgladiolegacy.so`: `undefined symbol: requestCodeToString` — функция определена только при `DEBUG_MODE` (`request_codes.h`), а я вызвал её в ветке без отладки (`gl_context.c`). Теперь пишется числовой код запроса: `glError 0x... after request code N`.
+
+## Сообщения о неудачной отправке/чтении + приветствие сервера (v24)
+Лог v23: `gladio-server:` не появилось вообще, `glGenBuffers` после `glDeleteBuffers 87` снова дал id 0 без сообщений. `GL_RECV_CHECKED`/`GL_SEND_CHECKED` при неудаче молча выходят из функции (переменная игры остаётся нулём) — это совпадает с симптомом.
+- Клиент: `gladio: <функция>: the reply could not be read (ring exit flag: N)` и `... request N could not be sent ...` (до 10 раз каждое).
+- Сервер: при `glXMakeCurrent` присылает `server channel ok; GLES: <версия> / <GPU>` — проверка канала и настоящий драйвер. **Нужна пересборка APK и Gladio.**

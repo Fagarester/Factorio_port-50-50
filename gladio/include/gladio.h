@@ -39,6 +39,8 @@
 #define GL_SEND_CHECKED(requestCode, outputBuffer, bufferSize, ...) \
     do { \
         if (!gl_send(currentGLContext->serverRing, requestCode, outputBuffer, bufferSize)) { \
+            static int sendFailures = 0; \
+            if (sendFailures++ < 10) println("gladio: %s: request %d could not be sent (ring exit flag: %d)", __func__, (int)(requestCode), RingBuffer_hasStatus(currentGLContext->serverRing, RING_STATUS_EXIT) ? 1 : 0); \
             GL_CALL_UNLOCK(); \
             return __VA_OPT__(GL_FALSE); \
         } \
@@ -48,6 +50,8 @@
 #define GL_RECV_CHECKED(...) \
     do { \
         if (!gl_recv(currentGLContext->clientRing, NULL, &inputBuffer)) { \
+            static int recvFailures = 0; \
+            if (recvFailures++ < 10) println("gladio: %s: the reply could not be read (ring exit flag: %d)", __func__, RingBuffer_hasStatus(currentGLContext->clientRing, RING_STATUS_EXIT) ? 1 : 0); \
             GL_CALL_UNLOCK(); \
             return __VA_OPT__(GL_FALSE); \
         } \
