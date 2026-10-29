@@ -333,3 +333,6 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 ## Java: стек при любом уничтожении GL-контекста (v27)
 Лог v26: между `Loading 3D bitmaps: 21` и ошибками чтения закрылись три X-соединения (`xserver:conn fd=196/197/124: connection shutdown`), но `destroyAllGLContexts` / `destroyGLContext` не печатались — Java-сторона контекст не уничтожала (или это делает другой путь).
 - `GLXExtension`: все нативные уничтожения идут через `destroyGLContextLogged`, который пишет в `logs.txt` причину и стек вызовов (`xserver:GLX native destroyGLContext ptr=.. reason: .. | ..`); создание: `xserver:GLX createGLContext fd=.. contextId=.. ptr=..`; закрытие клиента: `xserver:GLX client destroyed fd=..`. **Только APK.**
+
+## Метка сборки в driver-report (v28)
+Лог v27: ни одной строки `xserver:GLX createGLContext ...` (она есть только в v27) — похоже, запускался APK без этих правок, а `versionCode 34` не меняется. В `driver-report.txt` добавлена строка `Port build: v28 (...)`. Содержимое Java-диагностики то же, что в v27.
