@@ -1,3 +1,10 @@
+# Порт v37 — быстрее старт: потоки загрузки спрайтов
+По логу v36 «Sprites loaded» наступает на 58,9 с (`Parallel sprite loader initialized (threads: 3, bitmaps: 8741)`), а все чтения `glGetTexImage` атласов укладываются в ~1 с. Узкое место — декодирование PNG на CPU, лаунчер писал `max-sprite-loading-threads=2`.
+- Значение по умолчанию теперь `clamp(ядра − 2, 2, 6)` (на 8 ядрах = 6).
+- Старый `config-native.ini` с `max-sprite-loading-threads=2` обновляется при запуске; любое другое значение игрока не трогается.
+- Переопределить можно переменной контейнера `NATIVE_GFX=max-sprite-loading-threads=N`.
+- Не проверено на устройстве; сравнивать время между `Parallel sprite loader initialized` и `Sprites loaded` (v36: 56 с).
+
 # Порт v36 — Gladio: RGTC в запросах размера и обратном чтении
 В v35 `0x502` исчез, но игра падала на своей проверке `VideoBitmapOpenGL.cpp:267: data.size() == size + offset`. Для RGTC-текстур Gladio отвечал `GL_TEXTURE_COMPRESSED = 0` и `GL_TEXTURE_COMPRESSED_IMAGE_SIZE = w*h*4`, а `glGetCompressedTexImage` не умел RGTC.
 - `isCompressedFormatForQuery()` (DXT + RGTC) для `GL_TEXTURE_COMPRESSED` и `..._IMAGE_SIZE`; `isCompressedFormat()` не менялся, потому что от него зависит путь «BGRA8 для хранилища».

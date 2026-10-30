@@ -12,7 +12,7 @@ android {
         applicationId 'com.factorio'
         minSdkVersion 26
         targetSdkVersion 28
-        versionCode 36
+        versionCode 37
         versionName "11.0-r34-bundled-opengl"
     }
 
