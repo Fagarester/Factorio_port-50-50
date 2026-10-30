@@ -150,7 +150,7 @@ public class Diagnostics {
             FileUtils.writeString(stateFile(context), state.toString());
         }
         catch (Exception e) {
-            ;
+            Log.w(TAG, "unable to write state", e);
         }
     }
 
@@ -203,7 +203,7 @@ public class Diagnostics {
             launchVariant(activity, runDir.getPath());
         }
         catch (Exception e) {
-            ;
+            Log.e(TAG, "start failed", e);
         }
     }
 
@@ -238,7 +238,7 @@ public class Diagnostics {
             FileUtils.writeString(new File(context.getFilesDir(), "diagnostics-config-path.txt"), configFile.getPath());
         }
         catch (Exception e) {
-            ;
+            Log.w(TAG, "config backup failed", e);
         }
     }
 
@@ -275,7 +275,7 @@ public class Diagnostics {
             }
         }
         catch (Exception e) {
-            ;
+            Log.e(TAG, "restore failed", e);
         }
         restoreConfig(context);
         stateFile(context).delete();
@@ -333,7 +333,7 @@ public class Diagnostics {
             return new Session(activity, state, variant, index, variants.size(), longMode);
         }
         catch (Exception e) {
-            ;
+            Log.e(TAG, "beginVariant failed", e);
             return null;
         }
     }
@@ -544,7 +544,7 @@ public class Diagnostics {
                 writeState(activity, state);
             }
             catch (Exception e) {
-                ;
+                Log.e(TAG, "finish failed", e);
             }
 
             activity.diagShutdown();
@@ -636,7 +636,7 @@ public class Diagnostics {
             return zipFile;
         }
         catch (Exception e) {
-            ;
+            Log.e(TAG, "zip failed", e);
             return null;
         }
     }

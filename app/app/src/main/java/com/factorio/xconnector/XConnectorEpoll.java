@@ -43,15 +43,9 @@ public class XConnectorEpoll {
         }
     }
 
-    // shows up in the game's log (logs.txt) next to the other "xserver:" lines
-    private void debugLog(ConnectedClient client, String message) {
-        if (client instanceof com.factorio.xserver.XClient) ((com.factorio.xserver.XClient)client).xServer.debugPrint("conn fd="+client.fd+": "+message);
-    }
-
     @Keep
     private void handleConnectionShutdown(Object tag) {
         ConnectedClient client = (ConnectedClient)tag;
-        debugLog(client, "connection shutdown");
         connectionHandler.handleConnectionShutdown(client);
         client.destroy();
 
@@ -85,15 +79,11 @@ public class XConnectorEpoll {
                     while (requestHandler.handleRequest(client)) activePosition = inputStream.getActivePosition();
                     inputStream.setActivePosition(activePosition);
                 }
-                else {
-                    debugLog(client, "no more data from the peer, closing");
-                    killConnection(client);
-                }
+                else killConnection(client);
             }
             else requestHandler.handleRequest(client);
         }
         catch (IOException e) {
-            debugLog(client, "request failed, closing: "+e);
             killConnection(client);
         }
     }

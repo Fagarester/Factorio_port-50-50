@@ -150,9 +150,6 @@ public class PresentExtension extends Extension {
 
                 int nonZero = sampleNonZero(src.getData());
                 presentCount++;
-                if (presentCount <= 40 || presentCount % 300 == 0 || nonZero == 0) {
-                    xServer.debugPrint("PRESENT #"+presentCount+" pixmap="+pixmapId+" "+src.width+"x"+src.height+" sampled non-zero pixels: "+nonZero+"/"+SAMPLES+(syncFd >= 0 ? " (dma-buf sync)" : ""));
-                }
 
                 // dma-buf (native OpenGL) only: a buffer that is still completely zero was not rendered yet.
                 // Keep the previous picture for up to 3 such frames in a row instead of flashing black; a real black

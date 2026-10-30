@@ -1,9 +1,4 @@
 #include "request_handler.h"
-#include <stdarg.h>
-
-__thread char gladioServerMessage[480];
-__thread int gladioServerMessageLen = 0;
-
 #include "shader_converter.h"
 #include "gl_formats.h"
 #include "attrib_stack.h"
@@ -1203,16 +1198,7 @@ void gd_handle_glGenBuffers(GLContext* context) {
     GLsizei n = ArrayBuffer_getInt(&context->inputBuffer);
 
     GLuint buffers[n];
-    for (int i = 0; i < n; i++) buffers[i] = 0;
     glGenBuffers(n, buffers);
-    for (int i = 0; i < n; i++) {
-        if (buffers[i] == 0) {
-            // the driver generated nothing: try once more
-            glGetError();
-            glGenBuffers(n, buffers);
-            break;
-        }
-    }
     gl_send(context->clientRing, REQUEST_CODE_GL_GEN_BUFFERS, buffers, sizeof(buffers));
 }
 
@@ -1532,12 +1518,6 @@ void gd_handle_glGetProgramInfoLog(GLContext* context) {
     GLchar infoLog[bufSize];
     GLsizei length = 0;
     glGetProgramInfoLog(program, bufSize, &length, infoLog);
-    if (ShaderConverter_lastError[0] && bufSize > 1) {
-        // the real GLES error of the converted shader (compilation is lazy, the plain log is empty)
-        snprintf(infoLog, bufSize, "%s", ShaderConverter_lastError);
-        length = strlen(infoLog);
-        ShaderConverter_lastError[0] = 0;
-    }
 
     ArrayBuffer_rewind(&context->outputBuffer);
     ArrayBuffer_putInt(&context->outputBuffer, length);
@@ -1610,12 +1590,6 @@ void gd_handle_glGetShaderInfoLog(GLContext* context) {
     GLchar infoLog[bufSize];
     GLsizei length = 0;
     glGetShaderInfoLog(shader, bufSize, &length, infoLog);
-    if (ShaderConverter_lastError[0] && bufSize > 1) {
-        // the real GLES error of the converted shader (compilation is lazy, the plain log is empty)
-        snprintf(infoLog, bufSize, "%s", ShaderConverter_lastError);
-        length = strlen(infoLog);
-        ShaderConverter_lastError[0] = 0;
-    }
 
     ArrayBuffer_rewind(&context->outputBuffer);
     ArrayBuffer_putInt(&context->outputBuffer, length);

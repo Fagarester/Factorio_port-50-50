@@ -146,17 +146,9 @@ void glBindAttribLocationARB(GLhandleARB programObj, GLuint index, const GLcharA
     glBindAttribLocation(programObj, index, name);
 }
 
-static GLuint lastArrayBufferBind = 0;
-static void* lastArrayBufferBindContext = NULL;
-
 void glBindBuffer(GLenum target, GLuint buffer) {
-    GL_TRACE("gladio-trace: glBindBuffer target=0x%x id=%u vao=%p", target, buffer, (void*)currentGLContext->clientState->vao);
     GL_CALL_LOCK();
     GLBuffer_setBound(target, buffer);
-    if (target == GL_ARRAY_BUFFER) {
-        lastArrayBufferBind = buffer;
-        lastArrayBufferBindContext = currentGLContext;
-    }
     ArrayBuffer_rewind(&outputBuffer);
     ArrayBuffer_putInt(&outputBuffer, target);
     ArrayBuffer_putInt(&outputBuffer, buffer);
@@ -292,7 +284,6 @@ void glBindTextureEXT(GLenum target, GLuint texture) {
 }
 
 void glBindVertexArray(GLuint array) {
-    GL_TRACE("gladio-trace: glBindVertexArray %u", array);
     GL_CALL_LOCK();
     GLVertexArrayObject_setBound(currentGLContext->clientState, array);
     gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_BIND_VERTEX_ARRAY, &array, sizeof(GLuint));
@@ -460,7 +451,6 @@ void glBlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GL
 }
 
 void glBufferData(GLenum target, GLsizeiptr size, const void* data, GLenum usage) {
-    GL_TRACE("gladio-trace: glBufferData target=0x%x size=%lld data=%p usage=0x%x bound=%u", target, (long long)size, data, usage, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->id : 0);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer) {
@@ -493,7 +483,6 @@ void glBufferDataARB(GLenum target, GLsizeiptrARB size, const void* data, GLenum
 }
 
 void glBufferStorage(GLenum target, GLsizeiptr size, const void* data, GLbitfield flags) {
-    GL_TRACE("gladio-trace: glBufferStorage target=0x%x size=%lld flags=0x%x bound=%u", target, (long long)size, flags, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->id : 0);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer) {
@@ -1281,7 +1270,6 @@ void glCullFace(GLenum mode) {
 }
 
 void glDeleteBuffers(GLsizei n, const GLuint* buffers) {
-    GL_TRACE("gladio-trace: glDeleteBuffers %d first=%u", n, n > 0 ? buffers[0] : 0);
     GL_CALL_LOCK();
     for (int i = 0; i < n; i++) GLBuffer_delete(buffers[i]);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1541,7 +1529,6 @@ void glDispatchComputeIndirect(GLintptr indirect) {
 }
 
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
-    GL_TRACE("glDrawArrays mode=0x%x first=%d count=%d vao=%p", mode, first, count, (void*)currentGLContext->clientState->vao);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(first, count, NULL, GL_NONE, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1558,7 +1545,6 @@ void glDrawArraysEXT(GLenum mode, GLint first, GLsizei count) {
 }
 
 void glDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount) {
-    GL_TRACE("glDrawArraysInstanced mode=0x%x first=%d count=%d inst=%d", mode, first, count, instancecount);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(first, count, NULL, GL_NONE, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1603,7 +1589,6 @@ void glDrawBuffersEXT(GLsizei n, const GLenum* bufs) {
 }
 
 void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices) {
-    GL_TRACE("glDrawElements mode=0x%x count=%d type=0x%x indices=%p vao=%p", mode, count, type, indices, (void*)currentGLContext->clientState->vao);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1616,7 +1601,6 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices
 }
 
 void glDrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type, const void* indices, GLint basevertex) {
-    GL_TRACE("glDrawElementsBaseVertex mode=0x%x count=%d type=0x%x indices=%p base=%d", mode, count, type, indices, basevertex);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, basevertex);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1634,7 +1618,6 @@ void glDrawElementsBaseVertexEXT(GLenum mode, GLsizei count, GLenum type, const 
 }
 
 void glDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const void* indices, GLsizei instancecount) {
-    GL_TRACE("glDrawElementsInstanced mode=0x%x count=%d type=0x%x inst=%d", mode, count, type, instancecount);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1685,7 +1668,6 @@ void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, con
 }
 
 void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void* indices) {
-    GL_TRACE("glDrawRangeElements mode=0x%x count=%d type=0x%x indices=%p", mode, count, type, indices);
     GL_CALL_LOCK();
     flushMappedPersistentBuffers(0, count, indices, type, 0);
     ArrayBuffer_rewind(&outputBuffer);
@@ -1987,7 +1969,6 @@ void glFlush() {
 }
 
 void glFlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length) {
-    GL_TRACE("gladio-trace: glFlushMappedBufferRange target=0x%x offset=%lld length=%lld", target, (long long)offset, (long long)length);
     if (target == GL_PIXEL_UNPACK_BUFFER || length == 0) return;
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
@@ -2202,12 +2183,10 @@ void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLd
 }
 
 void glGenBuffers(GLsizei n, GLuint* buffers) {
-    GL_TRACE("gladio-trace: glGenBuffers %d", n);
     GL_CALL_LOCK();
     GL_SEND_CHECKED(REQUEST_CODE_GL_GEN_BUFFERS, &n, sizeof(GLsizei));
     GL_RECV_CHECKED();
     memcpy(buffers, inputBuffer.buffer, inputBuffer.size);
-    if (n > 0 && inputBuffer.size != n * (int)sizeof(GLuint)) println("gladio: glGenBuffers(%d) got a reply of %d bytes", n, (int)inputBuffer.size);
     GL_CALL_UNLOCK();
 }
 
@@ -2819,49 +2798,6 @@ void glGetProgramEnvParameterfvARB(GLenum target, GLuint index, GLfloat* params)
     println(MSG_DEBUG_UNIMPLEMENTED_GLCALL, "glGetProgramEnvParameterfvARB");
 }
 
-// Original GLSL of every shader (client side, for diagnostics): printed when the server reports a compile error for it
-#define SHADER_SOURCE_SLOTS 16384
-static char* shaderSources[SHADER_SOURCE_SLOTS];
-
-static void rememberShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, const GLint* length) {
-    if (shader >= SHADER_SOURCE_SLOTS || count <= 0) return;
-    size_t total = 1;
-    for (int i = 0; i < count; i++) total += length && length[i] >= 0 ? (size_t)length[i] : strlen(string[i]);
-    char* text = malloc(total);
-    if (!text) return;
-    size_t offset = 0;
-    for (int i = 0; i < count; i++) {
-        size_t size = length && length[i] >= 0 ? (size_t)length[i] : strlen(string[i]);
-        memcpy(text + offset, string[i], size);
-        offset += size;
-    }
-    text[offset] = 0;
-    free(shaderSources[shader]);
-    shaderSources[shader] = text;
-}
-
-static void dumpShaderSourceForLog(const char* infoLog) {
-    static int dumped = 0;
-    if (dumped >= 6) return;
-    const char* mark = strstr(infoLog, "shader ");
-    if (!mark) return;
-    GLuint shader = (GLuint)atoi(mark + 7);
-    if (shader == 0 || shader >= SHADER_SOURCE_SLOTS || !shaderSources[shader]) return;
-    dumped++;
-    println("gladio-src: ---- original source of shader %u ----", shader);
-    const char* line = shaderSources[shader];
-    int number = 1;
-    while (*line && number < 400) {
-        const char* end = strchr(line, '\n');
-        int size = end ? (int)(end - line) : (int)strlen(line);
-        if (size > 0 && line[size - 1] == '\r') size--;
-        println("gladio-src: %3d| %.*s", number++, size, line);
-        if (!end) break;
-        line = end + 1;
-    }
-    println("gladio-src: ---- end ----");
-}
-
 void glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei* length, GLchar* infoLog) {
     GL_CALL_LOCK();
     ArrayBuffer_rewind(&outputBuffer);
@@ -2874,7 +2810,6 @@ void glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei* length, GLcha
     memcpy(infoLog, inputBuffer.buffer + inputBuffer.position, strSize);
     infoLog[strSize] = '\0';
     if (length) *length = strSize;
-    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetProgramInfoLog: %s", infoLog);  dumpShaderSourceForLog(infoLog); }
     GL_CALL_UNLOCK();
 }
 
@@ -3035,7 +2970,6 @@ void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei* length, GLchar*
     memcpy(infoLog, inputBuffer.buffer + inputBuffer.position, strSize);
     infoLog[strSize] = '\0';
     if (length) *length = strSize;
-    if (strSize > 1) { static int reported = 0; if (reported++ < 30) println("gladio: glGetShaderInfoLog: %s", infoLog);  dumpShaderSourceForLog(infoLog); }
     GL_CALL_UNLOCK();
 }
 
@@ -3718,7 +3652,6 @@ void* glMapBufferARB(GLenum target, GLenum access) {
 }
 
 void* glMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) {
-    GL_TRACE("gladio-trace: glMapBufferRange target=0x%x offset=%lld length=%lld access=0x%x bound=%u mapped=%d data=%p", target, (long long)offset, (long long)length, access, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->id : 0, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->mapped : -1, GLBuffer_getBound(target) ? GLBuffer_getBound(target)->mappedData : NULL);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer || buffer->mapped) {
@@ -5504,7 +5437,6 @@ void glShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, c
         ArrayBuffer_putBytes(&outputBuffer, string[i], strSize);
     }
 
-    rememberShaderSource(shader, count, string, length);
     gl_send(currentGLContext->serverRing, REQUEST_CODE_GL_SHADER_SOURCE, outputBuffer.buffer, outputBuffer.size);
     GL_CALL_UNLOCK();
 }
@@ -6514,7 +6446,6 @@ void glUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose, co
 }
 
 GLboolean glUnmapBuffer(GLenum target) {
-    GL_TRACE("gladio-trace: glUnmapBuffer target=0x%x", target);
     GL_CALL_LOCK();
     GLBuffer* buffer = GLBuffer_getBound(target);
     if (!buffer) {
@@ -7371,8 +7302,6 @@ void glVertexAttribI4usvEXT(GLuint index, const GLushort* v) {
 void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void* pointer) {
     GL_CALL_LOCK();
     GLClientState* clientState = currentGLContext->clientState;
-    GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER);
-    GL_TRACE("glVertexAttribIPointer index=%u size=%d type=0x%x stride=%d pointer=%p arrayBuffer=%u", index, size, type, stride, pointer, arrayBuffer ? arrayBuffer->id : 0);
     // Integer attributes only make sense with a VBO (data stays on the server side); a client array is not supported
     if (index < VERTEX_ATTRIB_COUNT) GLVertexArrayObject_setAttribState(clientState, index, VERTEX_ATTRIB_DISABLED, true);
 
@@ -7394,13 +7323,8 @@ void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean norm
     GL_CALL_LOCK();
     GLClientState* clientState = currentGLContext->clientState;
     GLBuffer* arrayBuffer = GLBuffer_getBound(GL_ARRAY_BUFFER);
-    GL_TRACE("gladio-trace: glVertexAttribPointer index=%u size=%d type=0x%x stride=%d pointer=%p arrayBuffer=%u vao=%p", index, size, type, stride, pointer, arrayBuffer ? arrayBuffer->id : 0, (void*)clientState->vao);
     // An address below 64 KB is never real memory: it is an offset into a VBO that the server has bound, even if this client lost track of the binding
     bool bufferOffset = !arrayBuffer && pointer && (uintptr_t)pointer < 65536;
-    if (bufferOffset) {
-        static int reported = 0;
-        if (reported++ < 20) println("gladio: glVertexAttribPointer index=%u size=%d type=0x%x stride=%d offset=%p but no GL_ARRAY_BUFFER bound (ctx=%p vao=%p program=%u; last glBindBuffer(ARRAY)=%u in ctx %p)", index, size, type, stride, pointer, (void*)currentGLContext, (void*)clientState->vao, clientState->program, lastArrayBufferBind, lastArrayBufferBindContext);
-    }
     if (index < VERTEX_ATTRIB_COUNT) {
         if (clientState->arbProgram[0]) index += GENERIC_VERTEX_ARRAY_INDEX;
         if ((!arrayBuffer && !bufferOffset) || (arrayBuffer && size == GL_BGRA)) {

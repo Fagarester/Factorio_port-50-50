@@ -27,11 +27,6 @@ public class XClient extends ConnectedClient implements XResourceManager.OnResou
     private int wireRequestCount;
 
     public void traceRequest(int opcode, int minor, int bytes) {
-        if (!xServer.isWireTraceEnabled()) return;
-        int n = ++wireRequestCount;
-        if (n <= 64 || n % 512 == 0)
-            xServer.debugPrint("WIRE-RX fd="+fd+" base=0x"+Integer.toHexString(resourceIDBase)
-                +" seq="+(sequenceNumber & 65535)+" opcode="+opcode+" data="+minor+" body-bytes="+bytes);
     }
 
     public XClient(long nativePtr, int fd, XServer xServer) {
@@ -65,7 +60,7 @@ public class XClient extends ConnectedClient implements XResourceManager.OnResou
             event.send(sequenceNumber, outputStream);
         }
         catch (IOException e) {
-            ;
+            e.printStackTrace();
         }
     }
 

@@ -74,8 +74,6 @@ typedef struct ShaderProgram {
     } location;
 } ShaderProgram;
 
-// Last shader compile / program link error (GLES info log); returned by glGetShaderInfoLog / glGetProgramInfoLog so the game can print it
-extern char ShaderConverter_lastError[1536];
 extern void ShaderConverter_setShaderSource(GLuint shaderId, GLsizei count, ArrayBuffer* inputBuffer);
 extern void ShaderConverter_getShaderSource(ShaderObject* shader, ArrayBuffer* outSource);
 extern GLuint ShaderConverter_createShader(GLenum type);

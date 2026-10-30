@@ -125,7 +125,6 @@ public class DRI3Extension extends Extension {
         short stride = gpuImage.getStride();
         int nativeHandle = gpuImage.getNativeHandle();
 
-        xServer.debugPrint("bufferFromPixmap handle "+nativeHandle+", width "+content.width+", height "+content.height+", stride "+stride);
 
         try (XStreamLock lock = outputStream.lock()) {
             outputStream.writeByte(RESPONSE_CODE_SUCCESS);
@@ -189,24 +188,19 @@ public class DRI3Extension extends Extension {
     private void pixmapFromFd(XClient client, int pixmapId, short width, short height, int stride, int offset, byte depth, int fd, long size)  throws IOException, XRequestError {
         try {
             // Diagnostics: what kind of fd did the client send (memfd / ashmem / dma-buf / kgsl)?
-            xServer.debugPrint("DRI3 pixmapFromFd: fd="+fd+" -> "+(fd >= 0 ? linkOf(fd) : "none")+" size="+size+" offset="+offset+
-                " stride="+stride+" "+width+"x"+height+" depth="+depth+" | fdinfo: "+(fd >= 0 ? readSmall("/proc/self/fdinfo/"+fd) : ""));
 
             // The Freedreno/KGSL client sends size=0 for its dma-buf (system heap) buffers; mmap(len=0) always fails
             // with EINVAL (that was the BadAlloc). The visible part of the buffer is stride * height.
             long needed = (long)(stride & 0xffff) * (height & 0xffff);
             if (size < needed) {
-                xServer.debugPrint("DRI3 pixmapFromFd: client size "+size+" is smaller than stride*height, using "+needed);
                 size = needed;
             }
 
             ByteBuffer buffer = fd >= 0 ? SysVSharedMemory.mapSHMSegment(fd, size, offset, true) : null;
             if (buffer == null && fd >= 0) {
-                xServer.debugPrint("DRI3 pixmapFromFd: read-only mmap failed, retrying read/write");
                 buffer = SysVSharedMemory.mapSHMSegment(fd, size, offset, false);
             }
             if (buffer == null) {
-                xServer.debugPrint("DRI3 pixmapFromFd: mmap failed -> BadAlloc");
                 throw new BadAlloc();
             }
 

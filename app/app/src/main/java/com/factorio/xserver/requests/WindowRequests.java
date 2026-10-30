@@ -50,7 +50,6 @@ public abstract class WindowRequests {
         Visual visual = client.xServer.pixmapManager.getVisual(inputStream.readInt());
         Bitmask valueMask = new Bitmask(inputStream.readInt());
 
-        client.xServer.debugPrint("CreateWindow id=0x"+Integer.toHexString(windowId)+" parent=0x"+Integer.toHexString(parentId)+" pos=("+x+","+y+") size="+width+"x"+height+" screen="+client.xServer.screenInfo.width+"x"+client.xServer.screenInfo.height);
 
         Window window = client.xServer.windowManager.createWindow(windowId, parent, x, y, width, height, windowClass, visual, depth, client);
         window.setBorderWidth(borderWidth);
@@ -378,8 +377,6 @@ public abstract class WindowRequests {
         // oldFocus == newFocus and no FocusIn was ever sent: SDL then believes its window has no focus and ignores the keyboard,
         // the mouse buttons and the gamepad. Compare with the window that was actually told about the focus instead.
         Window announced = windowManager.getFocusEventWindow();
-        client.xServer.debugPrint("FOCUS: SetInputFocus window=" + (newFocus != null ? newFocus.id : 0) + " focused-before=" + (oldFocus != null ? oldFocus.id : 0)
-            + " last-FocusIn=" + (announced != null ? announced.id : 0) + (announced != newFocus ? " -> sending FocusIn" : " -> already announced"));
         if (announced != newFocus) {
             if (announced != null && announced != windowManager.rootWindow) {
                 announced.sendEvent(Event.FOCUS_CHANGE, new FocusOut(announced, FocusIn.DETAIL_NONLINEAR));

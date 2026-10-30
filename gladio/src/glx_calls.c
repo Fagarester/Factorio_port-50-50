@@ -130,7 +130,6 @@ GLXWindow glXCreateWindow(Display* dpy, GLXFBConfig config, Window win, const in
 
 void glXDestroyContext(Display* dpy, GLXContext ctx) {
     GLX_CALL_LOCK();
-    println("gladio: glXDestroyContext thread=%d ctx=%p (id %d)", currentThreadId(), (void*)ctx, ctx ? ctx->id : -1);
     glx_send(serverFd, GLX_OPCODE_DESTROY_CONTEXT, &ctx->id, sizeof(int));
 
     GLClientState_destroy(&ctx->clientState);
@@ -318,10 +317,6 @@ Bool glXMakeContextCurrent(Display* dpy, GLXDrawable draw, GLXDrawable read, GLX
 
 Bool glXMakeCurrent(Display* dpy, GLXDrawable drawable, GLXContext ctx) {
     GLX_CALL_LOCK();
-    {
-        static int reported = 0;
-        if (reported++ < 60) println("gladio: glXMakeCurrent thread=%d drawable=0x%lx ctx=%p (id %d) threadContext=%p", currentThreadId(), (unsigned long)drawable, (void*)ctx, ctx ? ctx->id : -1, (void*)currentGLContext);
-    }
     if (ctx) {
         ctx->drawable = drawable;
         createGLContextForCallingThread();
@@ -451,7 +446,6 @@ void glXSelectEvent(Display* dpy, GLXDrawable draw, unsigned long event_mask) {
 }
 
 void glXSwapBuffers(Display* dpy, GLXDrawable drawable) {
-    GL_TRACE("glXSwapBuffers"); 
     GL_CALL_LOCK();
     int drawableId = (int)drawable;
     GL_SEND_CHECKED(REQUEST_CODE_SWAP_DISPLAY_BUFFERS, &drawableId, sizeof(int));

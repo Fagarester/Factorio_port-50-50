@@ -1,19 +1,3 @@
-# Порт v38 — убрано логирование
-Логирование стояло везде, в том числе на горячих путях: в Gladio `GL_TRACE` по умолчанию делал `vsnprintf` в кольцевой буфер на каждом draw/bind вызове, на сервере после каждого запроса вызывался `glGetError` (первые 30000), в X-сервере на каждый запрос строилась строка `core opcode=...`.
-- Gladio (клиент, `gladio/`): `println` и `debug_printf` — пустые макросы; `GL_TRACE` и `gl_trace_dump_recent` — пустые; удалены кольцевой буфер трассировки, `GLADIO_TRACE`, `atexit`-дамп «gladio-tail».
-- Gladio (сервер, `gladiolegacy`/`gladiorenderer`): `gladioServerLog` — пустой макрос, функция удалена; убраны проверки `glGetError` после каждого запроса и вокруг `glTexImage2D`; `HANGLOG` вместо `__android_log_print`; повтор `glGenBuffers` при id 0 сохранён без логов.
-- Java: удалены 44 вызова `Log.*`, `printStackTrace`, `System.out/err.print*`; `XServer.debugPrint` — пустой метод; убраны построение строки на каждый X-запрос и строка на каждый GLX-запрос.
-- Не тронуто: собственный лог игры (`factorio-native.log`), отчёты `driver-report.txt`/`vortek-report.txt`, раннер Diagnostics, сторонний `libadrenotools`.
-- Gladio-клиент собирается отдельно (`gladio/`, импортируется как бинарник): чтобы убрать трассировку на горячем пути, его нужно пересобрать и заново импортировать.
-- Проверено: Java разбирается компилятором без новых ошибок; C на устройстве не собирался.
-
-# Порт v37 — быстрее старт: потоки загрузки спрайтов
-По логу v36 «Sprites loaded» наступает на 58,9 с (`Parallel sprite loader initialized (threads: 3, bitmaps: 8741)`), а все чтения `glGetTexImage` атласов укладываются в ~1 с. Узкое место — декодирование PNG на CPU, лаунчер писал `max-sprite-loading-threads=2`.
-- Значение по умолчанию теперь `clamp(ядра − 2, 2, 6)` (на 8 ядрах = 6).
-- Старый `config-native.ini` с `max-sprite-loading-threads=2` обновляется при запуске; любое другое значение игрока не трогается.
-- Переопределить можно переменной контейнера `NATIVE_GFX=max-sprite-loading-threads=N`.
-- Не проверено на устройстве; сравнивать время между `Parallel sprite loader initialized` и `Sprites loaded` (v36: 56 с).
-
 # Порт v36 — Gladio: RGTC в запросах размера и обратном чтении
 В v35 `0x502` исчез, но игра падала на своей проверке `VideoBitmapOpenGL.cpp:267: data.size() == size + offset`. Для RGTC-текстур Gladio отвечал `GL_TEXTURE_COMPRESSED = 0` и `GL_TEXTURE_COMPRESSED_IMAGE_SIZE = w*h*4`, а `glGetCompressedTexImage` не умел RGTC.
 - `isCompressedFormatForQuery()` (DXT + RGTC) для `GL_TEXTURE_COMPRESSED` и `..._IMAGE_SIZE`; `isCompressedFormat()` не менялся, потому что от него зависит путь «BGRA8 для хранилища».
@@ -390,3 +374,13 @@ v9 не помог: `base=0xc size=280` остался. Теперь `glVertexAt
 - `texture_utils.h` (`convertTexImageFormat`): `glTexImage2D` со СЖАТЫМ внутренним форматом и без данных (так Factorio выделяет память под атласы) превращался в `internalformat = GL_BGRA` — в ES 3.2 это `INVALID_VALUE`, текстура не создавалась, а следующая `glCompressedTexSubImage2D` получала `INVALID_OPERATION`. Теперь `GL_BGRA8_EXT` (0x93A1, размерный формат из EXT_texture_format_BGRA8888) + `GL_BGRA/GL_UNSIGNED_BYTE`; то же в `glCompressedTexImage2D` и в сжатых 3D-загрузках (`request_handler.c`).
 - `glTexImage2D`: при ошибке сервер пишет в лог `glTexImage2D error 0x..: target level WxH border internalformat A->B format A->B type A->B imageSize` (до 12 раз) — если 0x501 останется, будет видно точные параметры.
 - `destroyGLXContext` (`gl_context.c`): убран полный разбор CPU-состояния (`GLClientState_destroy` + `GLRenderer_destroy`), который вызывал Scudo-abort при выходе из игры; освобождается только GPU-часть и EGL-контекст. **Серверная часть → пересборка APK; Gladio клиент не менялся (2.9).**
+
+## v37: всё логирование вырезано (основа — v36 из другого чата, где игра заработала)
+Функциональные исправления v36 (EINTR, glReadPixels, BGRA8, RGTC, виртуальный атлас и т.д.) не тронуты. Удалено:
+- **Клиент Gladio:** трассировка вызовов (`GL_TRACE`, кольцо на 400 записей, `gladio-recent/tail`), дамп исходников шейдеров (`gladio-src`), проверка соответствия ответов (`lastCode`), разбор текста от сервера в заголовке ответа, сообщения о неудачной отправке/чтении, о контекстах и `glXMakeCurrent`, о нечитаемых массивах/загрузках текстур. Защиты (`mincore`, нули вместо падения) остались, но молча.
+- **Сервер gladiolegacy:** канал `gladioServerLog` и флаг `0x80000000` в ответах (протокол снова как в оригинале), приветствие сервера, дополнительные `glGetError` после каждого запроса и после `glTexImage2D`, повторная попытка `glGenBuffers`, диагностика `glGetTexImage`/`glGetCompressedTexImage`/`glGetTexLevelParameter`, перенос ошибок шейдеров в `glGet*InfoLog` (`ShaderConverter_lastError`).
+- **gladiorenderer:** 10 строк `HANG_DEBUG` в `gl_context.c`.
+- **Java:** все вызовы `debugPrint` (27 мест, включая по одному на каждый X-запрос), `XClient.traceRequest` теперь пустой, `XServer.debugPrint` — пустая заглушка, `destroyGLContextLogged`, `debugLog` в `XConnectorEpoll`, строка `Port build` в `driver-report.txt`.
+- **Нативные `println` / `debug_printf`** (оригинальные сообщения «unimplemented», ошибки шейдеров и т.п.) отключены одним переключателем в трёх `winlator.h` и в `ring_buffer.c`: `println` → `((void)0)`. Включить обратно: `-DPORT_ENABLE_LOGGING` при сборке.
+- Оставлено как есть: оригинальные сообщения об ошибках приложения (`Log.e` / `printStackTrace` в Java, `Diagnostics`, отчёты `driver-report` / `vortek-report` / `compression-report`).
+- **Нужна пересборка APK и Gladio клиента (новая версия, например 3.0).**

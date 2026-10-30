@@ -78,7 +78,6 @@ static inline GLXContext createGLXContext(Display* dpy, int contextId, GLXContex
 static inline void createGLContextForCallingThread() {
     if (currentGLContext) return;
     int threadId = currentThreadId();
-    println("gladio: create GL context for thread %d", threadId);
     glx_send(serverFd, GLX_OPCODE_CREATE_GL_CONTEXT, &threadId, sizeof(int));
 
     GLContext* context = calloc(1, sizeof(GLContext));
@@ -93,7 +92,6 @@ static inline void createGLContextForCallingThread() {
 
 static inline void destroyGLContextForCallingThread() {
     if (!currentGLContext) return;
-    println("gladio: destroy GL context of thread %d (glxContext=%p)", currentThreadId(), (void*)currentGLContext->glxContext);
     gl_flush(currentGLContext->serverRing);
     if (!glx_send(serverFd, GLX_OPCODE_DESTROY_GL_CONTEXT, &currentGLContext->id, sizeof(int))) return;
 

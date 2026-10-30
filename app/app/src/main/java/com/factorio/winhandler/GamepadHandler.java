@@ -84,7 +84,7 @@ public class GamepadHandler {
             if (inputManager != null) inputManager.registerInputDeviceListener(bridgeDeviceListener, new Handler(Looper.getMainLooper()));
         }
         catch (Exception e) {
-            ;
+            Log.e("NativeGamepad", "device listener registration failed: "+e);
             bridgeDeviceListener = null;
         }
         refreshBridge();
@@ -106,7 +106,7 @@ public class GamepadHandler {
             updateGamepadSlots();
         }
         catch (Exception e) {
-            ;
+            Log.e("NativeGamepad", "updateGamepadSlots failed: "+e);
             return;
         }
         int count = 0;
@@ -115,7 +115,7 @@ public class GamepadHandler {
             if (present) count++;
             bridge.setSlotPresent(i, present);
         }
-        ;
+        Log.i("NativeGamepad", "refresh: "+count+" gamepad(s) attached");
     }
 
     private void updateGamepadSlots() {

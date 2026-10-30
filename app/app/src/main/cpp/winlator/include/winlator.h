@@ -75,11 +75,22 @@ static inline pid_t currentThreadId() {
 #endif
 }
 
+// Logging is compiled out. Build with -DPORT_ENABLE_LOGGING to get the println() messages back.
+#ifdef PORT_ENABLE_LOGGING
 #ifdef __ANDROID__
 #include <android/log.h>
-#define println(...) ((void)0)
+#define println(...) __android_log_print(ANDROID_LOG_DEBUG, "System.out", __VA_ARGS__)
 #else
 
+#define println(fmt, ...) \
+    do { \
+        char fmtBuf[256] = {0}; \
+        sprintf(fmtBuf, "%s\n", fmt); \
+        fprintf(stderr, fmtBuf __VA_OPT__(,) __VA_ARGS__); \
+    } \
+    while (0)
+#endif
+#else
 #define println(...) ((void)0)
 #endif
 

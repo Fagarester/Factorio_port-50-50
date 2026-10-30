@@ -53,7 +53,7 @@ public class RootFS {
             FileUtils.writeString(file, String.valueOf(version));
         }
         catch (IOException e) {
-            ;
+            e.printStackTrace();
         }
     }
 

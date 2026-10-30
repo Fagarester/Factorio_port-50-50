@@ -27,7 +27,7 @@ public class EventListener {
             event.send(client.getSequenceNumber(), client.getOutputStream());
         }
         catch (IOException e) {
-            ;
+            e.printStackTrace();
         }
     }
 }

@@ -158,6 +158,7 @@ public class XClientRequestHandler implements RequestHandler {
         client.generateSequenceNumber();
         client.setRequestData(requestData);
         client.setRequestLength(requestLength);
+        client.traceRequest(opcode & 255, requestData & 255, requestLength);
 
         try {
             if (opcode < 0) {
@@ -172,7 +173,6 @@ public class XClientRequestHandler implements RequestHandler {
                 // would be parsed from the middle of it, so the server stops answering that client.
                 int unread = client.getRemainingRequestLength();
                 if (unread > 0) {
-                    client.xServer.debugPrint("ext request left "+unread+" unread byte(s), skipped (opcode="+(opcode & 0xff)+" minor="+(requestData & 0xff)+")");
                     inputStream.skip(unread);
                 }
             }

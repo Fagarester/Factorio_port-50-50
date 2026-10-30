@@ -292,7 +292,6 @@ void destroyGLContext(JNIEnv* env, GLContext* context) {
 
 #include <android/log.h>
 #define HANGTAG "HANG_DEBUG"
-#define HANGLOG(...) ((void)0)
 
 GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
     static const EGLint confAttribList[] = {
@@ -309,24 +308,19 @@ GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
     };
     EGLBoolean success;
 
-    HANGLOG("1: eglGetDisplay start");
     EGLDisplay eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (!eglDisplay) return NULL;
-    HANGLOG("2: eglInitialize start");
 
     EGLint major, minor;
     success = eglInitialize(eglDisplay, &major, &minor);
     if (!success) return NULL;
-    HANGLOG("3: eglChooseConfig start");
 
     int numConfigs;
     EGLConfig eglConfig;
     success = eglChooseConfig(eglDisplay, confAttribList, &eglConfig, 1, &numConfigs);
     if (!success || numConfigs != 1) return NULL;
-    HANGLOG("4: eglCreateContext start");
 
     EGLContext eglContext = eglCreateContext(eglDisplay, eglConfig, sharedContext ? sharedContext->eglContext : globalEGLContext, ctxAttribList);
-    HANGLOG("5: eglCreateContext done, ctx=%p", (void*)eglContext);
 
     GLXContext* context = calloc(1, sizeof(GLXContext));
     context->eglContext = eglContext;
@@ -334,16 +328,11 @@ GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
     GLVertexArrayObject_setBound(&context->renderer.clientState, 0);
     GLClientState_init(&context->renderer.clientState, sharedContext ? &sharedContext->renderer.clientState : NULL);
 
-    HANGLOG("6: GLX_CONTEXT_LOCK start");
     GLX_CONTEXT_LOCK();
-    HANGLOG("7: lock acquired, eglMakeCurrent start");
     eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, context->eglContext);
-    HANGLOG("8: GLRenderer_initOnEGLContext start");
     GLRenderer_initOnEGLContext(&context->renderer);
-    HANGLOG("9: done, unlocking");
     eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     GLX_CONTEXT_UNLOCK();
-    HANGLOG("10: fully done");
     return context;
 }
 

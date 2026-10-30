@@ -39,8 +39,6 @@
 #define GL_SEND_CHECKED(requestCode, outputBuffer, bufferSize, ...) \
     do { \
         if (!gl_send(currentGLContext->serverRing, requestCode, outputBuffer, bufferSize)) { \
-            static int sendFailures = 0; \
-            if (sendFailures++ < 10) println("gladio: [thread %d] %s: request %d could not be sent (ring exit flag: %d)", currentThreadId(), __func__, (int)(requestCode), RingBuffer_hasStatus(currentGLContext->serverRing, RING_STATUS_EXIT) ? 1 : 0); \
             GL_CALL_UNLOCK(); \
             return __VA_OPT__(GL_FALSE); \
         } \
@@ -50,8 +48,6 @@
 #define GL_RECV_CHECKED(...) \
     do { \
         if (!gl_recv(currentGLContext->clientRing, NULL, &inputBuffer)) { \
-            static int recvFailures = 0; \
-            if (recvFailures++ < 10) println("gladio: [thread %d] %s: the reply could not be read (ring exit flag: %d)", currentThreadId(), __func__, RingBuffer_hasStatus(currentGLContext->clientRing, RING_STATUS_EXIT) ? 1 : 0); \
             GL_CALL_UNLOCK(); \
             return __VA_OPT__(GL_FALSE); \
         } \
@@ -124,9 +120,6 @@ typedef struct JMethods {
 #define GL_BATCH_CAPACITY (256 * 1024)
 #define GL_BATCH_MAX_ITEM (32 * 1024)
 extern int gl_batch_ops;
-// call tracing removed
-#define GL_TRACE(...) ((void)0)
-#define gl_trace_dump_recent(n) ((void)0)
 
 static inline bool gl_flush(RingBuffer* ring) {
     if (!ring || ring->batchSize == 0) return true;
@@ -147,7 +140,6 @@ static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int 
     char header[HEADER_SIZE];
     *(short*)(header + 0) = requestCode;
     *(int*)(header + 2) = size;
-    ring->lastCode = requestCode;
 
     if (gl_batch_ops > 0 && size >= 0 && size <= GL_BATCH_MAX_ITEM) {
         if (!ring->batch) ring->batch = malloc(GL_BATCH_CAPACITY);
@@ -188,30 +180,7 @@ static inline bool gl_recv(RingBuffer* ring, short* outRequestCode, ArrayBuffer*
     if (!result) return false;
 
     if (outRequestCode != NULL) *outRequestCode = *(short*)(header + 0);
-    uint32_t rawSize = *(uint32_t*)(header + 2);
-    int size = (int)(rawSize & 0x7fffffffu);
-
-    if (ring->peer && ring->peer->lastCode != *(short*)(header + 0)) {
-        // a reply that does not belong to the last request: the reply queue is out of sync (an earlier request got no reply read, or an extra one was sent)
-        static int mismatches = 0;
-        if (mismatches++ < 20) {
-            println("gladio: reply mismatch: last request %d, reply code %d (size %d)", (int)ring->peer->lastCode, (int)*(short*)(header + 0), size);
-            if (mismatches == 1) gl_trace_dump_recent(80);
-        }
-    }
-
-    if (rawSize & 0x80000000u) {
-        // the server attached a text for the game's log: [uint16 length][text]
-        uint16_t textLength = 0;
-        if (!RingBuffer_read(ring, &textLength, 2)) return false;
-        char text[520] = {0};
-        uint16_t keep = textLength < sizeof(text) - 1 ? textLength : sizeof(text) - 1;
-        if (!RingBuffer_read(ring, text, keep)) return false;
-        for (int skip = textLength - keep; skip > 0; skip--) { char dummy; if (!RingBuffer_read(ring, &dummy, 1)) return false; }
-        println("gladio-server: %s", text);
-        size -= 2 + textLength;
-        if (size < 0) size = 0;
-    }
+    int size = *(int*)(header + 2);
 
     ArrayBuffer_rewind(data);
 
@@ -306,7 +275,6 @@ static inline int getGLCallParamsCount(GLenum pname, bool* isColor) {
     do { \
         GLClientState* clientState = currentGLContext->clientState; \
         GLBuffer* pixelUnpackBuffer = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER); \
-        GL_TRACE("texupload req=%d fmt=0x%x %dx%dx%d csize=%d data=%p pbo=%u", (int)(requestCode), (unsigned)(format), (int)(width), (int)(height), (int)(depth), (int)(compressedSize), (const void*)(imageData), pixelUnpackBuffer ? pixelUnpackBuffer->id : 0); \
         int dataSize = compressedSize; \
         if (compressedSize == 0) { \
             if (clientState->pixelStore.unpackRowLength > 0) width = clientState->pixelStore.unpackRowLength; \

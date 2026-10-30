@@ -47,15 +47,7 @@ void GLVertexAttrib_putBytes(ArrayBuffer* out, const void* base, int64_t offset,
 
     if (available > 0 && limit < 0) {
         if (safeArrays == -1) safeArrays = !(getenv("GLADIO_SAFE_ARRAYS") && atoi(getenv("GLADIO_SAFE_ARRAYS")) == 0);
-        if (safeArrays && !gl_isReadable((const uint8_t*)base + offset, available)) {
-            static int reported = 0;
-            if (reported++ < 30) println("gladio: unreadable client vertex array base=%p offset=%lld size=%lld (zero filled)", base, (long long)offset, (long long)available);
-            available = 0;
-        }
-    }
-    else if (available < size && limit >= 0) {
-        static int reportedLimit = 0;
-        if (reportedLimit++ < 30) println("gladio: vertex array larger than its buffer: wanted %lld+%lld, buffer has %lld (zero filled)", (long long)offset, (long long)size, (long long)limit);
+        if (safeArrays && !gl_isReadable((const uint8_t*)base + offset, available)) available = 0;
     }
 
     if (available > 0) ArrayBuffer_putBytes(out, (const uint8_t*)base + offset, (int)available);
@@ -149,12 +141,6 @@ void gl_write_raw_checked(RingBuffer* ring, const void* data, int size, int requ
     if (data && gl_isReadable(data, size)) {
         gl_write_raw(ring, data, size);
         return;
-    }
-    static int reported = 0;
-    if (reported++ < 30) {
-        GLBuffer* unpack = GLBuffer_getBound(GL_PIXEL_UNPACK_BUFFER);
-        println("gladio: texture upload (request %d) has unreadable data=%p size=%d (GL_PIXEL_UNPACK_BUFFER bound: %u), sending zeros", requestCode, data, size, unpack ? unpack->id : 0);
-        if (reported == 1) gl_trace_dump_recent(150);
     }
     static const char zeros[65536];
     for (int left = size; left > 0; ) {

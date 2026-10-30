@@ -112,29 +112,11 @@ typedef struct JMethods {
 #include "gl_dsa.h"
 #endif
 
-// Text the server wants to show in the game's log (logcat is not collected). It travels with the next reply:
-// size gets the 0x80000000 flag, the payload starts with [uint16 textLength][text] followed by the normal data.
-extern __thread char gladioServerMessage[480];
-extern __thread int gladioServerMessageLen;
-#define gladioServerLog(...) ((void)0)
-
 static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int size) {
     char header[HEADER_SIZE];
     *(short*)(header + 0) = requestCode;
-    int dataSize = size > 0 ? size : 0;
-
-    if (gladioServerMessageLen > 0) {
-        uint16_t textLength = (uint16_t)gladioServerMessageLen;
-        gladioServerMessageLen = 0;
-        *(uint32_t*)(header + 2) = 0x80000000u | (uint32_t)(2 + textLength + dataSize);
-        if (!RingBuffer_write(ring, header, HEADER_SIZE)) return false;
-        if (!RingBuffer_write(ring, &textLength, 2)) return false;
-        if (!RingBuffer_write(ring, gladioServerMessage, textLength)) return false;
-        if (dataSize > 0 && !RingBuffer_write(ring, data, dataSize)) return false;
-        return true;
-    }
-
     *(int*)(header + 2) = size;
+
     bool result = RingBuffer_write(ring, header, HEADER_SIZE);
     if (!result) return false;
 

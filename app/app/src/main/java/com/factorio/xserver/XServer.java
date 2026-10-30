@@ -208,6 +208,7 @@ public class XServer {
         return (T)extensions[index];
     }
 
+    // Logging is switched off: kept so that callers (e.g. the optional wire trace sink) still compile.
     public void debugPrint(String line) {
     }
 }

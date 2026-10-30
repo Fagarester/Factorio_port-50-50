@@ -30,7 +30,6 @@ public abstract class DesktopHelper {
     private static int focusLogCount = 0;
 
     private static void focusDbg(XServer xServer, String message) {
-        if (focusLogCount++ < 150) xServer.debugPrint("FOCUS: " + message);
     }
 
     private static String describe(Window w) {

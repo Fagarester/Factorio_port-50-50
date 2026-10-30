@@ -38,12 +38,10 @@ public class GLXExtension extends Extension {
         return FIRST_EVENT_ID;
     }
     private static final byte DEFAULT_FBCONFIG_ID = 1;
-    private static boolean buildBannerPrinted = false;
     private final SparseArray<SparseLongArray> clientGLXContexts = new SparseArray<>();
     private final SparseArray<SparseLongArray> clientGLContexts = new SparseArray<>();
     private final String glxExtensions = "GLX_ARB_create_context GLX_ARB_get_proc_address";
     private final Callback<XClient> onDestroyClientListener = (client) -> {
-        xServer.debugPrint("GLX client destroyed fd="+client.fd);
         destroyAllGLContexts(client.fd);
         destroyAllGLXContexts(client.fd);
     };
@@ -95,19 +93,17 @@ public class GLXExtension extends Extension {
         }
 
         long context = createGLContext(client.fd);
-        xServer.debugPrint("GLX createGLContext fd="+client.fd+" contextId="+contextId+" ptr="+context);
         if (context != 0) contexts.put(contextId, context);
     }
 
     private void destroyGLContext(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int contextId = inputStream.readInt();
-        client.xServer.debugPrint("GLX destroyGLContext id="+contextId+" fd="+client.fd);
 
         SparseLongArray contexts = clientGLContexts.get(client.fd);
         if (contexts == null) throw new GLXBadContext();
 
         long context = contexts.get(contextId, 0L);
-        if (context != 0) destroyGLContextLogged(context, "request id="+contextId+" fd="+client.fd);
+        if (context != 0) destroyGLContext(context);
         contexts.delete(contextId);
 
         try (XStreamLock lock = outputStream.lock()) {
@@ -119,9 +115,7 @@ public class GLXExtension extends Extension {
     }
 
     private void createGLXContextForClient(XClient client, int contextId, int shareContextId) throws IOException, XRequestError {
-        xServer.debugPrint("GLX createGLXContextForClient: before lock");
         synchronized (clientGLXContexts) {
-            xServer.debugPrint("GLX createGLXContextForClient: lock acquired");
             SparseLongArray contexts = clientGLXContexts.get(client.fd);
             if (contexts == null) {
                 clientGLXContexts.put(client.fd, contexts = new SparseLongArray());
@@ -129,17 +123,13 @@ public class GLXExtension extends Extension {
             }
 
             long sharedContextPtr = shareContextId > 0 ? contexts.get(shareContextId) : 0;
-            xServer.debugPrint("GLX createGLXContextForClient: calling native createGLXContext");
             long context = createGLXContext(contextId, sharedContextPtr);
-            xServer.debugPrint("GLX createGLXContextForClient: native call returned, context=" + context);
             if (context == 0) throw new BadAlloc();
             contexts.put(contextId, context);
         }
-        xServer.debugPrint("GLX createGLXContextForClient: done");
     }
 
     private void createContext(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
-        xServer.debugPrint("GLX createContext: START");
         int contextId = inputStream.readInt();
         inputStream.skip(8);
         int shareList = inputStream.readInt();
@@ -149,7 +139,6 @@ public class GLXExtension extends Extension {
         createGLXContextForClient(client, contextId, shareList);
         // GLXCreateContext has NO reply in the GLX protocol. The old code wrote a 32-byte reply here,
         // which is a protocol violation; the generic handler now also skips the 3 padding bytes of the request.
-        xServer.debugPrint("GLX createContext: done (no reply, as per protocol)");
     }
 
     // GLXIsDirect (opcode 6): Mesa's glXCreateContext asks the server whether the context is direct and
@@ -362,7 +351,6 @@ public class GLXExtension extends Extension {
             if (name == GLXEnums.GLX_CONTEXT_MAJOR_VERSION_ARB) glMajorVersion = value;
             else if (name == GLXEnums.GLX_CONTEXT_MINOR_VERSION_ARB) glMinorVersion = value;
         }
-        xServer.debugPrint("GLX createContextAttribsARB: requested GL "+glMajorVersion+"."+glMinorVersion);
 
         // GLXCreateContextAttribsARB has NO reply in the GLX protocol: the client uses xcb_request_check(), which
         // asserts ("Assertion `!reply' failed") when it receives a reply for it. The old code wrote a 32-byte reply
@@ -374,11 +362,6 @@ public class GLXExtension extends Extension {
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData();
-        if (!buildBannerPrinted) {
-            buildBannerPrinted = true;
-            // Lets any log show which server build produced it (APK must contain all of these fixes).
-            xServer.debugPrint("BUILD v33: GLX event base=72 (range 72..88); optional wire trace via X11_WIRE_TRACE=1");
-        }
         switch (opcode) {
             case ClientOpcodes.CREATE_GL_CONTEXT:
                 createGLContext(client, inputStream, outputStream);
@@ -477,9 +460,8 @@ public class GLXExtension extends Extension {
     private void destroyAllGLContexts(int clientFd) {
         synchronized (clientGLContexts) {
             SparseLongArray contexts = clientGLContexts.get(clientFd);
-            xServer.debugPrint("GLX destroyAllGLContexts fd="+clientFd+" contexts="+(contexts != null ? contexts.size() : 0));
             if (contexts != null) {
-                for (int i = 0; i < contexts.size(); i++) destroyGLContextLogged(contexts.valueAt(i), "client fd="+clientFd+" gone");
+                for (int i = 0; i < contexts.size(); i++) destroyGLContext(contexts.valueAt(i));
                 contexts.clear();
             }
             clientGLContexts.remove(clientFd);
@@ -498,14 +480,6 @@ public class GLXExtension extends Extension {
     }
 
     private native long createGLContext(int clientFd);
-
-    // every native destroy goes through here so that logs.txt shows who asked for it
-    private void destroyGLContextLogged(long contextPtr, String reason) {
-        String stack = android.util.Log.getStackTraceString(new Throwable()).replace('\n', ' ').replace('\t', ' ');
-        if (stack.length() > 700) stack = stack.substring(0, 700);
-        xServer.debugPrint("GLX native destroyGLContext ptr="+contextPtr+" reason: "+reason+" | "+stack);
-        destroyGLContext(contextPtr);
-    }
 
     private native void destroyGLContext(long contextPtr);
 

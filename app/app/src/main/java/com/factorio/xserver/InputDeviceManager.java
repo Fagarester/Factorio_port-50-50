@@ -150,7 +150,6 @@ public class InputDeviceManager implements Pointer.OnPointerMotionListener, Keyb
     private int keyOkCount = 0;
 
     private void inputDbg(String message) {
-        if (inputLogCount++ < 400) xServer.debugPrint("INPUT: " + message);
     }
 
     private int motionSent = 0;

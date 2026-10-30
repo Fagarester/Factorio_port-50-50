@@ -138,7 +138,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         if (!nativeFile.isFile()) {
             // Without this check the glibc loader only prints "cannot open shared object file" for the game binary.
             final String reason = describeMissingGame(nativeSrc, nativeFile);
-            ;
+            android.util.Log.e("Factorio", reason);
             File missingLogDir = LogView.getLogFile().getParentFile();
             if (missingLogDir != null && missingLogDir.isDirectory() && missingLogDir.canWrite()) {
                 FileUtils.writeString(new File(missingLogDir, "factorio-native.log"), reason+"\n");
@@ -170,17 +170,12 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 byte[] currentBytes = FileUtils.read(configFile);
                 String current = currentBytes != null ? new String(currentBytes, java.nio.charset.StandardCharsets.UTF_8) : null;
                 keepExisting = current != null && current.contains("read-data=") && !current.contains("__PATH__");
-                // v37: configs written by older builds carry our old default of 2 sprite-loading threads; raise it
-                // (a value the player changed to something else is left alone)
-                if (keepExisting && current.contains("max-sprite-loading-threads=2\n")) {
-                    FileUtils.writeString(configFile, current.replace("max-sprite-loading-threads=2\n", "max-sprite-loading-threads=" + defaultSpriteThreads() + "\n"));
-                }
             }
 
             if (!keepExisting) {
                 com.factorio.core.Diagnostics.backupConfig(environment.getContext(), configFile);
                 java.util.LinkedHashMap<String, String> gfx = new java.util.LinkedHashMap<>();
-                gfx.put("max-sprite-loading-threads", String.valueOf(defaultSpriteThreads()));
+                gfx.put("max-sprite-loading-threads", "2");
                 gfx.put("texture-compression-level", "low-quality");
                 gfx.put("gpu-accelerated-compression", "false");
                 gfx.put("video-memory-usage", "medium");
@@ -237,7 +232,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             try {
                 mesaDir = BundledOpenGL.prepare(environment.getContext(), rootDir);
             } catch (java.io.IOException e) {
-                ;
+                android.util.Log.e("Factorio", "Cannot prepare bundled OpenGL", e);
                 return -1;
             }
             libPath = mesaDir+"/lib:"+libPath;
@@ -344,13 +339,6 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         long[] acc = new long[3];
         collectSignature(dir, acc);
         return acc[0]+"/"+acc[1]+"/"+acc[2];
-    }
-
-    // PNG decoding of ~8700 sprites is the bulk of the start-up time (about 56 s with 2 threads on an 8-core phone).
-    // Leave two cores for the game's main thread, Gladio and the X server.
-    private static int defaultSpriteThreads() {
-        int cores = Runtime.getRuntime().availableProcessors();
-        return Math.max(2, Math.min(6, cores - 2));
     }
 
     private static void collectSignature(File file, long[] acc) {
