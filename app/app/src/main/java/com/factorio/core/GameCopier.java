@@ -130,7 +130,7 @@ public final class GameCopier {
                         rc = TextureCompressor.shrinkPng(src.getPath(), dst.getPath(), ratio, minColors, kmeans, dither);
                     }
                     catch (Throwable e) {
-                        Log.e(TAG, "Cannot shrink "+src, e);
+                        ;
                         rc = -1;
                     }
                     switch (rc) {
@@ -160,7 +160,7 @@ public final class GameCopier {
                 future.get();
             }
             catch (Exception e) {
-                Log.e(TAG, "Copy task failed", e);
+                ;
                 failed.set(true);
             }
         }
@@ -192,7 +192,7 @@ public final class GameCopier {
         }
         result.report = sb.toString();
 
-        Log.i(TAG, "game copy: "+result.files+" files, "+(sum >> 20)+" MB -> "+(result.outBytes >> 20)+" MB, png shrunk "+result.pngShrunk+"/"+result.pngTotal);
+        ;
         return result;
     }
 }

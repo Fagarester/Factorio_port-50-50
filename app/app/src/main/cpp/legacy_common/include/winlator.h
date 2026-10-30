@@ -47,16 +47,10 @@ static inline pid_t currentThreadId() {
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#define println(...) __android_log_print(ANDROID_LOG_DEBUG, "System.out", __VA_ARGS__)
+#define println(...) ((void)0)
 #else
 
-#define println(fmt, ...) \
-    do { \
-        char fmtBuf[256] = {0}; \
-        sprintf(fmtBuf, "%s\n", fmt); \
-        fprintf(stderr, fmtBuf __VA_OPT__(,) __VA_ARGS__); \
-    } \
-    while (0)
+#define println(...) ((void)0)
 #endif
 
 

@@ -22,7 +22,7 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#define debug_printf(...) __android_log_print(ANDROID_LOG_DEBUG, "System.out", __VA_ARGS__)
+#define debug_printf(...) ((void)0)
 #else
 #define debug_printf(...) fprintf(stderr, __VA_ARGS__)
 #endif

@@ -353,7 +353,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             StringBuilder sb = new StringBuilder();
             sb.append("Driver report ").append(new java.util.Date()).append("\n");
             sb.append("App version code: ").append(AppUtils.getVersionCode(this)).append("\n");
-            sb.append("Port build: v37 (sprite loading threads by core count; RGTC fixes)\n\n");
+            sb.append("Port build: v38 (logging removed; sprite threads by core count; RGTC fixes)\n\n");
 
             if (GraphicsDrivers.isLegacyMode(graphicsDriver)) {
                 sb.append("BLOCK: Vortek + ").append(GraphicsDrivers.getName(graphicsDriver[1])).append(" (original Winlator stack)\n");
@@ -436,7 +436,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             DriverReport.write(logDir, sb.toString());
         }
         catch (Exception e) {
-            android.util.Log.w("DriverReport", e);
+            ;
         }
     }
 
@@ -553,7 +553,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 hasLibs = a && b;
             }
             if (!hasLibs) {
-                Log.w("NativeGamepad", "assets/input_interposer/*.so not found, gamepad bridge disabled");
+                ;
                 return;
             }
 
@@ -574,7 +574,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             winHandler.gamepadHandler.startBridge(socketDir);
         }
         catch (Exception e) {
-            Log.e("NativeGamepad", "bridge setup failed: "+e);
+            ;
         }
     }
 

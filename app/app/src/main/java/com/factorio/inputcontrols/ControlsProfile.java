@@ -213,7 +213,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
             controllersLoaded = true;
         }
         catch (JSONException e) {
-            e.printStackTrace();
+            ;
         }
         return controllers;
     }
@@ -294,7 +294,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
             elementsLoaded = true;
         }
         catch (JSONException e) {
-            e.printStackTrace();
+            ;
         }
     }
 }

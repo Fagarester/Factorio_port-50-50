@@ -209,7 +209,5 @@ public class XServer {
     }
 
     public void debugPrint(String line) {
-        DebugDialog debugDialog = activity.getDebugDialog();
-        if (debugDialog != null) debugDialog.call("xserver:"+line);
     }
 }

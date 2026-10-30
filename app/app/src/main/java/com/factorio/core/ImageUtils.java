@@ -45,7 +45,7 @@ public abstract class ImageUtils {
             else bitmap = BitmapFactory.decodeStream(is);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
         finally {
             try {
@@ -73,7 +73,7 @@ public abstract class ImageUtils {
             options.inSampleSize = inSampleSize;
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
         finally {
             try {
@@ -101,7 +101,7 @@ public abstract class ImageUtils {
             }
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
         finally {
             try {
@@ -127,7 +127,7 @@ public abstract class ImageUtils {
             return bitmap.compress(compressFormat, quality, fos);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            ;
         }
         finally {
             try {
@@ -137,7 +137,7 @@ public abstract class ImageUtils {
                 }
             }
             catch (IOException e) {
-                e.printStackTrace();
+                ;
             }
         }
         return false;

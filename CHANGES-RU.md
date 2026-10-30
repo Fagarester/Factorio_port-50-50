@@ -1,3 +1,12 @@
+# Порт v38 — убрано логирование
+Логирование стояло везде, в том числе на горячих путях: в Gladio `GL_TRACE` по умолчанию делал `vsnprintf` в кольцевой буфер на каждом draw/bind вызове, на сервере после каждого запроса вызывался `glGetError` (первые 30000), в X-сервере на каждый запрос строилась строка `core opcode=...`.
+- Gladio (клиент, `gladio/`): `println` и `debug_printf` — пустые макросы; `GL_TRACE` и `gl_trace_dump_recent` — пустые; удалены кольцевой буфер трассировки, `GLADIO_TRACE`, `atexit`-дамп «gladio-tail».
+- Gladio (сервер, `gladiolegacy`/`gladiorenderer`): `gladioServerLog` — пустой макрос, функция удалена; убраны проверки `glGetError` после каждого запроса и вокруг `glTexImage2D`; `HANGLOG` вместо `__android_log_print`; повтор `glGenBuffers` при id 0 сохранён без логов.
+- Java: удалены 44 вызова `Log.*`, `printStackTrace`, `System.out/err.print*`; `XServer.debugPrint` — пустой метод; убраны построение строки на каждый X-запрос и строка на каждый GLX-запрос.
+- Не тронуто: собственный лог игры (`factorio-native.log`), отчёты `driver-report.txt`/`vortek-report.txt`, раннер Diagnostics, сторонний `libadrenotools`.
+- Gladio-клиент собирается отдельно (`gladio/`, импортируется как бинарник): чтобы убрать трассировку на горячем пути, его нужно пересобрать и заново импортировать.
+- Проверено: Java разбирается компилятором без новых ошибок; C на устройстве не собирался.
+
 # Порт v37 — быстрее старт: потоки загрузки спрайтов
 По логу v36 «Sprites loaded» наступает на 58,9 с (`Parallel sprite loader initialized (threads: 3, bitmaps: 8741)`), а все чтения `glGetTexImage` атласов укладываются в ~1 с. Узкое место — декодирование PNG на CPU, лаунчер писал `max-sprite-loading-threads=2`.
 - Значение по умолчанию теперь `clamp(ядра − 2, 2, 6)` (на 8 ядрах = 6).

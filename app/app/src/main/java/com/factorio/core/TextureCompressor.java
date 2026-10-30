@@ -17,7 +17,7 @@ public final class TextureCompressor {
                 loaded = true;
             }
             catch (Throwable e) {
-                Log.e("Factorio", "texcompress library is not available, textures are copied as they are", e);
+                ;
             }
         }
         return loaded;

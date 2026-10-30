@@ -4,21 +4,6 @@
 __thread char gladioServerMessage[480];
 __thread int gladioServerMessageLen = 0;
 
-void gladioServerLog(const char* fmt, ...) {
-    int used = gladioServerMessageLen;
-    if (used >= (int)sizeof(gladioServerMessage) - 8) return;
-    va_list args;
-    va_start(args, fmt);
-    int written = vsnprintf(gladioServerMessage + used, sizeof(gladioServerMessage) - used - 2, fmt, args);
-    va_end(args);
-    if (written < 0) return;
-    used += written;
-    if (used > (int)sizeof(gladioServerMessage) - 3) used = sizeof(gladioServerMessage) - 3;
-    gladioServerMessage[used++] = ' ';
-    gladioServerMessage[used++] = '|';
-    gladioServerMessage[used++] = ' ';
-    gladioServerMessageLen = used;
-}
 #include "shader_converter.h"
 #include "gl_formats.h"
 #include "attrib_stack.h"
@@ -1222,11 +1207,9 @@ void gd_handle_glGenBuffers(GLContext* context) {
     glGenBuffers(n, buffers);
     for (int i = 0; i < n; i++) {
         if (buffers[i] == 0) {
-            // the driver generated nothing: report why, try once more
-            GLenum error = glGetError();
-            gladioServerLog("glGenBuffers(%d) returned id 0 at index %d, glError=0x%x", n, i, error);
+            // the driver generated nothing: try once more
+            glGetError();
             glGenBuffers(n, buffers);
-            gladioServerLog("retry gave %u", buffers[0]);
             break;
         }
     }
@@ -1390,8 +1373,6 @@ void gd_handle_glGetCompressedTexImage(GLContext* context) {
 
     int compressedSize;
     void* compressedData = GLRenderer_getCompressedTexImage(currentRenderer, target, level, &compressedSize);
-    { static int rep = 0; GLTexture* t = GLTexture_getBound(parseTexTarget(target));
-      if (rep++ < 20) gladioServerLog("glGetCompressedTexImage target=0x%x level=%d tex=%dx%d originFormat=0x%x -> size=%d", target, level, t ? t->width : -1, t ? t->height : -1, t ? t->originFormat : 0, compressedSize); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_COMPRESSED_TEX_IMAGE, &compressedSize, sizeof(int));
 
     if (compressedSize > 0) {
@@ -1721,7 +1702,6 @@ void gd_handle_glGetTexImage(GLContext* context) {
 
     int imageSize;
     void* pixels = GLRenderer_getTexImage(currentRenderer, target, level, format, type, &imageSize);
-    { static int rep = 0; if (rep++ < 20) gladioServerLog("glGetTexImage target=0x%x level=%d format=0x%x type=0x%x -> size=%d", target, level, format, type, imageSize); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_TEX_IMAGE, &imageSize, sizeof(int));
 
     if (imageSize > 0) {
@@ -1737,7 +1717,6 @@ void gd_handle_glGetTexLevelParameterfv(GLContext* context) {
 
     GLfloat result;
     GLRenderer_getTexParameter(currentRenderer, target, level, pname, &result);
-    { static int rep = 0; if (rep++ < 40) gladioServerLog("glGetTexLevelParameter target=0x%x level=%d pname=0x%x -> %g", target, level, pname, (double)result); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_TEX_LEVEL_PARAMETERFV, &result, sizeof(GLfloat));
 }
 
@@ -2713,17 +2692,8 @@ void gd_handle_glTexImage2D(GLContext* context) {
     else {
         void* imageData = NULL;
         RING_READ_BEGIN(context->serverRing, imageData, imageSize);
-        GLint requestedInternalformat = internalformat;
-        GLenum requestedFormat = format, requestedType = type;
         convertTexImageFormat(target, &internalformat, &format, &type, &imageData, imageSize);
-        glGetError();
         glTexImage2D(target, level, internalformat, width, height, border, format, type, imageData);
-        GLenum texError = glGetError();
-        if (texError != GL_NO_ERROR) {
-            static int reported = 0;
-            if (reported++ < 12) gladioServerLog("glTexImage2D error 0x%x: target=0x%x level=%d %dx%d border=%d internalformat 0x%x->0x%x format 0x%x->0x%x type 0x%x->0x%x imageSize=%d",
-                texError, target, level, width, height, border, requestedInternalformat, internalformat, requestedFormat, format, requestedType, type, imageSize);
-        }
         RING_READ_END(context->serverRing);
     }
 

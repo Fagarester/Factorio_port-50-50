@@ -138,7 +138,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         if (!nativeFile.isFile()) {
             // Without this check the glibc loader only prints "cannot open shared object file" for the game binary.
             final String reason = describeMissingGame(nativeSrc, nativeFile);
-            android.util.Log.e("Factorio", reason);
+            ;
             File missingLogDir = LogView.getLogFile().getParentFile();
             if (missingLogDir != null && missingLogDir.isDirectory() && missingLogDir.canWrite()) {
                 FileUtils.writeString(new File(missingLogDir, "factorio-native.log"), reason+"\n");
@@ -237,7 +237,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             try {
                 mesaDir = BundledOpenGL.prepare(environment.getContext(), rootDir);
             } catch (java.io.IOException e) {
-                android.util.Log.e("Factorio", "Cannot prepare bundled OpenGL", e);
+                ;
                 return -1;
             }
             libPath = mesaDir+"/lib:"+libPath;

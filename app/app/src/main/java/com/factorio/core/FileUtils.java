@@ -75,7 +75,7 @@ public abstract class FileUtils {
             return true;
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
         return false;
     }
@@ -87,7 +87,7 @@ public abstract class FileUtils {
             return true;
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
         return false;
     }
@@ -232,7 +232,7 @@ public abstract class FileUtils {
             }
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
         return lines;
     }

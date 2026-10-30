@@ -63,7 +63,7 @@ public abstract class DriverReport {
     }
 
     public static void write(File dir, String text) {
-        Log.i(TAG, text);
+        ;
         try {
             if (dir != null && dir.isDirectory() && dir.canWrite()) FileUtils.writeString(new File(dir, "driver-report.txt"), text);
         }

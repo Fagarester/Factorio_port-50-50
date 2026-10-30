@@ -116,7 +116,7 @@ typedef struct JMethods {
 // size gets the 0x80000000 flag, the payload starts with [uint16 textLength][text] followed by the normal data.
 extern __thread char gladioServerMessage[480];
 extern __thread int gladioServerMessageLen;
-extern void gladioServerLog(const char* fmt, ...);
+#define gladioServerLog(...) ((void)0)
 
 static inline bool gl_send(RingBuffer* ring, short requestCode, void* data, int size) {
     char header[HEADER_SIZE];

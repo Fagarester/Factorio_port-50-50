@@ -104,7 +104,7 @@ public abstract class ProcessHelper {
                         if (!debugCallbacks.isEmpty()) {
                             for (Callback<String> callback : debugCallbacks) callback.call(line);
                         }
-                        else if (MainActivity.DEBUG_MODE) System.out.println(line);
+                        else if (MainActivity.DEBUG_MODE) ;
                     }
                 }
             }

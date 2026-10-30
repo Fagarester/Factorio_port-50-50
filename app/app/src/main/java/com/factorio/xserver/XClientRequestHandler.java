@@ -158,14 +158,6 @@ public class XClientRequestHandler implements RequestHandler {
         client.generateSequenceNumber();
         client.setRequestData(requestData);
         client.setRequestLength(requestLength);
-        client.traceRequest(opcode & 255, requestData & 255, requestLength);
-
-        // Debug tracing (visible only when the debug log is enabled)
-        if (opcode < 0) {
-            Extension traced = client.xServer.getExtension(opcode);
-            client.xServer.debugPrint("ext "+(traced != null ? traced.getName() : "?")+" minor="+(requestData & 0xff));
-        }
-        else client.xServer.debugPrint("core opcode="+opcode);
 
         try {
             if (opcode < 0) {

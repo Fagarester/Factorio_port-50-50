@@ -101,7 +101,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
         boolean bcnLayerLoaded = false;
         if (bcnLayerPath != null) {
             bcnLayerLoaded = initBcnLayer(bcnLayerPath);
-            if (!bcnLayerLoaded) Log.w("VortekRenderer", "BCn layer not loaded, using CPU decoding");
+            if (!bcnLayerLoaded) ;
         }
         writeReport(vulkanReport, bcnLayerPath, bcnLayerLoaded);
     }
@@ -129,7 +129,7 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
             }
         }
         catch (ErrnoException e) {
-            Log.w("VortekRenderer", "unable to set BCn layer environment", e);
+            ;
         }
         return layerFile.getPath();
     }
@@ -249,10 +249,10 @@ public class VortekRendererComponent extends EnvironmentComponent implements Con
 
             File dir = LogView.getLogFile().getParentFile();
             if (dir != null && dir.isDirectory() && dir.canWrite()) FileUtils.writeString(new File(dir, "vortek-report.txt"), sb.toString());
-            Log.i("VortekRenderer", sb.toString());
+            ;
         }
         catch (Exception e) {
-            Log.w("VortekRenderer", "unable to write vortek-report", e);
+            ;
         }
     }
 

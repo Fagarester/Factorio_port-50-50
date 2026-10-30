@@ -179,10 +179,6 @@ static void* requestHandlerThread(void* param) {
                 }
 
                 setCurrentRenderWindow(context, windowId);
-                {
-                    static int helloSent = 0;
-                    if (helloSent++ < 2) gladioServerLog("server channel ok; GLES: %s / %s", (const char*)glGetString(GL_VERSION), (const char*)glGetString(GL_RENDERER));
-                }
                 gl_send(context->clientRing, REQUEST_CODE_SET_CURRENT_RENDER_WINDOW, NULL, 0);
                 break;
             }
@@ -212,20 +208,6 @@ static void* requestHandlerThread(void* param) {
 #if IS_DEBUG_ENABLED(DEBUG_MODE_GL_ERROR)
         GLenum error = glGetError();
         if (error != GL_NO_ERROR) println("gladio: glError %s %x", requestCodeToString(requestCode), error);
-#else
-        {
-            // the first GL errors go to the game's log (see gladioServerLog); checked only early, glGetError after every request is not free
-            static int checksLeft = 30000;
-            static int errorsLeft = 40;
-            if (checksLeft > 0 && errorsLeft > 0) {
-                checksLeft--;
-                GLenum error = glGetError();
-                if (error != GL_NO_ERROR) {
-                    errorsLeft--;
-                    gladioServerLog("glError 0x%x after request code %d", error, (int)requestCode);
-                }
-            }
-        }
 #endif
     }
 

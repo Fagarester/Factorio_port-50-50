@@ -218,7 +218,7 @@ public class LogView extends View {
         }
         postInvalidate();
 
-        if (MainActivity.DEBUG_MODE) System.out.println(line);
+        if (MainActivity.DEBUG_MODE) ;
     }
 
     public static File getLogFile() {

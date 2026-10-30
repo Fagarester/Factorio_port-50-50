@@ -65,7 +65,7 @@ public class XClient extends ConnectedClient implements XResourceManager.OnResou
             event.send(sequenceNumber, outputStream);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            ;
         }
     }
 

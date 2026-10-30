@@ -124,7 +124,7 @@ public class InterposerGamepadServer {
                 return true;
             }
             catch (Exception e) {
-                Log.e(TAG, "Cannot bind "+path+": "+e);
+                ;
                 stop();
                 return false;
             }
@@ -140,7 +140,7 @@ public class InterposerGamepadServer {
                     thread.start();
                 }
                 catch (IOException e) {
-                    if (running) Log.w(TAG, "accept failed on "+path+": "+e);
+                    if (running) ;
                     break;
                 }
             }
@@ -175,7 +175,7 @@ public class InterposerGamepadServer {
         this.rumbleListener = rumbleListener;
         if (!socketDir.isDirectory()) socketDir.mkdirs();
         if (socketDir.getPath().length() + 24 > 107) {
-            Log.w(TAG, "Socket directory path is too long for AF_UNIX (108 bytes limit): "+socketDir);
+            ;
         }
         for (int slot = 0; slot < SLOT_COUNT; slot++) resetState(slot);
     }
@@ -203,7 +203,7 @@ public class InterposerGamepadServer {
             if (ev.start() && js.start()) {
                 evEndpoints[slot] = ev;
                 jsEndpoints[slot] = js;
-                Log.i(TAG, "slot "+slot+" attached");
+                ;
             }
             else {
                 ev.stop();
@@ -215,7 +215,7 @@ public class InterposerGamepadServer {
             evEndpoints[slot].stop();
             jsEndpoints[slot] = null;
             evEndpoints[slot] = null;
-            Log.i(TAG, "slot "+slot+" detached");
+            ;
         }
     }
 

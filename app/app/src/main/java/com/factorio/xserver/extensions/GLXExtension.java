@@ -379,7 +379,6 @@ public class GLXExtension extends Extension {
             // Lets any log show which server build produced it (APK must contain all of these fixes).
             xServer.debugPrint("BUILD v33: GLX event base=72 (range 72..88); optional wire trace via X11_WIRE_TRACE=1");
         }
-        xServer.debugPrint("GLX handleRequest: opcode=" + opcode);
         switch (opcode) {
             case ClientOpcodes.CREATE_GL_CONTEXT:
                 createGLContext(client, inputStream, outputStream);
