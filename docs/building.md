@@ -49,3 +49,12 @@ python3 tools/repack-runtime.py runtime/out/apk/assets/runtime.tar.xz \
 
 Подпись: если есть `../../factory-keys/keystore.properties` (или переменная `FACTORY_SIGNING` указывает на файл),
 debug и release подписываются этим ключом. Иначе используется обычный debug-ключ. Ключи в репозиторий не кладутся.
+
+## Сборка на GitHub
+
+Workflow `.github/workflows/build.yml` собирает APK на GitHub: вкладка **Actions → Build APK → Run workflow**.
+Он также запускается при push в `main`, кроме правок документов. Готовый APK лежит в разделе **Artifacts** запуска.
+
+- `runtime.tar.xz` берётся из релиза (поле `runtime_release`). Новую среду выполнения сначала выложите в релиз.
+- Подпись: секреты `FACTORY_KEYSTORE_BASE64`, `FACTORY_STORE_PASSWORD`, `FACTORY_KEY_ALIAS`, `FACTORY_KEY_PASSWORD`.
+  Без них APK подписан случайным ключом и не ставится поверх версии с другим ключом.
