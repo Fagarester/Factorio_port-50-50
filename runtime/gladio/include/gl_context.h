@@ -1,0 +1,138 @@
+#ifndef GLADIO_GL_CONTEXT_H
+#define GLADIO_GL_CONTEXT_H
+
+#include <time.h>
+#include "gl_client_state.h"
+
+typedef struct __GLXcontextRec {
+    Display* dpy;
+    int id;
+    GLXDrawable drawable;
+    GLClientState clientState;
+} __GLXcontextRec;
+
+typedef struct CommandBuffer {
+    bool begin;
+    GLenum mode;
+    int minIndex;
+    int maxIndex;
+    ArrayBuffer data;
+} CommandBuffer;
+
+typedef struct GLContext {
+    int id;
+    RingBuffer* serverRing;
+    RingBuffer* clientRing;
+    GLClientState* clientState;
+    GLXContext glxContext;
+    CommandBuffer commandBuffer;
+    uint8_t lockCount;
+    void* sync; // the server's handler of this thread as a coroutine (GLADIO_INPROCESS with sync), see main.c
+} GLContext;
+
+typedef struct AttributePair {
+    int name;
+    int value;
+} AttributePair;
+
+typedef struct __GLXFBConfigRec {
+    AttributePair attributes[16];
+    int numProperties;
+} __GLXFBConfigRec;
+
+extern bool setupRingBuffers(GLContext* context);
+extern void (*gl_sync_finish)(void* sync);
+extern bool gladioInitOnce();
+extern char* getCachedString(int name);
+extern char* putCachedString(int name, char* string, int length);
+extern void writeUnboundVertexArrays(GLint first, GLsizei count, const void* indices, GLenum indexType, GLint basevertex);
+extern int serverFd;
+extern ArrayBuffer outputBuffer;
+extern ArrayBuffer inputBuffer;
+extern SparseArray glxContexts;
+extern thread_local GLContext* currentGLContext;
+
+// One lock for all GL / GLX calls (they share the request buffers). A futex lock instead of pthread_mutex_t: uncontended
+// it is one atomic exchange to take and one to give back; Factorio makes up to 50k calls a frame from its render thread.
+// 0 free, 1 taken, 2 taken with waiters (Drepper, "Futexes Are Tricky").
+#include <stdatomic.h>
+extern atomic_int gl_call_lock;
+extern void gl_call_lock_slow(void);
+extern void gl_call_unlock_wake(void);
+static inline void gl_lock(void) {
+    int expected = 0;
+    if (!atomic_compare_exchange_strong_explicit(&gl_call_lock, &expected, 1, memory_order_acquire, memory_order_relaxed)) gl_call_lock_slow();
+}
+static inline void gl_unlock(void) {
+    if (atomic_exchange_explicit(&gl_call_lock, 0, memory_order_release) == 2) gl_call_unlock_wake();
+}
+
+#define GLX_OPCODE_CREATE_GL_CONTEXT 1
+#define GLX_OPCODE_DESTROY_GL_CONTEXT 2
+#define GLX_OPCODE_CREATE_CONTEXT 3
+#define GLX_OPCODE_DESTROY_CONTEXT 4
+#define GLX_OPCODE_QUERY_VERSION 7
+#define GLX_OPCODE_QUERY_EXTENSIONS_STRING 18
+#define GLX_OPCODE_QUERY_SERVER_STRING 19
+#define GLX_OPCODE_GET_FB_CONFIGS 21
+#define GLX_OPCODE_CREATE_CONTEXT_ATTRIBS_ARB 34
+
+// frame time trace: time spent in Gladio's GL calls (outermost lock to unlock) and their number
+extern __thread uint64_t gl_call_enter_ns, gl_call_time_ns;
+extern __thread unsigned gl_call_count;
+static inline uint64_t gl_now_ns(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (uint64_t)t.tv_sec * 1000000000ull + t.tv_nsec;
+}
+// timed only with GLADIO_PROFILE=1: two clock reads per call cost ~2-3 ms a frame at Factorio's up to 50k calls
+extern int gl_profile;
+// GLADIO_PROFILE=2 times every call (two clock reads each: costly with tens of thousands of calls a frame); 1 only counts
+#define GL_CALL_LOCK() if (currentGLContext->lockCount++ == 0) { gl_lock(); if (gl_profile > 1) gl_call_enter_ns = gl_now_ns(); }
+#define GL_CALL_UNLOCK() if (--currentGLContext->lockCount == 0) { if (gl_profile) { if (gl_profile > 1) gl_call_time_ns += gl_now_ns() - gl_call_enter_ns; gl_call_count++; } gl_unlock(); }
+        
+static inline GLXContext createGLXContext(Display* dpy, int contextId, GLXContext sharedContext) {
+    GLXContext context = calloc(1, sizeof(__GLXcontextRec));
+    context->dpy = dpy;
+    context->id = contextId;
+    GLVertexArrayObject_setBound(&context->clientState, 0);
+    GLClientState_init(&context->clientState, sharedContext ? &sharedContext->clientState : NULL);
+    
+    SparseArray_put(&glxContexts, contextId, context);
+    return context;
+}
+
+static inline void createGLContextForCallingThread() {
+    if (currentGLContext) return;
+    int threadId = currentThreadId();
+    if (gl_profile) println("gladio: create GL context for thread %d", threadId);
+    glx_send(serverFd, GLX_OPCODE_CREATE_GL_CONTEXT, &threadId, sizeof(int));
+
+    GLContext* context = calloc(1, sizeof(GLContext));
+    context->id = threadId;
+
+    if (!setupRingBuffers(context)) {
+        free(context);
+        context = NULL;
+    }
+    currentGLContext = context;
+}
+
+static inline void destroyGLContextForCallingThread() {
+    if (!currentGLContext) return;
+    if (gl_profile) println("gladio: destroy GL context of thread %d (glxContext=%p)", currentThreadId(), (void*)currentGLContext->glxContext);
+    gl_flush(currentGLContext->serverRing);
+    // the handler ends here, on the thread its EGL context is current on, before the server frees the context
+    if (currentGLContext->sync) gl_sync_finish(currentGLContext->sync);
+    if (!glx_send(serverFd, GLX_OPCODE_DESTROY_GL_CONTEXT, &currentGLContext->id, sizeof(int))) return;
+
+    ArrayBuffer replyData = {0};
+    if (!glx_recv(serverFd, &replyData)) return;
+
+    if (currentGLContext->serverRing) RingBuffer_free(currentGLContext->serverRing);
+    if (currentGLContext->clientRing) RingBuffer_free(currentGLContext->clientRing);
+    free(currentGLContext);
+    currentGLContext = NULL;
+}
+
+#endif

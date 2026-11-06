@@ -1,0 +1,12 @@
+--- a/lorie/src/main/cpp/patches/dix-config.h.in	2026-11-03 20:37:13.179821781 +0000
++++ b/lorie/src/main/cpp/patches/dix-config.h.in	2026-11-03 20:37:13.191821781 +0000
+@@ -114,6 +114,9 @@
+ #define DRI3 1
+ #define HAS_SHM 1
+ #define MITSHM 1
++
++/* ShmAttachFd: clients share memfd buffers (Factory: frames of the Gladio OpenGL translator) */
++#define SHM_FD_PASSING 1
+ #define PANORAMIX 1
+ #define PRESENT 1
+ #define RANDR 1

@@ -1,0 +1,8 @@
+{
+  global:
+    gl*;
+    glX*;
+    __glX*;
+  local:
+    *;
+};

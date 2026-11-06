@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/type" />
+
+        <Spinner
+            style="@style/ComboBox"
+            android:id="@+id/SType"
+            android:layout_width="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/LLShape"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/shape" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SShape"
+                android:layout_width="match_parent" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/scale"/>
+
+        <com.factory.widget.SeekBar
+            android:id="@+id/SBScale"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:suffix="%"
+            app:step="5"
+            app:minValue="50"
+            app:maxValue="300" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/opacity" />
+
+        <com.factory.widget.SeekBar
+            android:id="@+id/SBOpacity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:suffix="%"
+            app:step="5"
+            app:minValue="0"
+            app:maxValue="100" />
+
+        <LinearLayout
+            android:id="@+id/LLOrientation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/orientation" />
+
+            <RadioGroup
+                android:id="@+id/RGOrientation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/RBHorizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/horizontal" />
+
+                <RadioButton
+                    android:id="@+id/RBVertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vertical" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLScrollOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/scroll_style" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SScrollStyle"
+                android:layout_width="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLCustomOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_trigger" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SCustomTrigger"
+                android:layout_width="match_parent" />
+
+            <CheckBox
+                android:id="@+id/CBCustomAutoClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_auto_close" />
+
+            <CheckBox
+                android:id="@+id/CBRootHidePath"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_root_hide" />
+
+            <CheckBox
+                android:id="@+id/CBRootAsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_root_as_button" />
+
+            <LinearLayout
+                android:id="@+id/LLRootBinding"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/TVCustomSelected"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text="@string/custom_selected_root" />
+
+            <Button
+                style="@style/ButtonNeutral"
+                android:id="@+id/BTCustomAdd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_add_button" />
+
+            <LinearLayout
+                android:id="@+id/LLCustomNode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/LLCustomNodeBinding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_node_size" />
+
+                <com.factory.widget.SeekBar
+                    android:id="@+id/SBNodeSize"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:suffix="%"
+                    app:step="10"
+                    app:minValue="40"
+                    app:maxValue="320" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shape" />
+
+                <Spinner
+                    style="@style/ComboBox"
+                    android:id="@+id/SNodeShape"
+                    android:layout_width="match_parent" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_node_text" />
+
+                <EditText
+                    style="@style/EditText"
+                    android:id="@+id/ETNodeText"
+                    android:maxLength="8"
+                    android:layout_width="match_parent"
+                    android:hint="@string/none"
+                    android:inputType="textCapCharacters" />
+
+                <CheckBox
+                    android:id="@+id/CBNodeHidePath"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_hide_on_path" />
+
+                <Button
+                    style="@style/ButtonNeutral"
+                    android:id="@+id/BTCustomRemove"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_remove_button" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLDrawerOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/drawer_side" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SDrawerSide"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/drawer_layout" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SDrawerLayout"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bindings" />
+
+            <com.factory.widget.NumberPicker
+                android:id="@+id/NPDrawerCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:minValue="1"
+                app:maxValue="40" />
+
+            <LinearLayout
+                android:id="@+id/LLDrawerGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/columns" />
+
+                <com.factory.widget.NumberPicker
+                    android:id="@+id/NPDrawerColumns"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:minValue="1"
+                    app:maxValue="40" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rows" />
+
+                <com.factory.widget.NumberPicker
+                    android:id="@+id/NPDrawerRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:minValue="1"
+                    app:maxValue="40" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/CBDrawerAutoClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/drawer_auto_close" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLRangeOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/range" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRange"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/columns" />
+
+            <com.factory.widget.NumberPicker
+                android:id="@+id/NPColumns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:minValue="3"
+                app:maxValue="8" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLRadialMenuOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_parts" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialParts"
+                android:layout_width="match_parent" />
+
+            <LinearLayout
+                android:id="@+id/LLRadialSingleCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bindings" />
+
+                <com.factory.widget.NumberPicker
+                    android:id="@+id/NPBindings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:minValue="1"
+                    app:maxValue="8" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/LLRadialPartsBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/radial_parts_hint" />
+
+                <LinearLayout
+                    android:id="@+id/LLRadialParts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_rotation" />
+
+            <com.factory.widget.SeekBar
+                android:id="@+id/SBRadialRotation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="°"
+                app:step="5"
+                app:minValue="0"
+                app:maxValue="355" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_distance" />
+
+            <com.factory.widget.SeekBar
+                android:id="@+id/SBRadialDistance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="%"
+                app:step="5"
+                app:minValue="50"
+                app:maxValue="250" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_style" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialStyle"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/radial_trigger" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/SRadialTrigger"
+                android:layout_width="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LLBindings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <CheckBox
+            android:id="@+id/CBToggleSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/toggle_switch" />
+
+        <CheckBox
+            android:id="@+id/CBMouseMoveMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/move_mouse_when_pressed" />
+
+        <LinearLayout
+            android:id="@+id/LLCustomTextIcon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_text" />
+
+            <EditText
+                style="@style/EditText"
+                android:id="@+id/ETCustomText"
+                android:maxLength="8"
+                android:layout_width="match_parent"
+                android:hint="@string/none"
+                android:inputType="textCapCharacters" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/icon" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+
+                <LinearLayout
+                    android:id="@+id/LLIconList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.22.1)
+
+project(Gladio C)
+message("Building ${PROJECT_NAME}")
+
+set(CMAKE_VERBOSE_MAKEFILE on)
+set(WARNS "-Wall -Wno-discarded-qualifiers -Wno-unused-function -Wimplicit-function-declaration -Werror=incompatible-pointer-types")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 ${WARNS} -DGL_GLEXT_PROTOTYPES -flto=auto -fno-semantic-interposition")
+
+include_directories(include)
+
+add_library(GL SHARED
+            src/main.c
+            src/gl_calls.c
+            src/glx_calls.c
+            src/arrays.c
+            src/ring_buffer.c
+            src/gl_buffer.c
+            src/gl_vao.c
+            src/present.c)
+
+find_library(X11_LIB X11)
+find_library(X11_XCB_LIB X11-xcb)
+find_library(XCB_LIB xcb)
+find_library(XCB_SHM_LIB xcb-shm)
+find_library(XCB_DRI3_LIB xcb-dri3)
+find_library(XCB_PRESENT_LIB xcb-present)
+# Export ONLY the GL / GLX API. Everything else (RingBuffer_*, ArrayBuffer_*, ...) has the same names as in libvulkan_vortek.so;
+# with exported names the dynamic linker can bind Vortek's calls to Gladio's copies (crash inside RingBuffer_write).
+set_target_properties(GL PROPERTIES LINK_FLAGS "-flto=auto -O2 -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/gladio.map -Wl,-Bsymbolic-functions -Wl,-z,defs")
+target_link_libraries(GL pthread dl m ${X11_LIB} ${X11_XCB_LIB} ${XCB_LIB} ${XCB_SHM_LIB} ${XCB_DRI3_LIB} ${XCB_PRESENT_LIB})
+set_target_properties(GL PROPERTIES VERSION 1.7.0 SOVERSION 1)

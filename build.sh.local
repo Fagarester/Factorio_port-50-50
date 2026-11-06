@@ -1,0 +1,5 @@
+#!/bin/sh
+# Gradle for Factory on ARM64 proot: system aapt2 (x86 via qemu) and CMake, wrapped NDK.
+cd /root/factory
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 ANDROID_HOME=/root/android/sdk CMAKE_POLICY_VERSION_MINIMUM=3.5
+exec ./gradlew --no-daemon -Pandroid.aapt2FromMavenOverride=/root/builds/aapt2-qemu/aapt2 "$@"

@@ -1,0 +1,39 @@
+name: Что-то не работает
+description: Чёрный экран, вылет, проблемы с управлением или другая ошибка.
+labels: [bug]
+body:
+  - type: input
+    id: phone
+    attributes:
+      label: Телефон
+      placeholder: Модель телефона
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версия Factory
+      placeholder: 1.0-hybrid-54
+    validations:
+      required: true
+  - type: input
+    id: driver
+    attributes:
+      label: Драйвер
+      description: Блок и варианты из настроек драйвера.
+      placeholder: Gladio, Termux:X11, напрямую + ANGLE
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Что случилось
+      description: Что вы сделали, что ожидали и что получили. Скриншоты помогают.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Журнал
+      description: Экспорт журнала из приложения.
+      render: text

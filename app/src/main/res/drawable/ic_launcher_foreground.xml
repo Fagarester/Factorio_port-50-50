@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Factory's own icon: a plain gear (not the game's art). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:rotation="0" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="45" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="90" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="135" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="180" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="225" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="270" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <group android:rotation="315" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#E39827" android:pathData="M48,24 L60,24 L61.5,34 L46.5,34 Z" />
+    </group>
+    <path android:fillColor="#E39827" android:pathData="M54,32 a22,22 0 1,0 0.01,0 Z" />
+    <path android:fillColor="#2E2A26" android:pathData="M54,45 a9,9 0 1,0 0.01,0 Z" />
+</vector>

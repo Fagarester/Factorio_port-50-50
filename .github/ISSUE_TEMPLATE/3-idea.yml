@@ -1,0 +1,9 @@
+name: Идея или вопрос
+description: Что Factory мог бы уметь, или что вы хотите узнать.
+body:
+  - type: textarea
+    id: text
+    attributes:
+      label: Ваша идея или вопрос
+    validations:
+      required: true

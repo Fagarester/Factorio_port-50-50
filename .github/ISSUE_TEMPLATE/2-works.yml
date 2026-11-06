@@ -1,0 +1,36 @@
+name: Работает на моём телефоне
+description: Телефон, на котором игра запускается, — для списка рабочих устройств.
+title: "[Работает] "
+labels: [works]
+body:
+  - type: input
+    id: phone
+    attributes:
+      label: Телефон
+      placeholder: Модель телефона
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      placeholder: Adreno 830
+    validations:
+      required: true
+  - type: input
+    id: driver
+    attributes:
+      label: Драйвер
+      placeholder: Zink + Turnip
+    validations:
+      required: true
+  - type: input
+    id: fps
+    attributes:
+      label: Кадров в секунду
+      placeholder: 60 FPS
+  - type: textarea
+    id: notes
+    attributes:
+      label: Что ещё
+      description: Изменённые настройки, что работает хуже.

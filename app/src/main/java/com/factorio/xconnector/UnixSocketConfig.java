@@ -1,0 +1,40 @@
+package com.factorio.xconnector;
+
+import com.factory.core.FileUtils;
+
+import java.io.File;
+
+public class UnixSocketConfig {
+    public static final String SYSVSHM_SERVER_PATH = "/tmp/.sysvshm/SM0";
+    public static final String ALSA_SERVER_PATH = "/tmp/.sound/AS0";
+    public static final String PULSE_SERVER_PATH = "/tmp/.sound/PS0";
+    public static final String VORTEK_SERVER_PATH = "/tmp/.vortek/V0";
+    public static final String XSERVER_PATH = "/tmp/.X11-unix/X0";
+    public final String path;
+
+    private UnixSocketConfig(String path) {
+        this.path = path;
+    }
+
+    /** A socket at this exact path (Factory: the X socket the game's DISPLAY names). */
+    public static UnixSocketConfig at(File socketFile) {
+        File dir = socketFile.getParentFile();
+        if (dir != null) dir.mkdirs();
+        socketFile.delete();
+        return new UnixSocketConfig(socketFile.getPath());
+    }
+
+    public static UnixSocketConfig create(String rootPath, String relativePath) {
+        File socketFile = new File(rootPath, relativePath);
+
+        String dirname = FileUtils.getDirname(relativePath);
+        if (dirname.lastIndexOf("/") > 0) {
+            File socketDir = new File(rootPath, FileUtils.getDirname(relativePath));
+            FileUtils.delete(socketDir);
+            socketDir.mkdirs();
+        }
+        else socketFile.delete();
+
+        return new UnixSocketConfig(socketFile.getPath());
+    }
+}
