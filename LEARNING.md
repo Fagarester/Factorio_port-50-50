@@ -31,3 +31,9 @@
 - FPS и время на стенде не показательны: futex и clock_gettime идут через ptrace. Число вызовов за кадр и картинка — показательны.
 - `perf_event_open` запрещён (SELinux). Профилировщик по SIGPROF: /root/builds/gladio-direct/prof (sampler.c, analyze.py; символы glibc из пакета libc6-dbg).
 - `pgrep -f <имя>` находит и сам цикл ожидания, в командной строке которого есть это имя. Ждать игру через `wait` или по PID.
+
+## Git и GitHub (Fagarester/Factorio_port-50-50)
+- 2026-11-06. `/root/factory` — рабочая копия репозитория. Termux:X11 — подмодуль на e8e9847; наши изменения только в `third_party/patches/termux-x11` (накладывает `tools/setup.sh`).
+- Сборка Termux:X11 сама меняет файлы вложенных подмодулей (`target_apply_patch` в `lorie/src/main/cpp/recipes/*.cmake`). Это не наши правки; локально стоит `submodule.third_party/termux-x11.ignore=dirty`.
+- Готовые `runtime.tar.xz` и APK не коммитятся (`.gitignore`), а выкладываются в Releases. Лимит GitHub на файл в репозитории — 100 МБ.
+- Подтверждение: чистый клон + `tools/setup.sh` + патчи CMake дали дерево, идентичное резервной копии №10 (diff -rq пуст, кроме документов и сборочных файлов).
