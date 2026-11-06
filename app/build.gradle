@@ -46,6 +46,9 @@ android {
         }
     }
 
+    // targetSdk 29 is deliberate (see defaultConfig) and the app isn't on Google Play: this check alone stops release builds.
+    lint.disable 'ExpiredTargetSdkVersion'
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
