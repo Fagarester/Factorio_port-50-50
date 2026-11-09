@@ -92,6 +92,8 @@ bool isNativeCompressedFormat(uint32_t format) {
         nativeS3TC = !off && strstr(extensions, "GL_EXT_texture_compression_s3tc") != NULL;
         nativeRGTC = !off && strstr(extensions, "GL_EXT_texture_compression_rgtc") != NULL;
         gladioServerLog("BC textures: %s", nativeS3TC ? (nativeRGTC ? "kept compressed (S3TC, RGTC)" : "S3TC kept compressed, RGTC decompressed") : "decompressed (driver has no S3TC)");
+        // the start summary: with decompressed textures big replies (texture read-backs) go through the reply ring
+        gladioServerLog("rings: requests %d MB, replies %d MB (more than half goes in parts)", SERVER_RING_BUFFER_SIZE >> 20, CLIENT_RING_BUFFER_SIZE >> 20);
     }
     switch (format) {
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:

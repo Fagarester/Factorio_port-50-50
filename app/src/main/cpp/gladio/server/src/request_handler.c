@@ -28,6 +28,19 @@ void gladioServerLog(const char* fmt, ...) {
 
 #define MSG_DEBUG_UNIMPLEMENTED_FUNC "%s not implemented yet"
 
+/**
+ * game.log ("gladio-server:"): replies over 8 MB, the first ones; over half the reply ring they go in parts (a 4096x4096
+ * texture read back uncompressed is 64 MB, the ring 32 MB: on a Mali that used to fail and break the mipmaps).
+ */
+#define SERVER_REPLY_HALF_RING (CLIENT_RING_BUFFER_SIZE / 2)
+static void logBigReply(const char* call, GLenum target, GLint level, int width, int height, GLenum format, int size) {
+    static int logged = 0;
+    if (size <= 8 * 1024 * 1024 || logged >= 24) return;
+    logged++;
+    gladioServerLog("%s target=0x%x level=%d %dx%d format=0x%x: %d KB reply%s%s", call, target, level, width, height, format,
+                    size / 1024, size > SERVER_REPLY_HALF_RING ? ", in parts" : "", logged == 24 ? " (no more of these)" : "");
+}
+
 void gd_handle_glAccum(GLContext* context) {
     GLenum op = ArrayBuffer_getInt(&context->inputBuffer);
     GLfloat value = ArrayBuffer_getFloat(&context->inputBuffer);
@@ -1518,6 +1531,8 @@ void gd_handle_glGetCompressedTexImage(GLContext* context) {
     void* compressedData = GLRenderer_getCompressedTexImage(currentRenderer, target, level, &compressedSize);
     { static int rep = 0; GLTexture* t = GLTexture_getBound(parseTexTarget(target));
       if (rep++ < 0) gladioServerLog("glGetCompressedTexImage target=0x%x level=%d tex=%dx%d originFormat=0x%x -> size=%d", target, level, t ? t->width : -1, t ? t->height : -1, t ? t->originFormat : 0, compressedSize); }
+    { GLTexture* t = GLTexture_getBound(parseTexTarget(target));
+      logBigReply("glGetCompressedTexImage", target, level, t ? t->width : -1, t ? t->height : -1, t ? t->originFormat : 0, compressedSize); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_COMPRESSED_TEX_IMAGE, &compressedSize, sizeof(int));
 
     if (compressedSize > 0) {
@@ -1853,6 +1868,8 @@ void gd_handle_glGetTexImage(GLContext* context) {
     int imageSize;
     void* pixels = GLRenderer_getTexImage(currentRenderer, target, level, format, type, &imageSize);
     { static int rep = 0; if (rep++ < 0) gladioServerLog("glGetTexImage target=0x%x level=%d format=0x%x type=0x%x -> size=%d", target, level, format, type, imageSize); }
+    { GLTexture* t = GLTexture_getBound(parseTexTarget(target));
+      logBigReply("glGetTexImage", target, level, t ? t->width : -1, t ? t->height : -1, format, imageSize); }
     gl_send(context->clientRing, REQUEST_CODE_GL_GET_TEX_IMAGE, &imageSize, sizeof(int));
 
     if (imageSize > 0) {
@@ -2563,7 +2580,21 @@ void gd_handle_glReadPixels(GLContext* context) {
         int imageSize = computeTexImageDataSize(format, type, width, height, 1);
         gl_send(context->clientRing, REQUEST_CODE_GL_READ_PIXELS, &imageSize, sizeof(int));
 
-        if (imageSize > 0) {
+        logBigReply("glReadPixels", 0, 0, width, height, format, imageSize);
+        if (imageSize > (int)(context->clientRing->bufferSize / 2)) {
+            // more than half the reply ring: read into memory, RingBuffer_write sends it in parts (the client reads
+            // them in parts); written straight into the ring it would not fit and the client would wait forever
+            void* pixels = malloc(imageSize);
+            if (pixels) {
+                if (raw) GLRenderer_readPixelsRaw(currentRenderer, x, y, width, height, format, type, pixels);
+                else GLRenderer_readPixels(currentRenderer, x, y, width, height, format, type, pixels);
+            }
+            else gladioServerLog("glReadPixels: no memory for %d KB, zeros sent", imageSize / 1024);
+            if (!pixels) pixels = calloc(1, imageSize);
+            RingBuffer_write(context->clientRing, pixels, imageSize);
+            free(pixels);
+        }
+        else if (imageSize > 0) {
             RING_WRITE_BEGIN(context->clientRing, imageSize);
             if (raw) GLRenderer_readPixelsRaw(currentRenderer, x, y, width, height, format, type, ringData);
             else GLRenderer_readPixels(currentRenderer, x, y, width, height, format, type, ringData);

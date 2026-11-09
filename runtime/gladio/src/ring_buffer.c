@@ -52,6 +52,37 @@ static inline void futexWait(atomic_uint* word, uint32_t expected) {
     syscall(SYS_futex, (uint32_t*)word, FUTEX_WAIT, expected, &timeout, NULL, 0);
 }
 
+/** Log: big transfers that go in parts (the first ones), as found on a Mali where they used to fail. */
+#define RING_LOGGED_PARTS 24
+static int ringPartsLogged = 0;
+static void ringLogParts(RingBuffer* ring, const char* what, uint32_t size) {
+    if (ringPartsLogged >= RING_LOGGED_PARTS) return;
+    ringPartsLogged++;
+    fprintf(stderr, "gladio ring: %s %u KB in parts of %u KB (ring %u MB)%s\n", what, size / 1024, ring->bufferSize / 2 / 1024,
+        ring->bufferSize >> 20, ringPartsLogged == RING_LOGGED_PARTS ? " (no more of these)" : "");
+}
+
+/**
+ * Watchdog for waits in the middle of a transfer (more than 4 KB: never the wait for the next request, which is idle
+ * time): after 2 s it logs, then every 5 s, so a hang shows what it waits for. Returns the next time to log.
+ */
+#define RING_STALL_FIRST_MS 2000
+#define RING_STALL_EVERY_MS 5000
+static uint64_t ringStallClockMs(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (uint64_t)t.tv_sec * 1000u + t.tv_nsec / 1000000;
+}
+static uint64_t ringStallCheck(RingBuffer* ring, const char* what, uint32_t size, uint64_t start, uint64_t next) {
+    if (size <= 4096) return next;
+    uint64_t now = ringStallClockMs();
+    if (next == 0) return start + RING_STALL_FIRST_MS;
+    if (now < next) return next;
+    fprintf(stderr, "gladio ring: %s waits %.1f s for %u KB (ring %u MB holds %u KB, status 0x%x)\n", what, (now - start) / 1000.0, size / 1024,
+        ring->bufferSize >> 20, RingBuffer_size(ring) / 1024, (unsigned)atomic_load_explicit(ring->status, memory_order_seq_cst));
+    return now + RING_STALL_EVERY_MS;
+}
+
 __thread unsigned ring_wakes = 0, ring_writes = 0; // frame time trace
 
 static inline void futexWakeIfWaiting(RingBuffer* ring, atomic_uint* word) {
@@ -124,9 +155,15 @@ uint32_t RingBuffer_freeSpace(RingBuffer* ring) {
 }
 
 bool RingBuffer_read(RingBuffer* ring, void* data, uint32_t size) {
-    if (size > ring->bufferSize) {
-        debug_printf("ring: buffer overflow on read (%d/%d)\n", size, ring->bufferSize);
-        return false;
+    // more than half the ring (a 4096x4096 texture read back uncompressed is 64 MB, the reply ring 32 MB): in parts,
+    // as the other side writes them; it used to fail and leave the caller's memory unfilled (broken mipmaps on Mali)
+    if (size > ring->bufferSize / 2) {
+        ringLogParts(ring, "read", size);
+        for (uint32_t done = 0, part; done < size; done += part) {
+            part = size - done < ring->bufferSize / 2 ? size - done : ring->bufferSize / 2;
+            if (!RingBuffer_read(ring, (char*)data + done, part)) return false;
+        }
+        return true;
     }
 
     if (!RingBuffer_waitForRead(ring, size)) return false;
@@ -147,9 +184,14 @@ bool RingBuffer_read(RingBuffer* ring, void* data, uint32_t size) {
 }
 
 bool RingBuffer_write(RingBuffer* ring, const void* data, uint32_t size) {
-    if (size > ring->bufferSize) {
-        debug_printf("ring: buffer overflow on write (%d/%d)\n", size, ring->bufferSize);
-        return false;
+    // more than half the ring: in parts, the reader takes each before the next fits (see RingBuffer_read)
+    if (size > ring->bufferSize / 2) {
+        ringLogParts(ring, "write", size);
+        for (uint32_t done = 0, part; done < size; done += part) {
+            part = size - done < ring->bufferSize / 2 ? size - done : ring->bufferSize / 2;
+            if (!RingBuffer_write(ring, (const char*)data + done, part)) return false;
+        }
+        return true;
     }
 
     if (!RingBuffer_waitForWrite(ring, size)) return false;
@@ -229,9 +271,11 @@ static bool waitForReadSlow(RingBuffer* ring, uint32_t size) {
         if (RingBuffer_size(ring) >= size) return true;
         sched_yield();
     }
+    uint64_t stallStart = size > 4096 ? ringStallClockMs() : 0, stallNext = 0;
     for (;;) {
         if (RingBuffer_size(ring) >= size) return true;
         if (RingBuffer_hasStatus(ring, RING_STATUS_EXIT)) return false;
+        stallNext = ringStallCheck(ring, "read", size, stallStart, stallNext);
         uint32_t tail = atomic_load_explicit(ring->tail, memory_order_seq_cst);
         atomic_fetch_add_explicit(ringWaiters(ring), 1, memory_order_seq_cst);
         if (tail - RingBuffer_getHead(ring) < size) futexWait(ring->tail, tail);
@@ -248,9 +292,11 @@ static bool waitForWriteSlow(RingBuffer* ring, uint32_t size) {
         if (RingBuffer_freeSpace(ring) >= size) return true;
         sched_yield();
     }
+    uint64_t stallStart = size > 4096 ? ringStallClockMs() : 0, stallNext = 0;
     for (;;) {
         if (RingBuffer_freeSpace(ring) >= size) return true;
         if (RingBuffer_hasStatus(ring, RING_STATUS_EXIT)) return false;
+        stallNext = ringStallCheck(ring, "write", size, stallStart, stallNext);
         uint32_t head = atomic_load_explicit(ring->head, memory_order_seq_cst);
         atomic_fetch_add_explicit(ringWaiters(ring), 1, memory_order_seq_cst);
         if (ring->bufferSize - (RingBuffer_getTail(ring) - head) < size) futexWait(ring->head, head);

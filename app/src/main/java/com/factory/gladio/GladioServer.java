@@ -10,14 +10,100 @@ public final class GladioServer {
     /** The phone's own ANGLE (GLES on Vulkan), which apps may not load from /system: copied to files/angle first. */
     private static final String[] ANGLE_LIBRARIES = {"libGLESv2_angle.so", "libEGL_angle.so"};   // in load order
     private static final java.io.File SYSTEM_LIB = new java.io.File("/system/lib64");
+    /** Other library folders some phones (MediaTek ones among them) keep ANGLE in. */
+    private static final String[] ANGLE_DIRS = {"/system/lib64", "/system_ext/lib64", "/product/lib64", "/vendor/lib64"};
+    /** ANGLE as an app (Android 10–14 on many phones): the libraries are inside its APK, lib/arm64-v8a/. */
+    private static final String[] ANGLE_PACKAGES = {"com.android.angle", "com.google.android.angle"};
 
     private static boolean loaded;
     private static boolean angle;
+    private static boolean angleSearched;
+    private static java.io.File angleSource;   // a library folder or an APK; null without ANGLE
 
-    /** Whether the phone has ANGLE in /system (Android 10+ on most phones). */
-    public static boolean angleAvailable() {
-        for (String name : ANGLE_LIBRARIES) if (!new java.io.File(SYSTEM_LIB, name).isFile()) return false;
-        return true;
+    /** Where the phone keeps ANGLE (searched once per process), or null. */
+    public static synchronized java.io.File angleSource(android.content.Context context) {
+        if (angleSearched) return angleSource;
+        angleSearched = true;
+        for (String path : ANGLE_DIRS) {
+            java.io.File dir = new java.io.File(path);
+            boolean all = true;
+            for (String name : ANGLE_LIBRARIES) all &= new java.io.File(dir, name).isFile();
+            if (all) return angleSource = dir;
+        }
+        for (String name : ANGLE_PACKAGES) {
+            try {
+                java.io.File apk = new java.io.File(context.getPackageManager().getApplicationInfo(name, 0).sourceDir);
+                try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(apk)) {
+                    boolean all = true;
+                    for (String library : ANGLE_LIBRARIES) all &= zip.getEntry("lib/arm64-v8a/"+library) != null;
+                    if (all) return angleSource = apk;
+                }
+            }
+            catch (Exception e) {
+                // not installed, or its APK can't be read
+            }
+        }
+        return null;
+    }
+
+    /** Whether the phone has ANGLE: in a system library folder or as the ANGLE app. */
+    public static boolean angleAvailable(android.content.Context context) {
+        return angleSource(context) != null;
+    }
+
+    /** Whether ANGLE is in /system/lib64, where libhybris finds it by name. */
+    public static boolean angleInSystemLib(android.content.Context context) {
+        return SYSTEM_LIB.equals(angleSource(context));
+    }
+
+    /** files/angle: the copies of ANGLE's libraries, which the app and the game may load. */
+    public static java.io.File angleDir(android.content.Context context) {
+        return new java.io.File(context.getFilesDir(), "angle");
+    }
+
+    /** Copies ANGLE into files/angle again when the system's copy changed (a system update). */
+    public static synchronized java.io.File installAngle(android.content.Context context) throws java.io.IOException {
+        java.io.File source = angleSource(context);
+        if (source == null) throw new java.io.IOException("no ANGLE on this phone");
+        java.io.File dir = angleDir(context);
+        if (!dir.isDirectory() && !dir.mkdirs()) throw new java.io.IOException("cannot create "+dir);
+        StringBuilder stamp = new StringBuilder(source.getPath());
+        if (source.isDirectory()) {
+            for (String name : ANGLE_LIBRARIES) {
+                java.io.File file = new java.io.File(source, name);
+                stamp.append(' ').append(file.length()).append(' ').append(file.lastModified());
+            }
+        }
+        else stamp.append(' ').append(source.length()).append(' ').append(source.lastModified());
+        java.io.File stampFile = new java.io.File(dir, ".source");
+        boolean copied = true;
+        for (String name : ANGLE_LIBRARIES) copied &= new java.io.File(dir, name).isFile();
+        if (copied && stamp.toString().equals(com.factory.core.FileUtils.readString(stampFile))) return dir;
+
+        java.util.zip.ZipFile zip = source.isDirectory() ? null : new java.util.zip.ZipFile(source);
+        try {
+            for (String name : ANGLE_LIBRARIES) {
+                java.io.File copy = new java.io.File(dir, name), part = new java.io.File(dir, name+".part");
+                if (zip == null) {
+                    if (!com.factory.core.FileUtils.copy(new java.io.File(source, name), part)) throw new java.io.IOException("cannot copy "+name);
+                }
+                else {
+                    try (java.io.InputStream in = zip.getInputStream(zip.getEntry("lib/arm64-v8a/"+name));
+                         java.io.OutputStream out = new java.io.FileOutputStream(part)) {
+                        byte[] buffer = new byte[1 << 16];
+                        int length;
+                        while ((length = in.read(buffer)) > 0) out.write(buffer, 0, length);
+                    }
+                }
+                copy.delete();
+                if (!part.renameTo(copy)) throw new java.io.IOException("cannot copy "+name);
+            }
+        }
+        finally {
+            if (zip != null) zip.close();
+        }
+        com.factory.core.FileUtils.writeString(stampFile, stamp.toString());
+        return dir;
     }
 
     /**
@@ -27,21 +113,10 @@ public final class GladioServer {
      */
     public static synchronized boolean load(android.content.Context context, boolean wantAngle) {
         if (loaded) return angle;
-        if (context != null && wantAngle && angleAvailable()) {
+        if (context != null && wantAngle && angleAvailable(context)) {
             try {
-                java.io.File dir = new java.io.File(context.getFilesDir(), "angle");
-                if (!dir.isDirectory() && !dir.mkdirs()) throw new java.io.IOException("cannot create "+dir);
-                for (String name : ANGLE_LIBRARIES) {
-                    java.io.File source = new java.io.File(SYSTEM_LIB, name), copy = new java.io.File(dir, name);
-                    // a system update brings a new ANGLE: copy again when the size or date differ
-                    if (copy.length() != source.length() || copy.lastModified() != source.lastModified()) {
-                        java.io.File part = new java.io.File(dir, name+".part");
-                        if (!com.factory.core.FileUtils.copy(source, part) || !part.renameTo(copy))
-                            throw new java.io.IOException("cannot copy "+source);
-                        copy.setLastModified(source.lastModified());
-                    }
-                    System.load(copy.getPath());
-                }
+                java.io.File dir = installAngle(context);
+                for (String name : ANGLE_LIBRARIES) System.load(new java.io.File(dir, name).getPath());
                 System.loadLibrary("gladioserver_angle");
                 angle = true;
             }

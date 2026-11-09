@@ -110,6 +110,9 @@ public final class Gladio {
         // GLADIO_DIRECT_PROCESS=1, a program beside it (Session starts it); not in here
         if (com.factory.runtime.Drivers.INSTANCE.gladioDirect(context)) {
             installDirect(context, installed);
+            // ANGLE outside /system/lib64: libhybris loads the copies in files/angle by their full path
+            if (com.factory.runtime.Drivers.INSTANCE.gladioDirectAngle(context) && !GladioServer.angleInSystemLib(context))
+                GladioServer.installAngle(context);
             return;
         }
         String error;
