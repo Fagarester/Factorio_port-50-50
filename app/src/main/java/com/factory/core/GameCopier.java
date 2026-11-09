@@ -195,4 +195,81 @@ public final class GameCopier {
         Log.i(TAG, "game copy: "+result.files+" files, "+(sum >> 20)+" MB -> "+(result.outBytes >> 20)+" MB, png shrunk "+result.pngShrunk+"/"+result.pngTotal);
         return result;
     }
+
+    /**
+     * Settings → texture compression: shrinks the PNG textures of the copied game where they are (each through a
+     * temporary file, so a stop leaves whole files). There is no way back but copying the game again.
+     */
+    public static Result compressInPlace(final File gameDir, final int mode, final Progress progress) {
+        final Result result = new Result();
+        final List<File> dirs = new ArrayList<>();
+        final List<File> all = new ArrayList<>();
+        collect(gameDir, dirs, all);
+        final List<File> pngs = new ArrayList<>();
+        long sum = 0;
+        for (File file : all) {
+            if (!file.getName().toLowerCase(Locale.ROOT).endsWith(".png")) continue;
+            if (GameCompression.isProtected(FileUtils.toRelativePath(gameDir.getPath(), file.getPath()))) result.skipProtected++;
+            else {
+                pngs.add(file);
+                sum += file.length();
+            }
+        }
+        result.pngTotal = pngs.size() + result.skipProtected;
+        final long totalBytes = Math.max(1, sum);
+        final int ratio = GameCompression.textureRatio(mode);
+        if (ratio <= 0 || !TextureCompressor.isAvailable()) return result;
+
+        final int minColors = GameCompression.textureMinColors(mode);
+        final int kmeans = GameCompression.textureKmeans(mode);
+        final int dither = GameCompression.textureDither(mode);
+        int threads = Math.max(2, Math.min(3, Runtime.getRuntime().availableProcessors() / 2)); // shrinking needs memory
+        final AtomicLong doneBytes = new AtomicLong(), outBytes = new AtomicLong();
+        final AtomicInteger shrunk = new AtomicInteger(), errors = new AtomicInteger(), lastPercent = new AtomicInteger(-1);
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<>();
+        for (final File png : pngs) {
+            futures.add(pool.submit(() -> {
+                long size = png.length();
+                File tmp = new File(png.getPath()+".shrinking");
+                int rc;
+                try {
+                    rc = TextureCompressor.shrinkPng(png.getPath(), tmp.getPath(), ratio, minColors, kmeans, dither);
+                }
+                catch (Throwable e) {
+                    Log.e(TAG, "Cannot shrink "+png, e);
+                    rc = -1;
+                }
+                if (rc == TextureCompressor.OK && tmp.renameTo(png)) shrunk.incrementAndGet();
+                else {
+                    if (rc < 0) errors.incrementAndGet();
+                    tmp.delete();
+                }
+                outBytes.addAndGet(png.length());
+                int percent = (int)(doneBytes.addAndGet(size) * 100 / totalBytes);
+                if (progress != null && percent != lastPercent.getAndSet(percent)) progress.onProgress(Math.min(percent, 100));
+            }));
+        }
+        pool.shutdown();
+        boolean failed = false;
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            }
+            catch (Exception e) {
+                Log.e(TAG, "Shrink task failed", e);
+                failed = true;
+            }
+        }
+        result.ok = !failed;
+        result.pngShrunk = shrunk.get();
+        result.pngErrors = errors.get();
+        result.inBytes = sum;
+        result.outBytes = outBytes.get();
+        result.report = "Texture compression in place\nmode: "+(mode == GameCompression.HIGH ? "high" : "low")+" (x"+ratio+")\n"+
+            "PNG files: "+result.pngTotal+", shrunk: "+result.pngShrunk+", protected (menu/GUI/LUT/icons) "+result.skipProtected+
+            ", errors "+result.pngErrors+"\nshrinkable PNG: "+(sum >> 20)+" MB -> "+(result.outBytes >> 20)+" MB\n";
+        Log.i(TAG, result.report);
+        return result;
+    }
 }

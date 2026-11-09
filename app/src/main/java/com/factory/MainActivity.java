@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private boolean autoStartPending = false; // true only on a fresh app start (not on rotation / returning from the game)
     private int selectedProfileId;
     private Callback<Uri> openFileCallback;
+    private Runnable permissionCallback;
     private SharedPreferences preferences;
     private Fragment currentFragment;
     private boolean openedFromGame = false; // Settings were opened from the in-game side drawer (the game is running underneath)
@@ -58,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
 
         Intent startIntent = getIntent();
+        // screen.log (while a game runs): the launcher opening over the game screen would close or cover it
+        com.factory.runtime.ScreenLog.INSTANCE.add("launcher opened" + (savedInstanceState != null ? " (recreated)" : "") +
+            ", extras " + (startIntent.getExtras() != null ? startIntent.getExtras().keySet() : "none"));
         openedFromGame = startIntent.getBooleanExtra("from_game", false) || Session.INSTANCE.getState() != Session.State.STOPPED;
         boolean openedByShortcutOrApp = startIntent.getBooleanExtra("edit_input_controls", false) ||
             startIntent.getBooleanExtra("open_settings", false) ||
@@ -97,7 +101,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int menuItemId = selectedMenuItemId > 0 ? selectedMenuItemId : R.id.menu_item_settings;
 
             autoStartPending = savedInstanceState == null && !openedByShortcutOrApp; // opened for settings: do not start the game
-            if (autoStartPending && isFirstStart()) showStartupCover();
+            // the settings stay hidden while the game is being found or installed (first start, or no game yet)
+            if (autoStartPending && (isFirstStart() || !GameLauncher.isGameInstalled(this))) showStartupCover();
 
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_menu);
             onNavigationItemSelected(navigationView.getMenu().findItem(menuItemId));
@@ -117,17 +122,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_WRITE_EXTERNAL_STORAGE_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                FirstRun.runIfNeeded(this);
-            }
-            else finish();
+            // not needed: refused, the game is picked with the system's file picker
+            Runnable then = permissionCallback;
+            permissionCallback = null;
+            if (then != null) then.run();
+            else FirstRun.runIfNeeded(this);
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.OPEN_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        // a file (OPEN_FILE) or a folder (OPEN_DIRECTORY, the game folder on the first start): its uri to the callback
+        if ((requestCode == MainActivity.OPEN_FILE_REQUEST_CODE || requestCode == MainActivity.OPEN_DIRECTORY_REQUEST_CODE) && resultCode == Activity.RESULT_OK && data != null) {
             if (openFileCallback != null) {
                 openFileCallback.call(data.getData());
                 openFileCallback = null;
@@ -161,13 +168,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.openFileCallback = openFileCallback;
     }
 
-    private boolean requestAppPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) return false;
+    /** Reading Download (the game folder, the search): Android 13+ names it "photos, videos, music and audio". */
+    public boolean hasStoragePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
 
+    /**
+     * Asked once, on the first start, and not needed: without it the game search is skipped
+     * and the player picks the archive with the system's file picker (a game folder needs it, GameLauncher asks again).
+     */
+    private boolean requestAppPermissions() {
+        if (preferences.getBoolean("storage_permission_asked", false)) return false;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+            hasStoragePermission()) return false;
+        preferences.edit().putBoolean("storage_permission_asked", true).apply();
+        requestStoragePermission(null);
+        return true;
+    }
+
+    /** Writing into Download (the demo's archive). */
+    public boolean canWriteDownload() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Asks for the storage permission; afterwards [then] runs (null: the first start goes on). */
+    public void requestStoragePermission(Runnable then) {
+        permissionCallback = then;
         String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
         ActivityCompat.requestPermissions(this, permissions, PERMISSION_WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
-        return true;
+    }
+
+    /** Whether Android still shows its permission question (not after the second "Deny": then only its settings). */
+    public boolean canAskStoragePermission() {
+        return !preferences.getBoolean("storage_permission_asked", false) ||
+            ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE);
     }
 
     @Override
@@ -217,9 +251,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void showStartupCover() {
         if (startupCover != null) return;
         startupCover = new View(this);
-        startupCover.setBackgroundColor(Color.BLACK);
+        // like the loading screens: the moments between them don't flash
+        startupCover.setBackgroundResource(R.drawable.loading_background);
         startupCover.setClickable(true);
         addContentView(startupCover, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    /** Finding, copying or unpacking the game: landscape like the loading screen and the game. */
+    public void lockLandscape() {
+        orientationLocked = true;
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+    }
+
+    public void unlockOrientation() {
+        orientationLocked = false;
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR); // back to the normal (manifest) behaviour
     }
 
     public void hideStartupCover() {
@@ -260,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }, "factory-benchmark-report").start();
     }
 
-    // Starts the game (copies it from Download/factorio first if needed) and closes this screen.
+    // Starts the game (asks for the game folder or archive first if there is no game yet) and closes this screen.
     public void startGame() {
         if (!FirstRun.isDone(this)) return;
         GameLauncher.start(this);
@@ -271,8 +317,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private boolean tryFastAutoStart() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (!prefs.getBoolean("auto_start_container", true)) return false;
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) return false;
 
         if (!FirstRun.isDone(this) || !GameLauncher.isGameInstalled(this)) return false;
         if (Session.INSTANCE.getState() != Session.State.STOPPED) {

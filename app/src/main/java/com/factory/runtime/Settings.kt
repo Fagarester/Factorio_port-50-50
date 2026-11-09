@@ -74,8 +74,9 @@ object Settings {
     fun uncompressedApplied(context: Context) = prefs(context).getBoolean("uncompressedApplied", false)
     fun setUncompressedApplied(context: Context, on: Boolean) = prefs(context).edit().putBoolean("uncompressedApplied", on).apply()
 
-    /** Without a GPU driver for the phone, the CPU's. */
-    fun driver(context: Context) = prefs(context).getString("driver", null) ?: Drivers.ZINK
+    /** Until the player picks one: the driver for the phone's GPU (Drivers.forThisGpu). */
+    fun driver(context: Context) = prefs(context).getString("driver", null) ?: Drivers.forThisGpu()
+    fun hasDriver(context: Context) = prefs(context).contains("driver")
     fun setDriver(context: Context, id: String) = prefs(context).edit().putString("driver", id).apply()
     fun clearDriver(context: Context) = prefs(context).edit().remove("driver").apply()
 

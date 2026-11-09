@@ -15,7 +15,9 @@
     <!-- Keeps a paused game alive in the background, with Quit in its notification. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- removed (Termux:X11 declares it): with targetSdk 29 Android 13+ asks for it by itself when the game screen
+         opens, over the starting game. The game's service runs without it, only its notification isn't shown. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
 
     <application
         android:name=".App"

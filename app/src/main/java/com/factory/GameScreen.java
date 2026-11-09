@@ -36,6 +36,7 @@ import com.factory.inputcontrols.ControlsProfile;
 import com.factory.inputcontrols.ExternalController;
 import com.factory.inputcontrols.InputControlsManager;
 import com.factory.runtime.Paths;
+import com.factory.runtime.ScreenLog;
 import com.factory.runtime.Session;
 import com.factory.runtime.Settings;
 import com.factory.runtime.controller.Gamepads;
@@ -173,6 +174,34 @@ public final class GameScreen implements Application.ActivityLifecycleCallbacks 
             return;
         }
         overlays.put(activity, new Overlay(activity, (MainActivity)activity, null));
+        screenConfigs.put(activity, new android.content.res.Configuration(activity.getResources().getConfiguration()));
+        ScreenLog.INSTANCE.add("game screen " + Integer.toHexString(System.identityHashCode(activity)) + ": " + activity.getClass().getSimpleName() +
+            (savedInstanceState != null ? ", restored (recreated)" : "") + ", intent flags 0x" + Integer.toHexString(activity.getIntent().getFlags()));
+        logConnection((MainActivity)activity);
+    }
+
+    /** The game screen's configuration when it opened: what changed when Android closes it (screen.log). */
+    private final java.util.Map<Activity, android.content.res.Configuration> screenConfigs = new java.util.WeakHashMap<>();
+
+    private static String screenId(Activity activity) {
+        return "game screen " + Integer.toHexString(System.identityHashCode(activity));
+    }
+
+    /** screen.log: when the game screen opened and when it joined the X server (the black time between them). */
+    private static void logConnection(final MainActivity termux) {
+        final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+        final long deadline = android.os.SystemClock.uptimeMillis() + 30000;
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (termux.isDestroyed()) return;
+                if (termux.getLorieView().connected()) {
+                    ScreenLog.INSTANCE.add(screenId(termux) + " connected to the X server");
+                    return;
+                }
+                if (android.os.SystemClock.uptimeMillis() < deadline) handler.postDelayed(this, 50);
+            }
+        });
     }
 
     @Override
@@ -182,18 +211,21 @@ public final class GameScreen implements Application.ActivityLifecycleCallbacks 
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
+        if (activity instanceof MainActivity) ScreenLog.INSTANCE.add(screenId(activity) + " resumed");
         Overlay overlay = overlays.get(activity);
         if (overlay != null) overlay.onResume();
     }
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
+        if (activity instanceof MainActivity) ScreenLog.INSTANCE.add(screenId(activity) + " paused");
         Overlay overlay = overlays.get(activity);
         if (overlay != null) overlay.onPause();
     }
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
+        if (activity instanceof MainActivity) ScreenLog.INSTANCE.add(screenId(activity) + " stopped");
         if (isGameActivity(activity) && !activity.isInPictureInPictureMode() && Settings.INSTANCE.pauseInBackground(activity)) {
             Session.INSTANCE.pause();
         }
@@ -201,6 +233,12 @@ public final class GameScreen implements Application.ActivityLifecycleCallbacks 
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
+        if (activity instanceof MainActivity) {
+            android.content.res.Configuration before = screenConfigs.remove(activity);
+            int diff = before != null ? before.diff(activity.getResources().getConfiguration()) : -1;
+            ScreenLog.INSTANCE.add(screenId(activity) + " closed: finishing " + activity.isFinishing() + ", changing configurations " +
+                activity.isChangingConfigurations() + ", configuration diff 0x" + Integer.toHexString(diff));
+        }
         Overlay overlay = overlays.remove(activity);
         if (overlay != null) overlay.onDestroy();
     }

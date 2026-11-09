@@ -49,6 +49,15 @@ object Drivers {
         return bundled + imported
     }
 
+    /** Qualcomm (Adreno 6xx and newer): Turnip with Zink; every other GPU (MediaTek's and others' Mali…): Gladio. */
+    fun forThisGpu() = if (Gpu.adreno && Gpu.supported) ZINK else GLADIO
+
+    /** First start: saves the driver for the phone's GPU, so the settings show it; a saved choice stays. */
+    fun chooseForThisGpu(context: Context): String {
+        if (!Settings.hasDriver(context)) Settings.setDriver(context, forThisGpu())
+        return chosen(context)
+    }
+
     fun chosen(context: Context): String {
         val id = Settings.driver(context)
         return if (all(context).any { it.id == id }) id else ZINK
@@ -76,14 +85,17 @@ object Drivers {
         val hybris = mapOf("HYBRIS_LINKER_DIR" to dir.path, "HYBRIS_EGLPLATFORM_DIR" to dir.path, "HYBRIS_EGLPLATFORM" to "null",
                            "HYBRIS_LIBGLESV2" to File(dir, "libhybris-glesv2.so.2").path,
                            "HYBRIS_PROPERTY_FILE" to com.factory.gladio.Gladio.directProperties(context).path)
-        // with ANGLE ticked too: libhybris loads the phone's ANGLE (GLES over Vulkan) instead of its GLES driver
-        val angle = if (gladioDirectAngle(context)) mapOf("LIBEGL" to "libEGL_angle.so", "LIBGLESV2" to "libGLESv2_angle.so") else emptyMap()
+        // with ANGLE ticked too: libhybris loads the phone's ANGLE (GLES over Vulkan) instead of its GLES driver; by
+        // name from /system/lib64, else Gladio.prepare's copies in files/angle (other folders, the ANGLE app's APK)
+        val angleDir = com.factory.gladio.GladioServer.angleDir(context)
+        fun angleLib(name: String) = if (com.factory.gladio.GladioServer.angleInSystemLib(context)) name else File(angleDir, name).path
+        val angle = if (gladioDirectAngle(context)) mapOf("LIBEGL" to angleLib("libEGL_angle.so"), "LIBGLESV2" to angleLib("libGLESv2_angle.so")) else emptyMap()
         return if (gladioDirectProcess(context)) hybris + angle else hybris + angle + ("GLADIO_INPROCESS" to File(dir, "libgladio-direct.so").path)
     }
 
     /** The phone's driver directly, on the phone's ANGLE (both ticked; X11 display only). */
     fun gladioDirectAngle(context: Context) = gladioDirect(context) && Settings.gladioAngle(context) &&
-        com.factory.gladio.GladioServer.angleAvailable()
+        com.factory.gladio.GladioServer.angleAvailable(context)
 
     fun cpu(context: Context) = chosen(context) == CPU
 

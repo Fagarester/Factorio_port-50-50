@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark background with a soft light in the middle, like the game's loading screen (no picture) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="75%p"
+        android:centerX="0.5"
+        android:centerY="0.45"
+        android:startColor="#FF2A2A2A"
+        android:endColor="#FF080808" />
+</shape>

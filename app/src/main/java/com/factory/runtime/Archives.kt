@@ -9,7 +9,9 @@ import java.io.InputStream
 import java.util.concurrent.ArrayBlockingQueue
 import kotlin.concurrent.thread
 
-fun untarXz(input: InputStream, dest: File, strip: Int = 0) {
+/** [onFile] gets each regular file once written, with its path inside dest ("factorio/data/…"). */
+@JvmOverloads
+fun untarXz(input: InputStream, dest: File, strip: Int = 0, onFile: ((String, File) -> Unit)? = null) {
     val root = dest.canonicalFile
     val buffer = ByteArray(1 shl 20)
     TarArchiveInputStream(PrefetchInputStream(NativeXzInputStream(input))).use { tar ->
@@ -40,6 +42,7 @@ fun untarXz(input: InputStream, dest: File, strip: Int = 0) {
                         }
                     }
                     if (entry.mode and 0b001_001_001 != 0) target.setExecutable(true, false)
+                    onFile?.invoke(parts.drop(strip).joinToString("/"), target)
                 }
             }
         }

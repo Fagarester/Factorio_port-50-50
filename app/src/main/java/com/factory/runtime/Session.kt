@@ -171,8 +171,25 @@ object Session {
         throw IOException("Can't find the game's process")
     }
 
+    /**
+     * The first start: the X server (and its window manager) start while the game is still being copied, so the game
+     * screen finds them ready when the copy ends. Not for Gladio on the app's own X server.
+     */
+    @Synchronized
+    fun prestartX(context: Context) {
+        if (Drivers.embeddedXServer(context) || game?.isAlive == true) return
+        val paths = Paths(context)
+        paths.logs.mkdirs()
+        paths.home.mkdirs()
+        startX(context, paths)
+        if (wm?.isAlive != true) wm = glibc(paths, listOf(File(paths.prefix, "bin/pocketfoundry-wm").path), "wm.log")
+    }
+
     private fun startX(context: Context, paths: Paths) {
-        if (xServer?.isAlive == true) return
+        if (xServer?.isAlive == true) {
+            ScreenLog.add("X server already running (started during the copy)")
+            return
+        }
         // Leftovers from a server that died with the app.
         paths.xSocket.delete()
         File(paths.tmp, ".X0-lock").delete()

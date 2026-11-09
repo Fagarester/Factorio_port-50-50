@@ -46,6 +46,7 @@ public class GraphicsDriverPicker {
     private final View blockTurnip, blockGladio;
     private final List<Drivers.Driver> vulkanDrivers = new ArrayList<>();
     private boolean gladioActive;
+    private final boolean angleAvailable;
     private boolean updating = false;
 
     public GraphicsDriverPicker(MainActivity activity, LinearLayout container) {
@@ -92,7 +93,7 @@ public class GraphicsDriverPicker {
         cbGladio.setText(R.string.graphics_block_gladio);
         blockTurnip = createBlock(context, cbTurnip, vulkanBox, glBox);
         blockGladio = createBlock(context, cbGladio, gladioBox, displayBox);
-        // both only with the X11 display (shown then): the phone's driver directly first, ANGLE below it
+        // both only with the X11 display (greyed out with the X server one): the phone's driver directly first, ANGLE below it
         // test: the server in the game's process on the phone's driver through libhybris, for the GPUs other than Adreno
         cbDirect = new CheckBox(context);
         cbDirect.setText(R.string.gladio_direct);
@@ -101,9 +102,8 @@ public class GraphicsDriverPicker {
         ((LinearLayout)blockGladio).addView(cbDirect);
         // ANGLE (experimental): Gladio's server on GLES over Vulkan (the phone's own ANGLE), for GLES drivers that are slow or wrong
         cbAngle = new CheckBox(context);
-        boolean angleAvailable = com.factory.gladio.GladioServer.angleAvailable();
+        angleAvailable = com.factory.gladio.GladioServer.angleAvailable(context);
         cbAngle.setText(angleAvailable ? context.getString(R.string.gladio_angle) : context.getString(R.string.gladio_angle)+" "+context.getString(R.string.gladio_angle_missing));
-        cbAngle.setEnabled(angleAvailable);
         cbAngle.setChecked(angleAvailable && Settings.INSTANCE.gladioAngle(context));
         cbAngle.setTextSize(13);
         ((LinearLayout)blockGladio).addView(cbAngle);
@@ -151,11 +151,11 @@ public class GraphicsDriverPicker {
         return !DISPLAY_XSERVER.equals(displayBox.getSelectedItem());
     }
 
-    /** The phone's driver directly and ANGLE only work on Termux:X11: shown with the X11 display only. */
+    /** The phone's driver directly and ANGLE only work on Termux:X11: always shown, they can be ticked with X11 only. */
     private void updateX11Options() {
-        int visibility = x11Display() ? View.VISIBLE : View.GONE;
-        cbDirect.setVisibility(visibility);
-        cbAngle.setVisibility(visibility);
+        boolean x11 = x11Display();
+        cbDirect.setEnabled(x11);
+        cbAngle.setEnabled(x11 && angleAvailable);
     }
 
     private boolean freedrenoSelected() {
@@ -206,7 +206,7 @@ public class GraphicsDriverPicker {
         Settings.INSTANCE.setTurnipBlockDriver(activity, turnipId);
         Settings.INSTANCE.setGladioDisplay(activity, DISPLAY_XSERVER.equals(displayBox.getSelectedItem()) ? "xserver" : "x11");
         boolean angleWas = Settings.INSTANCE.gladioAngle(activity);
-        // hidden with the X server display: off then (the direct server would otherwise take Termux:X11 instead)
+        // greyed out with the X server display: off then (the direct server would otherwise take Termux:X11 instead)
         boolean angle = x11Display() && cbAngle.isChecked();
         Settings.INSTANCE.setGladioAngle(activity, angle);
         // the app's server is loaded once per app process: a change shows after a restart of the app (the direct

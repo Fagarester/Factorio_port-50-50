@@ -23,6 +23,9 @@ object Gpu {
         return number >= 600
     }
 
+    /** Qualcomm's Adreno: our Turnip (Zink) runs on it. */
+    val adreno: Boolean get() = name?.contains("Adreno") == true
+
     /** Arm's Mali: the phone's driver sets it up for OpenGL 3.3 and uncompressed textures. */
     val mali: Boolean get() = name?.contains("Mali") == true
 

@@ -23,7 +23,10 @@ import androidx.preference.PreferenceManager;
 import com.factory.contentdialog.AddEnvVarDialog;
 import com.factory.contentdialog.ContentDialog;
 import com.factory.core.AppUtils;
+import com.factory.core.DownloadProgressDialog;
 import com.factory.core.EnvVars;
+import com.factory.core.GameCompression;
+import com.factory.core.GameCopier;
 import com.factory.core.GameSettings;
 import com.factory.core.LocaleHelper;
 import com.factory.core.ScreenResolution;
@@ -96,6 +99,8 @@ public class SettingsFragment extends Fragment {
             else activity.startGame();
         }));
 
+        setupTextureCompression(view, activity);
+
         // ---- bottom section "variables and logging": folded until the header is tapped ----
         final View llAdvancedBody = view.findViewById(R.id.LLAdvancedBody);
         final TextView tvAdvancedArrow = view.findViewById(R.id.TVAdvancedArrow);
@@ -152,6 +157,66 @@ public class SettingsFragment extends Fragment {
         });
 
         return view;
+    }
+
+    /**
+     * Texture compression of the copied game (moved here from the first start): once, light x2 or strong x5, with a
+     * warning that only an app reset and a new copy bring the original textures back.
+     */
+    private static void setupTextureCompression(final View view, final MainActivity activity) {
+        final TextView state = view.findViewById(R.id.TVCompressionState);
+        final View low = view.findViewById(R.id.BTCompressLow), high = view.findViewById(R.id.BTCompressHigh);
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        final Runnable refresh = () -> {
+            int mode = prefs.getInt(GameCompression.PREF_KEY, GameCompression.ORIGINAL);
+            state.setText(mode == GameCompression.HIGH ? R.string.compression_state_high
+                        : mode == GameCompression.LOW ? R.string.compression_state_low : R.string.compression_state_original);
+            boolean can = mode == GameCompression.ORIGINAL;
+            low.setEnabled(can);
+            high.setEnabled(can);
+            low.setAlpha(can ? 1f : 0.5f);
+            high.setAlpha(can ? 1f : 0.5f);
+        };
+        refresh.run();
+        View.OnClickListener onClick = (v) -> {
+            final int mode = v == high ? GameCompression.HIGH : GameCompression.LOW;
+            if (com.factory.runtime.Session.INSTANCE.getState() != com.factory.runtime.Session.State.STOPPED) {
+                AppUtils.showToast(activity, R.string.compression_close_game);
+                return;
+            }
+            final com.factory.runtime.Paths paths = new com.factory.runtime.Paths(activity);
+            if (!GameLauncher.isGameInstalled(activity)) {
+                AppUtils.showToast(activity, R.string.compression_no_game);
+                return;
+            }
+            String name = activity.getString(mode == GameCompression.HIGH ? R.string.compress_high : R.string.compress_low).replace('\n', ' ');
+            new androidx.appcompat.app.AlertDialog.Builder(activity)
+                .setTitle(R.string.texture_compression)
+                .setMessage(activity.getString(R.string.compression_confirm, name))
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
+                    dialog.show(R.string.compressing_textures);
+                    AppUtils.keepScreenOn(activity);
+                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                        GameCopier.Result result = GameCopier.compressInPlace(paths.getGame(), mode,
+                            (percent) -> activity.runOnUiThread(() -> dialog.setProgress(percent)));
+                        com.factory.core.FileUtils.writeString(new java.io.File(paths.getLogs(), "compression-report.txt"), result.report);
+                        // even a stopped run changed some files: the original textures are gone either way
+                        if (result.pngShrunk > 0 || result.ok) prefs.edit().putInt(GameCompression.PREF_KEY, mode).apply();
+                        activity.runOnUiThread(() -> {
+                            dialog.close();
+                            if (!result.ok) AppUtils.showToast(activity, R.string.compression_failed);
+                            else AppUtils.showToast(activity, activity.getString(R.string.compression_done, result.pngShrunk, result.pngTotal,
+                                (int)(result.inBytes / 1048576), (int)(result.outBytes / 1048576)));
+                            refresh.run();
+                        });
+                    });
+                })
+                .show();
+        };
+        low.setOnClickListener(onClick);
+        high.setOnClickListener(onClick);
     }
 
     /** 720p / 1080p / native: puts the computed size into the custom width x height fields. */

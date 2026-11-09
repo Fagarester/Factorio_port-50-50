@@ -17,8 +17,7 @@ class GameService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        getSystemService(NotificationManager::class.java).createNotificationChannel(
-            NotificationChannel(CHANNEL, getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
+        createChannel(this)
         Session.addListener(update)
     }
 
@@ -77,5 +76,11 @@ class GameService : Service() {
         private const val CHANNEL = "game"
         private const val ID = 1
         private const val ACTION_QUIT = "com.factory.runtime.QUIT"
+
+        @JvmStatic
+        fun createChannel(context: android.content.Context) {
+            context.getSystemService(NotificationManager::class.java).createNotificationChannel(
+                NotificationChannel(CHANNEL, context.getString(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
+        }
     }
 }

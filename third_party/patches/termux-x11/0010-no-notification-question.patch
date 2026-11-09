@@ -1,0 +1,16 @@
+--- a/lorie/src/main/java/com/termux/x11/MainActivity.java	2026-11-08 21:26:50.231102297 +0000
++++ b/lorie/src/main/java/com/termux/x11/MainActivity.java	2026-11-08 21:26:50.239102297 +0000
+@@ -399,11 +399,8 @@
+         initStylusAuxButtons();
+         initMouseAuxButtons();
+ 
+-        if (SDK_INT >= VERSION_CODES.TIRAMISU
+-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PERMISSION_GRANTED
+-                && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+-            requestPermissions(new String[] { Manifest.permission.POST_NOTIFICATIONS }, 0);
+-        }
++        // Factory: no notification question here. It opened Android's permission screen over the starting game
++        // (the game screen paused, black for seconds on the first start); the app doesn't need notifications.
+ 
+         findViewById(android.R.id.content).addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> makeSureHelpersAreVisibleAndInScreenBounds());
+     }

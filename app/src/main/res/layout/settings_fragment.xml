@@ -184,6 +184,56 @@
                         android:layout_marginTop="8dp"
                         android:textSize="14sp"
                         android:text="@string/benchmark" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/texture_compression" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textSize="12sp"
+                        android:alpha="0.7"
+                        android:text="@string/texture_compression_hint" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/BTCompressLow"
+                            style="@style/ButtonAccent"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:minHeight="48dp"
+                            android:layout_marginRight="6dp"
+                            android:textSize="12sp"
+                            android:text="@string/compress_low" />
+
+                        <Button
+                            android:id="@+id/BTCompressHigh"
+                            style="@style/ButtonAccent"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:minHeight="48dp"
+                            android:textSize="12sp"
+                            android:text="@string/compress_high" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/TVCompressionState"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textSize="12sp"
+                        android:alpha="0.7" />
                 </LinearLayout>
                 <TextView
                     style="@style/FieldSetLabel"

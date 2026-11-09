@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- First start, when the search found no game: where it comes from (GameLauncher.showGameSource).
+     The logo and the question in the middle, three tiles below: the game folder, the archive, the free demo. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/loading_background">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/LLSourceContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- the logo and the words above the choices; at first alone in the middle (GameLauncher.SourceIntro) -->
+            <LinearLayout
+                android:id="@+id/LLSourceTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <!-- the logo from factorio.com (with internet; size set by GameLauncher) -->
+                <ImageView
+                    android:id="@+id/IVDemoLogo"
+                    android:layout_width="340dp"
+                    android:layout_height="56dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="invisible"
+                    android:contentDescription="@null" />
+
+                <!-- the intro's words, and in their place after the tap the question over the choices -->
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+
+                    <TextView
+                        android:id="@+id/TVSourceIntro"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:maxWidth="440dp"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.2"
+                        android:textSize="15sp"
+                        android:textColor="#FFB8B0A8"
+                        android:text="@string/game_source_intro" />
+
+                    <LinearLayout
+                        android:id="@+id/LLSourceTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFF29A1F"
+                            android:text="@string/game_source_title" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:gravity="center"
+                            android:textSize="13sp"
+                            android:textColor="#FFB8B0A8"
+                            android:text="@string/game_source_intro_short" />
+                    </LinearLayout>
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- the choices -->
+            <LinearLayout
+                android:id="@+id/LLSourceCards"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:id="@+id/BTPickFolder"
+                    android:layout_width="210dp"
+                    android:layout_height="158dp"
+                    android:layout_marginLeft="0dp"
+                    android:background="@drawable/source_card"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:background="@drawable/source_icon_box"
+                            android:padding="13dp"
+                            android:src="@drawable/ic_source_folder"
+                            android:tint="#FFF29A1F"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFFFF"
+                            android:text="@string/game_source_pick_folder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:gravity="center"
+                            android:maxLines="2"
+                            android:textSize="12sp"
+                            android:textColor="#FFA8A098"
+                            android:text="@string/game_source_folder_hint" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/BTPickArchive"
+                    android:layout_width="210dp"
+                    android:layout_height="158dp"
+                    android:layout_marginLeft="16dp"
+                    android:background="@drawable/source_card"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:background="@drawable/source_icon_box"
+                            android:padding="13dp"
+                            android:src="@drawable/ic_source_archive"
+                            android:tint="#FFF29A1F"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFFFF"
+                            android:text="@string/game_source_pick_archive" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:gravity="center"
+                            android:maxLines="2"
+                            android:textSize="12sp"
+                            android:textColor="#FFA8A098"
+                            android:text="@string/game_source_archive_hint" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/BTDownloadDemo"
+                    android:layout_width="210dp"
+                    android:layout_height="158dp"
+                    android:layout_marginLeft="16dp"
+                    android:background="@drawable/source_card_accent"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:background="@drawable/source_icon_box_accent"
+                            android:padding="13dp"
+                            android:src="@drawable/ic_source_download"
+                            android:tint="#FFFFFFFF"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFFFF"
+                            android:text="@string/game_source_download_demo" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:gravity="center"
+                            android:maxLines="2"
+                            android:textSize="12sp"
+                            android:textColor="#E6FFFFFF"
+                            android:text="@string/game_source_demo_hint_short" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|right"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/source_badge"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"
+                        android:textColor="#FFF29A1F"
+                        android:text="@string/game_source_free" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/TVDownloadLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:padding="8dp"
+                android:gravity="center"
+                android:textSize="13sp"
+                android:textColor="#FFFFB050" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- the intro waits for a tap -->
+    <TextView
+        android:id="@+id/TVSourceTap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="28dp"
+        android:alpha="0"
+        android:textSize="12sp"
+        android:letterSpacing="0.1"
+        android:textColor="#FFB8B0A8"
+        android:text="@string/game_source_tap" />
+</FrameLayout>
