@@ -9,6 +9,9 @@
 **Factory runs your own copy of Factorio on an Android phone.** It starts the official Factorio build for
 Linux ARM64. There is no x86 emulation and no streaming. The app contains no game files.
 
+> **Unofficial.** Factory is a fan project. It is not made, endorsed or supported by Wube Software, the developer of
+> Factorio. Please don't send Factory problems to Wube.
+
 > **Made by AI.** The code, the documentation and this text were written by Claude (Anthropic's AI model)
 > under the direction of [Fagarester](https://github.com/Fagarester), who set the goals, tested every build on
 > real phones and decided what stays. This English text was written and translated by AI.
@@ -19,7 +22,7 @@ Linux ARM64. There is no x86 emulation and no streaming. The app contains no gam
 |---|---|
 | 1 | Proof that Factorio for Linux ARM64 runs on Android at all |
 | 2 | Test ground built on Winlator: Wine, Box64, FEX and everything else not needed was cut out; the interface design, settings and on-screen controls stayed |
-| **3 (this repository)** | The same test ground as a hybrid: the interface of iteration 2 on Pocket Foundry's runtime |
+| **3 (this repository)** | The same test ground as a hybrid: the interface of iteration 2 on Pocket Foundry's runtime. Gladio was extended and reworked (a "direct" mode, ANGLE, batching, large transfers in parts), and the on-screen controls got new element types: radial menu, scroll wheel, side drawer and custom menu |
 
 Factory is a hybrid:
 
