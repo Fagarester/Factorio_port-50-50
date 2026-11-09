@@ -18,8 +18,8 @@ Linux ARM64. There is no x86 emulation and no streaming. The app contains no gam
 | Iteration | Purpose |
 |---|---|
 | 1 | Proof that Factorio for Linux ARM64 runs on Android at all |
-| 2 | Test ground: own menus, on-screen controls, drivers |
-| **3 (this repository)** | The same test ground, as a hybrid of two launchers |
+| 2 | Test ground built on Winlator: Wine, Box64, FEX and everything else not needed was cut out; the interface design, settings and on-screen controls stayed |
+| **3 (this repository)** | The same test ground as a hybrid: the interface of iteration 2 on Pocket Foundry's runtime |
 
 Factory is a hybrid:
 
