@@ -23,11 +23,13 @@ Linux ARM64. There is no x86 emulation and no streaming. The app contains no gam
 
 Factory is a hybrid:
 
-- the graphics stack and the Linux runtime come from [Pocket Foundry](https://github.com/JulioFerrero/pocket-foundry):
-  glibc built for Android, Mesa, SDL and the Termux:X11 X server;
-- the interface comes from the earlier iterations: menus, on-screen controls and their editor;
-- **Gladio**, an OpenGL path taken from Winlator and reworked: the game sends its OpenGL calls to a server in the app,
-  and the server draws with the phone's GLES (also through the system ANGLE).
+- from [Pocket Foundry](https://github.com/JulioFerrero/pocket-foundry), the neighbouring project: the Linux runtime
+  (glibc built for Android, Mesa, SDL, a small window manager), the game session code and the display through
+  Termux:X11;
+- from [Winlator](https://github.com/brunodev85/winlator), through the earlier iterations: the settings menus, the
+  on-screen controls and their editor, the app's own built-in X server, and **Gladio**, an OpenGL path reworked here:
+  the game sends its OpenGL calls to a server in the app, and the server draws with the phone's GLES (also through
+  the system ANGLE).
 
 **Still to do:** the on-screen controls need more work.
 
@@ -95,7 +97,7 @@ GitHub Actions builds the APK too (`.github/workflows/build.yml`). Details (in R
 
 | Path | Contents |
 |---|---|
-| `app/src/main/java/com/factory` | Interface, controls, first start, game launch |
+| `app/src/main/java/com/factory` | Interface, controls, first start, game launch (interface and controls from Winlator) |
 | `app/src/main/java/com/factory/runtime` | Session, paths, input and audio bridges (from Pocket Foundry) |
 | `app/src/main/cpp/gladio` | Gladio server and the "direct" mode |
 | `runtime/` | Builds of glibc, Mesa, SDL, the window manager and the Gladio client |
@@ -108,9 +110,9 @@ GitHub Actions builds the APK too (`.github/workflows/build.yml`). Details (in R
 - **[Wube Software](https://www.factorio.com)** for Factorio, and above all for the official **Linux ARM64** build.
   Without it none of this would exist.
 - **[JulioFerrero / Pocket Foundry](https://github.com/JulioFerrero/pocket-foundry)**, the neighbouring project:
-  the Linux runtime, the graphics stack and the Kotlin session code.
-- **[Winlator](https://github.com/brunodev85/winlator)** by brunodev85: Gladio, the built-in X server and the base of
-  the earlier iterations' interface.
+  the Linux runtime, the Mesa/SDL graphics stack, the Termux:X11 display path and the Kotlin session code.
+- **[Winlator](https://github.com/brunodev85/winlator)** by brunodev85: the settings and on-screen controls interface
+  with its editor, the built-in X server and Gladio.
 - **[Termux:X11](https://github.com/termux/termux-x11)**: the X server.
 - **[Mesa](https://mesa3d.org)** (Turnip, Freedreno, Zink), **glibc**, **[SDL](https://libsdl.org)**,
   **[libhybris](https://github.com/libhybris/libhybris)**, **XZ Utils**, **Apache Commons Compress**, **AndroidX**,
