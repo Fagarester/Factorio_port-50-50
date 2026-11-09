@@ -17,7 +17,7 @@ Linux ARM64. There is no x86 emulation and no streaming. The app contains no gam
 > under the direction of [Fagarester](https://github.com/Fagarester), who set the goals, tested every build on
 > real phones and decided what stays. This English text was written and translated by AI.
 
-## Status: third iteration
+## Status: iteration 3 (of the project, not the app version)
 
 | Iteration | Purpose |
 |---|---|
