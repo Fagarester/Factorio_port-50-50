@@ -98,6 +98,45 @@
             android:layout_height="wrap_content"
             android:text="@string/style_icon_filter" />
 
+        <!-- either this or the filter above -->
+        <CheckBox
+            android:id="@+id/CBStyleIconGray"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/style_icon_gray" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/style_glow_color" />
+
+            <com.factory.widget.ColorPickerView
+                android:id="@+id/CPVStyleGlow"
+                android:layout_width="84dp"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/style_glow_strength" />
+
+        <com.factory.widget.SeekBar
+            android:id="@+id/SBStyleGlow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:suffix="%"
+            app:step="5"
+            app:minValue="0"
+            app:maxValue="100" />
+
         <Button
             style="@style/ButtonNeutral"
             android:id="@+id/BTStyleReset"

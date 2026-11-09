@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.PopupWindow;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
@@ -187,11 +188,15 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         final ColorPickerView cpvContent = view.findViewById(R.id.CPVStyleContent);
         final SeekBar sbContentAlpha = view.findViewById(R.id.SBStyleContentAlpha);
         final CheckBox cbIconFilter = view.findViewById(R.id.CBStyleIconFilter);
+        final CheckBox cbIconGray = view.findViewById(R.id.CBStyleIconGray);
+        final ColorPickerView cpvGlow = view.findViewById(R.id.CPVStyleGlow);
+        final SeekBar sbGlow = view.findViewById(R.id.SBStyleGlow);
         final boolean[] updating = {false};
 
         final int[] palette = {0xffffff, 0xcfd8dc, 0x90a4ae, 0x000000, 0xff1744, 0xff9100, 0xffea00, 0x00e676, 0x1de9b6, 0x00b0ff, 0x651fff, 0xf50057};
         cpvOutline.setPalette(palette);
         cpvContent.setPalette(palette);
+        cpvGlow.setPalette(palette);
 
         ((TextView)view.findViewById(R.id.TVStyleTarget)).setText(element != null ? R.string.style_target_element : R.string.style_target_all);
         ((TextView)view.findViewById(R.id.BTStyleReset)).setText(element != null ? R.string.style_reset_element : R.string.style_reset_all);
@@ -205,7 +210,10 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             sbOutlineAlpha.setValue(effective.outlineAlpha * 100);
             cpvContent.setColor(effective.contentColor);
             sbContentAlpha.setValue(effective.contentAlpha * 100);
-            cbIconFilter.setChecked(effective.iconFilter);
+            cbIconFilter.setChecked(effective.iconFilter && !effective.iconGray);
+            cbIconGray.setChecked(effective.iconGray);
+            cpvGlow.setColor(effective.glowColor);
+            sbGlow.setValue(effective.glowStrength * 100);
             updating[0] = false;
         };
         load.run();
@@ -238,9 +246,36 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
             target.contentAlpha = value / 100.0f;
             changed.run();
         });
+        // the tint and black and white exclude each other: ticking one unticks the other
         cbIconFilter.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (updating[0]) return;
             target.iconFilter = isChecked;
+            if (isChecked) {
+                target.iconGray = false;
+                updating[0] = true;
+                cbIconGray.setChecked(false);
+                updating[0] = false;
+            }
+            changed.run();
+        });
+        cbIconGray.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (updating[0]) return;
+            target.iconGray = isChecked;
+            if (isChecked) {
+                target.iconFilter = false;
+                updating[0] = true;
+                cbIconFilter.setChecked(false);
+                updating[0] = false;
+            }
+            changed.run();
+        });
+        cpvGlow.setOnColorChangedListener((color) -> {
+            target.glowColor = color;
+            changed.run();
+        });
+        sbGlow.setOnValueChangeListener((seekBar, value) -> {
+            if (updating[0]) return;
+            target.glowStrength = value / 100.0f;
             changed.run();
         });
 
@@ -655,8 +690,14 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
 
         final EditText etCustomText = view.findViewById(R.id.ETCustomText);
         etCustomText.setText(element.getText());
-        final LinearLayout llIconList = view.findViewById(R.id.LLIconList);
-        loadIcons(llIconList, element.getIconId());
+        final java.util.List<ImageView> iconViews = loadIcons(view.findViewById(R.id.LLIconRows), element.getIconId());
+        final SeekBar sbIconScale = view.findViewById(R.id.SBIconScale);
+        sbIconScale.setValue(element.getIconScale() * 100);
+        sbIconScale.setOnValueChangeListener((seekBar, value) -> {
+            element.setIconScale(value / 100.0f);
+            profile.save();
+            inputControlsView.invalidate();
+        });
 
         if (element.getCustomMenu() != null) element.getCustomMenu().setOnSelectionChanged(() -> {
             if (customRefresh[0] != null) customRefresh[0].run();
@@ -667,13 +708,12 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         PopupWindow popupWindow = showPanelBelowToolbox(view);
         popupWindow.setOnDismissListener(() -> {
             restoreToolboxBackground();
-            byte iconId = 0;
+            int iconId = 0;
             if (element.getCustomMenu() != null) element.getCustomMenu().setOnSelectionChanged(null);
             if (element.getType() == ControlElement.Type.BUTTON || element.getType() == ControlElement.Type.CUSTOM_MENU) {
-                for (int i = 0; i < llIconList.getChildCount(); i++) {
-                    View child = llIconList.getChildAt(i);
+                for (ImageView child : iconViews) {
                     if (child.isSelected()) {
-                        iconId = (byte)child.getTag();
+                        iconId = (int)child.getTag();
                         break;
                     }
                 }
@@ -962,43 +1002,64 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         });
     }
 
-    private void loadIcons(final LinearLayout parent, byte selectedId) {
-        byte[] iconIds = new byte[0];
-        try {
-            String[] filenames = getAssets().list("inputcontrols/icons/");
-            iconIds = new byte[filenames.length];
-            for (int i = 0; i < filenames.length; i++) {
-                iconIds[i] = Byte.parseByte(FileUtils.getBasename(filenames[i]));
-            }
-        }
-        catch (IOException e) {}
-
-        Arrays.sort(iconIds);
-
+    /** The icon picker: one sideways-scrolling row per IconCatalog row (empty rows left out), one selection over all. */
+    private java.util.List<ImageView> loadIcons(final LinearLayout rows, int selectedId) {
+        final java.util.List<ImageView> views = new java.util.ArrayList<>();
+        // titles: one per IconCatalog row
+        final int[] titles = {R.string.icon_row_app, R.string.icon_row_interface, R.string.icon_row_signals,
+                              R.string.icon_row_combat, R.string.icon_row_items, R.string.icon_row_items_more,
+                              R.string.icon_row_fluids, R.string.icon_row_game_ui, R.string.icon_row_alerts,
+                              R.string.icon_row_technology, R.string.icon_row_gamepad, R.string.icon_row_nature,
+                              R.string.icon_row_letters};
         int size = (int)UnitUtils.dpToPx(40);
         int margin = (int)UnitUtils.dpToPx(2);
         int padding = (int)UnitUtils.dpToPx(4);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
-        params.setMargins(margin, 0, margin, 0);
-
-        for (final byte id : iconIds) {
-            ImageView imageView = new ImageView(this);
-            imageView.setLayoutParams(params);
-            imageView.setPadding(padding, padding, padding, padding);
-            imageView.setBackgroundResource(R.drawable.icon_background);
-            imageView.setTag(id);
-            imageView.setSelected(id == selectedId);
-            imageView.setOnClickListener((v) -> {
-                for (int i = 0; i < parent.getChildCount(); i++) parent.getChildAt(i).setSelected(false);
-                imageView.setSelected(true);
-            });
-
-            try (InputStream is = getAssets().open("inputcontrols/icons/"+id+".png")) {
-                imageView.setImageBitmap(BitmapFactory.decodeStream(is));
+        rows.removeAllViews();
+        for (int row = 0; row < com.factory.inputcontrols.IconCatalog.ROWS; row++) {
+            int[] ids = com.factory.inputcontrols.IconCatalog.row(this, row);
+            if (ids.length == 0) continue;
+            TextView title = new TextView(this);
+            title.setText(titles[row]);
+            title.setTextSize(11);
+            title.setAlpha(0.7f);
+            rows.addView(title);
+            HorizontalScrollView scroll = new HorizontalScrollView(this);
+            scroll.setPadding(0, margin, 0, margin);
+            LinearLayout line = new LinearLayout(this);
+            line.setOrientation(LinearLayout.HORIZONTAL);
+            scroll.addView(line);
+            rows.addView(scroll);
+            for (final int id : ids) {
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    com.factory.inputcontrols.IconCatalog.isWide(id) ? size * 2 : size, size);   // the key words are wide
+                params.setMargins(margin, 0, margin, 0);
+                final ImageView imageView = new ImageView(this);
+                imageView.setLayoutParams(params);
+                imageView.setPadding(padding, padding, padding, padding);
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                imageView.setBackgroundResource(R.drawable.icon_background);
+                imageView.setTag(id);
+                imageView.setSelected(id == selectedId);
+                imageView.setOnClickListener((v) -> {
+                    for (ImageView other : views) other.setSelected(false);
+                    imageView.setSelected(true);
+                });
+                line.addView(imageView);
+                views.add(imageView);
             }
-            catch (IOException e) {}
-
-            parent.addView(imageView);
         }
+        // ~800 pictures: read beside the UI, each shown when ready (a missing one is taken out)
+        final java.util.List<ImageView> pending = new java.util.ArrayList<>(views);
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            for (final ImageView imageView : pending) {
+                if (isFinishing() || !imageView.isAttachedToWindow() && imageView.getParent() == null) return;
+                final android.graphics.Bitmap bitmap = com.factory.inputcontrols.IconCatalog.load(this, (int)imageView.getTag());
+                runOnUiThread(() -> {
+                    if (bitmap != null) imageView.setImageBitmap(bitmap);
+                    else imageView.setVisibility(View.GONE);
+                });
+            }
+        });
+        return views;
     }
 }

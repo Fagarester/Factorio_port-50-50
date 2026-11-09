@@ -58,7 +58,7 @@ public class InputControlsView extends View {
     private float overlayOpacity = DEFAULT_OVERLAY_OPACITY;
     private TouchpadView touchpadView;
     private XServer xServer;
-    private final Bitmap[] icons = new Bitmap[18];
+    private final android.util.SparseArray<Bitmap> icons = new android.util.SparseArray<>();
     private Timer mouseMoveTimer;
     private final PointF mouseMoveOffset = new PointF();
     private boolean showTouchscreenControls = true;
@@ -550,14 +550,10 @@ public class InputControlsView extends View {
         }
     }
 
-    public Bitmap getIcon(byte id) {
-        if (icons[id] == null) {
-            Context context = getContext();
-            try (InputStream is = context.getAssets().open("inputcontrols/icons/"+id+".png")) {
-                icons[id] = BitmapFactory.decodeStream(is);
-            }
-            catch (IOException e) {}
-        }
-        return icons[id];
+    /** Any control icon (IconCatalog), read once; null if there is none (a game icon before the game is copied). */
+    public Bitmap getIcon(int id) {
+        if (icons.indexOfKey(id) < 0) icons.put(id, com.factory.inputcontrols.IconCatalog.load(getContext(), id));
+        return icons.get(id);
     }
+
 }

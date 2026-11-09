@@ -480,17 +480,28 @@
                 android:layout_height="wrap_content"
                 android:text="@string/icon" />
 
-            <HorizontalScrollView
+            <!-- six rows, each scrolls sideways (IconCatalog): the app's, interface, signals, combat, items, letters -->
+            <LinearLayout
+                android:id="@+id/LLIconRows"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp">
+                android:layout_marginTop="4dp"
+                android:orientation="vertical" />
 
-                <LinearLayout
-                    android:id="@+id/LLIconList"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal" />
-            </HorizontalScrollView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/icon_scale" />
+
+            <com.factory.widget.SeekBar
+                android:id="@+id/SBIconScale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="%"
+                app:step="5"
+                app:minValue="30"
+                app:maxValue="200" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

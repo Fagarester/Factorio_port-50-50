@@ -11,6 +11,7 @@ import androidx.preference.PreferenceManager;
 
 import com.factory.core.AppUtils;
 import com.factory.core.FileUtils;
+import com.factory.core.StreamUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,6 +75,33 @@ public class InputControlsManager {
         preferences.edit().putBoolean("inputcontrols_bundled_cleanup_v1", true).apply();
     }
 
+    /**
+     * A bundled profile new in this version ("control 2", "control 3"): added unless the player already has one of that
+     * name (imported, for example). Its id may be taken by a profile of the player's: then it gets a free one.
+     */
+    private void addBundledProfile(AssetManager assetManager, String assetPath, ControlsProfile origin) {
+        File[] files = getProfilesDir(context).listFiles();   // again: an earlier one may just have been added
+        if (files == null) return;
+        int maxId = 0;
+        boolean idTaken = false;
+        for (File file : files) {
+            ControlsProfile existing = loadProfile(context, file);
+            if (existing == null) continue;
+            if (existing.getName().equals(origin.getName())) return;
+            if (existing.id == origin.id) idTaken = true;
+            maxId = Math.max(maxId, existing.id);
+        }
+        int id = idTaken ? maxId + 1 : origin.id;
+        try (java.io.InputStream in = assetManager.open(assetPath)) {
+            org.json.JSONObject data = new org.json.JSONObject(new String(StreamUtils.copyToByteArray(in), java.nio.charset.StandardCharsets.UTF_8));
+            data.put("id", id);
+            FileUtils.writeString(ControlsProfile.getProfileFile(context, id), data.toString());
+        }
+        catch (Exception e) {
+            android.util.Log.w("InputControls", "Couldn't add the bundled profile "+assetPath, e);
+        }
+    }
+
     private void copyAssetProfilesIfNeeded() {
         File profilesDir = InputControlsManager.getProfilesDir(context);
         if (FileUtils.isEmpty(profilesDir)) {
@@ -111,6 +139,7 @@ public class InputControlsManager {
                 if (targetFile != null) {
                     FileUtils.copy(context, assetPath, targetFile);
                 }
+                else addBundledProfile(assetManager, assetPath, originProfile);
             }
         }
         catch (IOException e) {}

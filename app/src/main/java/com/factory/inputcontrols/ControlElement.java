@@ -111,7 +111,9 @@ public class ControlElement {
     private boolean[] states = new boolean[4];
     private final Bitmask propertyFlags = new Bitmask(new int[]{FLAG_BOUNDING_BOX_NEEDS_UPDATE});
     private String text = "";
-    private byte iconId;
+    private int iconId;
+    /** The icon's size in its button, 1 = the usual. */
+    private float iconScale = 1.0f;
     private Range range;
     private byte orientation;
     private PointF currentPosition;
@@ -141,7 +143,7 @@ public class ControlElement {
     private CustomMenu customMenu;
     private final ControlStyle styleOverrides = new ControlStyle();
     private ControlStyle resolvedStyle;
-    private android.graphics.PorterDuffColorFilter iconFilterCache;
+    private android.graphics.ColorFilter iconFilterCache;
     private int iconFilterCacheColor;
 
     public ControlElement(InputControlsView inputControlsView) {
@@ -209,6 +211,7 @@ public class ControlElement {
         }
 
         iconId = 0;
+        iconScale = 1.0f;
         range = null;
         propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
     }
@@ -500,12 +503,20 @@ public class ControlElement {
         this.text = text != null ? text : "";
     }
 
-    public byte getIconId() {
+    public int getIconId() {
         return iconId;
     }
 
+    public float getIconScale() {
+        return iconScale;
+    }
+
+    public void setIconScale(float iconScale) {
+        this.iconScale = Math.max(0.3f, Math.min(2.0f, iconScale));
+    }
+
     public void setIconId(int iconId) {
-        this.iconId = (byte)iconId;
+        this.iconId = iconId;
     }
 
     public Rect getBoundingBox() {
@@ -712,7 +723,9 @@ public class ControlElement {
                     }
                 }
 
-                if (iconId > 0) {
+                drawGlow(canvas, cx, cy, Math.min(boundingBox.width(), boundingBox.height()) * 0.5f);
+                // a game icon (GameIcons) is missing until the game is copied: the button's text shows meanwhile
+                if (iconId != 0 && inputControlsView.getIcon(iconId) != null) {
                     drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), iconId, true);
                 }
                 else {
@@ -1209,30 +1222,86 @@ public class ControlElement {
 
     private void drawIcon(Canvas canvas, float cx, float cy, float width, float height, int iconId, boolean automargin) {
         Paint paint = inputControlsView.getPaint();
-        Bitmap icon = inputControlsView.getIcon((byte)iconId);
+        Bitmap icon = inputControlsView.getIcon(iconId);
+        if (icon == null) return;
         int oldPaintColor = paint.getColor();
         boolean darkIcon = propertyFlags.isSet(FLAG_PRESSED) && isOutlineVisible();
         int iconColor = darkIcon ? getDarkColor() : getContentColor();
-        if (isIconFilterEnabled()) {
-            // the filter (default) paints every icon in one color; without it the icons keep their own colors
-            int rgb = darkIcon ? 0x000000 : (iconColor & 0xffffff);
-            if (iconFilterCache == null || iconFilterCacheColor != rgb) {
-                iconFilterCache = new android.graphics.PorterDuffColorFilter(0xff000000 | rgb, android.graphics.PorterDuff.Mode.SRC_IN);
-                iconFilterCacheColor = rgb;
-            }
-            paint.setColorFilter(iconFilterCache);
-        }
+        ControlStyle s = style();
+        if (darkIcon && (s.iconFilter || s.iconGray)) paint.setColorFilter(iconColorFilter(ICON_SHAPE, 0x000000)); // pressed: a dark shape
+        else if (s.iconGray) paint.setColorFilter(iconColorFilter(ICON_GRAY, 0));
+        // the game's item icons keep their colors with the tint (GameIcons.keepsColors): their color tells them apart
+        else if (s.iconFilter && !IconCatalog.keepsColors(iconId)) paint.setColorFilter(iconColorFilter(ICON_TINT, iconColor & 0xffffff));
         else paint.setColorFilter(null);
         paint.setAlpha(Color.alpha(iconColor));
         float snappingSize = inputControlsView.getSnappingSize();
-        int margin = automargin ? (int)(snappingSize * (shape == Shape.CIRCLE || shape == Shape.SQUARE ? 2.0f : 1.0f) * scale) : 0;
-        int halfSize = (int)((Math.min(width, height) - margin) * 0.5f);
+        // a bit bigger than it was (2.0 / 1.0 snapping steps of margin)
+        int margin = automargin ? (int)(snappingSize * (shape == Shape.CIRCLE || shape == Shape.SQUARE ? 1.3f : 0.7f) * scale) : 0;
+        float half = (Math.min(width, height) - margin) * 0.5f * (automargin ? iconScale : 1f);
+        // the picture's proportions are kept (the key words are wide): it fits the square the button gives it
+        float halfW = half, halfH = half;
+        if (icon.getWidth() > icon.getHeight()) halfH = half * icon.getHeight() / icon.getWidth();
+        else if (icon.getHeight() > icon.getWidth()) halfW = half * icon.getWidth() / icon.getHeight();
 
         Rect srcRect = new Rect(0, 0, icon.getWidth(), icon.getHeight());
-        Rect dstRect = new Rect((int)(cx - halfSize), (int)(cy - halfSize), (int)(cx + halfSize), (int)(cy + halfSize));
+        Rect dstRect = new Rect((int)(cx - halfW), (int)(cy - halfH), (int)(cx + halfW), (int)(cy + halfH));
         canvas.drawBitmap(icon, srcRect, dstRect, paint);
         paint.setColorFilter(null);
         paint.setColor(oldPaintColor);
+    }
+
+    private static final int ICON_SHAPE = 0, ICON_TINT = 1, ICON_GRAY = 2;
+
+    /**
+     * ICON_TINT: the icon in the given color, its light and shade kept (dark parts dimmer, light ones full) instead of
+     * one flat shape, so a dark backing square stays grey and the sign on it white. ICON_GRAY: black and white (shades
+     * of grey, a little brighter). ICON_SHAPE: one flat color (the pressed look).
+     */
+    private android.graphics.ColorFilter iconColorFilter(int mode, int rgb) {
+        int key = (mode << 24) | (rgb & 0xffffff);
+        if (iconFilterCache != null && iconFilterCacheColor == key) return iconFilterCache;
+        android.graphics.ColorFilter filter;
+        if (mode == ICON_SHAPE) filter = new android.graphics.PorterDuffColorFilter(0xff000000 | rgb, android.graphics.PorterDuff.Mode.SRC_IN);
+        else {
+            float r = 0.299f, g = 0.587f, b = 0.114f;   // the brightness of a pixel
+            float[] m;
+            if (mode == ICON_GRAY) {
+                float k = 1.15f, add = 12;
+                m = new float[]{r*k, g*k, b*k, 0, add,  r*k, g*k, b*k, 0, add,  r*k, g*k, b*k, 0, add,  0, 0, 0, 1, 0};
+            }
+            else {
+                // out = color * (0.45 + 0.9 * brightness): black → 45 % of the color, mid grey and lighter → all of it
+                float cr = ((rgb >> 16) & 0xff) / 255f, cg = ((rgb >> 8) & 0xff) / 255f, cb = (rgb & 0xff) / 255f;
+                float k = 0.9f, base = 0.45f * 255;
+                m = new float[]{cr*r*k, cr*g*k, cr*b*k, 0, cr*base,  cg*r*k, cg*g*k, cg*b*k, 0, cg*base,
+                                cb*r*k, cb*g*k, cb*b*k, 0, cb*base,  0, 0, 0, 1, 0};
+            }
+            filter = new android.graphics.ColorMatrixColorFilter(new android.graphics.ColorMatrix(m));
+        }
+        iconFilterCache = filter;
+        iconFilterCacheColor = key;
+        return filter;
+    }
+
+    /** The style's soft spot under a button's icon or text: its color, fading out to the edge, as strong as set. */
+    private void drawGlow(Canvas canvas, float cx, float cy, float radius) {
+        ControlStyle s = style();
+        if (s.glowStrength == null || s.glowStrength <= 0 || radius <= 0) return;
+        int alpha = Math.round(Math.min(1f, s.glowStrength) * 230);
+        int color = s.glowColor & 0xffffff;
+        Paint paint = inputControlsView.getPaint();
+        android.graphics.Shader oldShader = paint.getShader();
+        Paint.Style oldStyle = paint.getStyle();
+        int oldColor = paint.getColor();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(0xff000000);
+        paint.setShader(new android.graphics.RadialGradient(cx, cy, radius,
+            new int[]{(alpha << 24) | color, ((alpha * 2 / 3) << 24) | color, color},
+            new float[]{0f, 0.55f, 1f}, android.graphics.Shader.TileMode.CLAMP));
+        canvas.drawCircle(cx, cy, radius, paint);
+        paint.setShader(oldShader);
+        paint.setStyle(oldStyle);
+        paint.setColor(oldColor);
     }
 
     public JSONObject toJSONObject() {
@@ -1252,6 +1321,7 @@ public class ControlElement {
             elementJSONObject.put("toggleSwitch", propertyFlags.isSet(FLAG_TOGGLE_SWITCH));
             elementJSONObject.put("text", text);
             elementJSONObject.put("iconId", iconId);
+            if (iconScale != 1.0f) elementJSONObject.put("iconScale", (double)iconScale);
             if (!styleOverrides.isEmpty()) elementJSONObject.put("style", styleOverrides.toJSONObject());
 
             if (type == Type.RANGE_BUTTON && range != null) {

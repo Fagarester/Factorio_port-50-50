@@ -10,7 +10,8 @@ import java.io.IOException;
 
 /**
  * Look of the buttons: outline (the shape of a button), its color and opacity, color and opacity of the text
- * or icon inside, and whether icons are tinted with the content color.
+ * or icon inside, whether icons are tinted with the content color or shown in black and white, and a soft spot of
+ * color under the icon (its color and strength).
  *
  * The profile owns the common style (all fields set). Every element can hold overrides: a field that is
  * null is taken from the profile style.
@@ -21,7 +22,10 @@ public class ControlStyle {
     public Float outlineAlpha;        // 0..1
     public Integer contentColor;      // 0xRRGGBB, text and icons
     public Float contentAlpha;        // 0..1
-    public Boolean iconFilter;        // true: icons are drawn in the content color, false: original colors
+    public Boolean iconFilter;        // true: icons are tinted with the content color (keeping their light and shade)
+    public Boolean iconGray;          // true: icons in black and white (shades of grey); not together with iconFilter
+    public Integer glowColor;         // 0xRRGGBB, the soft spot under the icon / text
+    public Float glowStrength;        // 0..1, 0 = no spot
 
     public static ControlStyle defaults() {
         ControlStyle style = new ControlStyle();
@@ -31,6 +35,9 @@ public class ControlStyle {
         style.contentColor = 0xffffff;
         style.contentAlpha = 1.0f;
         style.iconFilter = true;
+        style.iconGray = false;
+        style.glowColor = 0x000000;
+        style.glowStrength = 0f;
         return style;
     }
 
@@ -44,6 +51,9 @@ public class ControlStyle {
         result.contentColor = pick(overrides != null ? overrides.contentColor : null, common != null ? common.contentColor : null, defaults.contentColor);
         result.contentAlpha = pick(overrides != null ? overrides.contentAlpha : null, common != null ? common.contentAlpha : null, defaults.contentAlpha);
         result.iconFilter = pick(overrides != null ? overrides.iconFilter : null, common != null ? common.iconFilter : null, defaults.iconFilter);
+        result.iconGray = pick(overrides != null ? overrides.iconGray : null, common != null ? common.iconGray : null, defaults.iconGray);
+        result.glowColor = pick(overrides != null ? overrides.glowColor : null, common != null ? common.glowColor : null, defaults.glowColor);
+        result.glowStrength = pick(overrides != null ? overrides.glowStrength : null, common != null ? common.glowStrength : null, defaults.glowStrength);
         return result;
     }
 
@@ -52,7 +62,8 @@ public class ControlStyle {
     }
 
     public boolean isEmpty() {
-        return showOutline == null && outlineColor == null && outlineAlpha == null && contentColor == null && contentAlpha == null && iconFilter == null;
+        return showOutline == null && outlineColor == null && outlineAlpha == null && contentColor == null && contentAlpha == null && iconFilter == null &&
+            iconGray == null && glowColor == null && glowStrength == null;
     }
 
     public void clear() {
@@ -62,6 +73,9 @@ public class ControlStyle {
         contentColor = null;
         contentAlpha = null;
         iconFilter = null;
+        iconGray = null;
+        glowColor = null;
+        glowStrength = null;
     }
 
     public void copyFrom(ControlStyle other) {
@@ -71,6 +85,9 @@ public class ControlStyle {
         contentColor = other.contentColor;
         contentAlpha = other.contentAlpha;
         iconFilter = other.iconFilter;
+        iconGray = other.iconGray;
+        glowColor = other.glowColor;
+        glowStrength = other.glowStrength;
     }
 
     public JSONObject toJSONObject() throws JSONException {
@@ -81,6 +98,9 @@ public class ControlStyle {
         if (contentColor != null) object.put("contentColor", contentColor);
         if (contentAlpha != null) object.put("contentAlpha", contentAlpha.doubleValue());
         if (iconFilter != null) object.put("iconFilter", iconFilter);
+        if (iconGray != null) object.put("iconGray", iconGray);
+        if (glowColor != null) object.put("glowColor", glowColor);
+        if (glowStrength != null) object.put("glowStrength", glowStrength.doubleValue());
         return object;
     }
 
@@ -92,6 +112,9 @@ public class ControlStyle {
         if (object.has("contentColor")) contentColor = object.optInt("contentColor", 0xffffff) & 0xffffff;
         if (object.has("contentAlpha")) contentAlpha = (float)object.optDouble("contentAlpha", 1.0);
         if (object.has("iconFilter")) iconFilter = object.optBoolean("iconFilter", true);
+        if (object.has("iconGray")) iconGray = object.optBoolean("iconGray", false);
+        if (object.has("glowColor")) glowColor = object.optInt("glowColor", 0) & 0xffffff;
+        if (object.has("glowStrength")) glowStrength = (float)object.optDouble("glowStrength", 0);
     }
 
     /** Streaming variant used by the profile reader. */
@@ -122,6 +145,15 @@ public class ControlStyle {
                     break;
                 case "iconFilter":
                     style.iconFilter = reader.nextBoolean();
+                    break;
+                case "iconGray":
+                    style.iconGray = reader.nextBoolean();
+                    break;
+                case "glowColor":
+                    style.glowColor = reader.nextInt() & 0xffffff;
+                    break;
+                case "glowStrength":
+                    style.glowStrength = (float)reader.nextDouble();
                     break;
                 default:
                     reader.skipValue();
