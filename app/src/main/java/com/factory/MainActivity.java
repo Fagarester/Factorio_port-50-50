@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Runnable permissionCallback;
     private SharedPreferences preferences;
     private Fragment currentFragment;
+    private boolean openedForSettings = false; // opened by the shortcut or from the app for the settings, not to start the game
     private boolean openedFromGame = false; // Settings were opened from the in-game side drawer (the game is running underneath)
 
     @Override
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startIntent.hasExtra("game_failed") ||
             startIntent.getBooleanExtra("benchmark_done", false) ||
             startIntent.getIntExtra("selected_menu_item_id", 0) != 0;
+        openedForSettings = openedByShortcutOrApp;
         if (savedInstanceState == null && !openedByShortcutOrApp && tryFastAutoStart()) return;
 
         // very first start (installing system files): landscape only
@@ -266,6 +268,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void unlockOrientation() {
         orientationLocked = false;
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR); // back to the normal (manifest) behaviour
+    }
+
+    /** The settings were asked for (the shortcut, the in-game drawer…): they may show under the game's first start. */
+    public boolean isOpenedForSettings() {
+        return openedForSettings;
     }
 
     public void hideStartupCover() {

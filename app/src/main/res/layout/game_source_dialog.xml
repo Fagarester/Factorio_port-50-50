@@ -6,10 +6,13 @@
     android:layout_height="match_parent"
     android:background="@drawable/loading_background">
 
+    <!-- no scroll bar: on a low screen the content scrolls without the white line at the edge -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
         <LinearLayout
             android:id="@+id/LLSourceContent"
@@ -18,7 +21,10 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp">
 
             <!-- the logo and the words above the choices; at first alone in the middle (GameLauncher.SourceIntro) -->
             <LinearLayout
@@ -95,7 +101,7 @@
                 <FrameLayout
                     android:id="@+id/BTPickFolder"
                     android:layout_width="210dp"
-                    android:layout_height="158dp"
+                    android:layout_height="150dp"
                     android:layout_marginLeft="0dp"
                     android:background="@drawable/source_card"
                     android:clickable="true"
@@ -142,7 +148,7 @@
                 <FrameLayout
                     android:id="@+id/BTPickArchive"
                     android:layout_width="210dp"
-                    android:layout_height="158dp"
+                    android:layout_height="150dp"
                     android:layout_marginLeft="16dp"
                     android:background="@drawable/source_card"
                     android:clickable="true"
@@ -189,7 +195,7 @@
                 <FrameLayout
                     android:id="@+id/BTDownloadDemo"
                     android:layout_width="210dp"
-                    android:layout_height="158dp"
+                    android:layout_height="150dp"
                     android:layout_marginLeft="16dp"
                     android:background="@drawable/source_card_accent"
                     android:clickable="true"
@@ -250,15 +256,36 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/TVDownloadLink"
+            <!-- the full game: the link, and how the archive gets in by itself (GameLauncher looks again on return) -->
+            <LinearLayout
+                android:id="@+id/LLSourceLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:padding="8dp"
-                android:gravity="center"
-                android:textSize="13sp"
-                android:textColor="#FFFFB050" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/TVDownloadLink"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="2dp"
+                    android:gravity="center"
+                    android:textSize="13sp"
+                    android:textColor="#FFFFB050" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxWidth="780dp"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:textColor="#FFB8B0A8"
+                    android:text="@string/game_source_auto_hint" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

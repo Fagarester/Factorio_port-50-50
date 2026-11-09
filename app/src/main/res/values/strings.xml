@@ -291,7 +291,8 @@
     <string name="game_source_found_hint">Found it: tap the green button, or choose by hand</string>
     <string name="game_source_nothing_found">The game wasn\'t found automatically: choose its folder or archive</string>
     <string name="game_source_download">No game yet? Download Factorio for Linux (ARM64) at factorio.com</string>
-    <string name="game_source_buy">The full game: factorio.com</string>
+    <string name="game_source_buy">Buy and download Factorio on factorio.com</string>
+    <string name="game_source_auto_hint">Download the Linux (ARM64) archive into Downloads and come back: Factory finds it, unpacks it and installs the game by itself.</string>
     <string name="game_source_intro">Factory runs Factorio for Linux ARM64. Show where the game is, or download the free demo.</string>
     <string name="game_source_folder_hint">Unpacked Factorio for Linux ARM64</string>
     <string name="game_source_archive_hint">The .tar.xz file from factorio.com</string>

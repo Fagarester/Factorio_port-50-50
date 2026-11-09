@@ -93,14 +93,19 @@ public abstract class GameLauncher {
         activity.lockLandscape();
         final Dialog dialog = new Dialog(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
         dialog.setContentView(R.layout.game_source_dialog);
-        // the cover over the settings goes only once this screen is drawn: no flash of the settings in between
-        dialog.setOnShowListener((d) -> new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            activity.hideStartupCover();
-            activity.lockLandscape();
-        }, 300));
-        // back: the settings, the game starts from the menu's Play later
         dialog.setCancelable(true);
-        dialog.setOnCancelListener((d) -> activity.unlockOrientation());
+        if (activity.isOpenedForSettings()) {
+            // opened for the settings (the shortcut): back to them; the cover goes once this screen is drawn
+            dialog.setOnShowListener((d) -> new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                activity.hideStartupCover();
+                activity.lockLandscape();
+            }, 300));
+            dialog.setOnCancelListener((d) -> activity.unlockOrientation());
+        }
+        else {
+            // a normal start: no settings before the game is installed (the shortcut's hold opens them); back closes the app
+            dialog.setOnCancelListener((d) -> activity.finish());
+        }
 
         dialog.findViewById(R.id.BTPickFolder).setOnClickListener((v) -> {
             if (!activity.hasStoragePermission()) {
@@ -150,6 +155,34 @@ public abstract class GameLauncher {
             Bitmap logo = GameSource.downloadLogo(false);
             activity.runOnUiThread(() -> intro.logoReady(logo));
         });
+        // back from the browser (or the file manager): the archive downloaded into Download meanwhile is taken at once
+        final boolean[] looking = {false};
+        dialog.getWindow().getDecorView().getViewTreeObserver().addOnWindowFocusChangeListener((hasFocus) -> {
+            if (!hasFocus || looking[0] || !dialog.isShowing() || !activity.hasStoragePermission()) return;
+            looking[0] = true;
+            Executors.newSingleThreadExecutor().execute(() -> {
+                File found = GameSource.findArchive();
+                // a browser still writing it: the size must hold still
+                if (found != null) {
+                    long size = found.length();
+                    try {
+                        Thread.sleep(1500);
+                    }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    if (found.length() != size || System.currentTimeMillis() - found.lastModified() < 3000) found = null;
+                }
+                final File archive = found;
+                activity.runOnUiThread(() -> {
+                    looking[0] = false;
+                    if (archive == null || !dialog.isShowing()) return;
+                    dialog.dismiss();
+                    unpackGame(activity, null, () -> new FileInputStream(archive), archive.length(), GameSource.isSpaceAgeArchive(archive.getName()));
+                });
+            });
+        });
+
         dialog.findViewById(R.id.BTDownloadDemo).setOnClickListener((v) -> {
             dialog.dismiss();
             // the archive goes to Download like a browser's download; without the permission into the app's own folder
@@ -193,7 +226,7 @@ public abstract class GameLauncher {
             top = dialog.findViewById(R.id.LLSourceTop);
             introWords = dialog.findViewById(R.id.TVSourceIntro);
             title = dialog.findViewById(R.id.LLSourceTitle);
-            link = dialog.findViewById(R.id.TVDownloadLink);
+            link = dialog.findViewById(R.id.LLSourceLink);
             tapHint = dialog.findViewById(R.id.TVSourceTap);
             logo = dialog.findViewById(R.id.IVDemoLogo);
             cards = dialog.findViewById(R.id.LLSourceCards);

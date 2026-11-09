@@ -286,7 +286,8 @@
     <string name="game_source_found_hint">Найдено: нажмите зелёную кнопку или выберите вручную</string>
     <string name="game_source_nothing_found">Игра не найдена автоматически: выберите папку или архив вручную</string>
     <string name="game_source_download">Нет игры? Скачать Factorio для Linux (ARM64) на factorio.com</string>
-    <string name="game_source_buy">Полная версия — на factorio.com</string>
+    <string name="game_source_buy">Купить и скачать Factorio на factorio.com</string>
+    <string name="game_source_auto_hint">Скачайте архив для Linux (ARM64) в «Загрузки» и вернитесь сюда: Factory сам найдёт его, распакует и установит игру.</string>
     <string name="game_source_intro">Factory запускает Factorio для Linux ARM64. Укажите, где лежит игра, или скачайте бесплатную демо-версию.</string>
     <string name="game_source_folder_hint">Распакованная игра для Linux ARM64</string>
     <string name="game_source_archive_hint">Файл .tar.xz с factorio.com</string>

@@ -44,7 +44,8 @@ Factory is a hybrid:
    an unpacked game folder or the archive `factorio…linux…arm64….tar.xz` from
    [factorio.com](https://factorio.com/download).
 3. If there is no game, a screen offers three ways: the game folder, the game archive, or the **free demo**.
-   The app downloads the demo from factorio.com by itself (about 1.4 GB, no account needed).
+   The app downloads the demo from factorio.com by itself (about 1.4 GB, no account needed). If you download the
+   full game's archive into `Download` meanwhile, the app picks it up as soon as you come back.
 
 You need Android 10 or newer and an ARM64 processor. Factorio is not included: buy it on
 [factorio.com](https://factorio.com) and download the **Linux (ARM64)** build, or try the free demo.
