@@ -10,8 +10,10 @@
 Linux ARM64. There is no x86 emulation and no streaming. The app contains no game files.
 
 > **Unofficial.** Factory is a fan project. It is not made, endorsed or supported by Wube Software, the developer of
-> Factorio. Please don't send Factory problems to Wube. We plan to write to the Factorio developers about the project
-> and ask for their approval; this note will be updated with their answer.
+> Factorio. Please don't send Factory problems to Wube.
+>
+> We wrote to Wube about the project. On 12 November 2026 they replied: *"As long as its free and non-commercial then
+> we have absolute no problem with this project."* So Factory stays free and non-commercial.
 
 > **Made by AI.** The code, the documentation and this text were written by Claude (Anthropic's AI model)
 > under the direction of [Fagarester](https://github.com/Fagarester), who set the goals, tested every build on
